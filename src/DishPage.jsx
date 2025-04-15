@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from'react';
-import { Box, Typography, Card, CardContent, Button, TextField, Select, MenuItem, InputLabel, FormControl, Avatar, Menu, MenuItem as MuiMenuItem } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Card,
+    CardContent,
+    Button,
+    TextField,
+    Select,
+    MenuItem,
+    InputLabel,
+    FormControl,
+    Avatar,
+    Menu,
+    MenuItem as MuiMenuItem
+} from '@mui/material';
 import { useNavigate } from'react-router-dom';
+import BottomNavigationBar from './BottomNavigationBar.jsx';
 import apiRequest from './api.js';
 
 function DishPage() {
@@ -13,14 +28,14 @@ function DishPage() {
     const [dishes, setDishes] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState(null); 
-    const [anchorEl, setAnchorEl] = useState(null); 
+    const [user, setUser] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
     const navigate = useNavigate();
 
     const handleLogout = () => {
         document.cookie = "sessionId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         setUser(null);
-        navigate('/'); 
+        navigate('/');
     };
 
     const handleClick = (event) => {
@@ -124,21 +139,33 @@ function DishPage() {
     }, []);
 
     return (
-        <Box sx={{
-            minHeight: '100vh',
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
-            color: '#333'
-        }}>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                p: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
+                color: '#333'
+            }}
+        >
             {user && (
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', width: '100%', mb: 2 }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        width: '100%',
+                        mb: 2
+                    }}
+                >
                     <Avatar onClick={handleClick} src={user.avatarUrl || ''} />
                     <Typography sx={{ ml: 1 }}>{user.nickname || ''}</Typography>
-                    <Typography sx={{ ml: 1, color: 'green', fontSize: '12px' }}>已登录</Typography>
+                    <Typography sx={{ ml: 1, color: 'black', fontSize: '12px' }}>
+                        {user.nickname || ''}，你好
+                    </Typography>
                     <Menu
                         id="simple-menu"
                         anchorEl={anchorEl}
@@ -149,24 +176,30 @@ function DishPage() {
                     </Menu>
                 </Box>
             )}
-            <Card sx={{
-                p: 4,
-                width: '100%',
-                maxWidth: 500,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                background: '#fff',
-                borderRadius: 8,
-                border: '1px solid #ccc'
-            }}>
-                <Typography variant="h4" gutterBottom sx={{
-                    background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textFillColor: 'transparent',
-                    textAlign: 'center',
-                    mb: 4
-                }}>
+            <Card
+                sx={{
+                    p: 4,
+                    width: '100%',
+                    maxWidth: 500,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    background: '#fff',
+                    borderRadius: 8,
+                    border: '1px solid #ccc'
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        textFillColor: 'transparent',
+                        textAlign: 'center',
+                        mb: 4
+                    }}
+                >
                     菜品推荐
                 </Typography>
                 <FormControl fullWidth sx={{ mb: 3 }}>
@@ -246,7 +279,14 @@ function DishPage() {
                         <MenuItem value="清淡">清淡</MenuItem>
                     </Select>
                 </FormControl>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb: 3
+                    }}
+                >
                     <TextField
                         label="菜品制作难度"
                         placeholder="菜品制作难度"
@@ -309,7 +349,16 @@ function DishPage() {
                 {dishes.length > 0 && (
                     <Box sx={{ mt: 4 }}>
                         {dishes.map((dish, index) => (
-                            <Card key={index} sx={{ mb: 2, p: 2, background: '#f9f9f9', borderRadius: 8, border: '1px solid #ccc' }}>
+                            <Card
+                                key={index}
+                                sx={{
+                                    mb: 2,
+                                    p: 2,
+                                    background: '#f9f9f9',
+                                    borderRadius: 8,
+                                    border: '1px solid #ccc'
+                                }}
+                            >
                                 <Typography variant="h6" sx={{ mb: 1 }}>
                                     {dish.dishName}
                                 </Typography>
@@ -335,6 +384,7 @@ function DishPage() {
                     </Box>
                 )}
             </Card>
+            <BottomNavigationBar />
         </Box>
     );
 }

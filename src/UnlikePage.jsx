@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from'react';
 import { Box, Typography, Card, CardContent, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Pagination, Checkbox } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from'react-router-dom';
 import apiRequest from './api.js';
+import BottomNavigationBar from './BottomNavigationBar.jsx';
 
 function UnlikePage() {
     const [unlikes, setUnlikes] = useState([]);
@@ -157,9 +158,9 @@ function UnlikePage() {
                     sx={{ mt: 2 }}
                 />
             </Card>
+            <BottomNavigationBar />
         </Box>
     );
 }
 
 export default UnlikePage;
-    
