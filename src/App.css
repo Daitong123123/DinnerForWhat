@@ -13,6 +13,14 @@
   }
 }
 
+/* 将所有表情图标的 URL 替换为代理地址 */
+.emoji-picker-react img {
+  content: attr(data-src);
+  object-fit: contain;
+  /* 修改为代理地址 */
+  src: var(--emoji-proxy-url);
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
