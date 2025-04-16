@@ -46,6 +46,10 @@ function LoginPage() {
             });
             const result = await response.json();
             if (result.code === '200') {
+                // 提取响应头中的 userId
+                const userId = response.headers.get('userid');
+                // 保存用户信息到本地存储
+                localStorage.setItem('userId', userId);
                 // 跳转到 DishPage
                 navigate('/dish');
             } else {
@@ -204,4 +208,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;
+export default LoginPage;    

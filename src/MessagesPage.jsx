@@ -16,15 +16,11 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useNavigate } from'react-router-dom';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
 import Picker from 'emoji-picker-react';
-
+import apiRequest from './api.js';
 
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
-    const [friends, setFriends] = useState([
-        { id: 1, name: '好友1', avatar: 'U' },
-        { id: 2, name: '好友2', avatar: 'O' },
-        { id: 3, name: '好友3', avatar: 'U' }
-    ]);
+    const [friends, setFriends] = useState([]);
     const [friendMessages, setFriendMessages] = useState({});
     const [newMessage, setNewMessage] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -33,18 +29,35 @@ function MessagesPage() {
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
 
-    const handleFriendSelect = (friend) => {
+    // 从本地存储获取 userId
+    const currentUserId = localStorage.getItem('userId');
+
+    const handleFriendSelect = async (friend) => {
         setSelectedFriend(friend);
-        if (friend) {
-            if (!friendMessages[friend.id]) {
-                const initialMessages = [
-                    { text: '你好！', sender: 'user' },
-                    { text: '嗨，有什么事吗？', sender: friend.avatar === 'U' ? 'other' : 'user' }
-                ];
-                setFriendMessages((prevMessages) => ({
-                    ...prevMessages,
-                    [friend.id]: initialMessages
-                }));
+        if (friend && currentUserId) {
+            try {
+                const formData = {
+                    userIdFrom: currentUserId,
+                    userIdTo: friend.id,
+                    // 假设分页参数默认值
+                    curPage: 1,
+                    pageSize: 20
+                };
+                const response = await apiRequest('/message-query', 'POST', formData, navigate);
+                if (response) {
+                    const messages = response.records.map(record => ({
+                        text: record.message,
+                        sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                    }));
+                    setFriendMessages((prevMessages) => ({
+                       ...prevMessages,
+                        [friend.id]: messages
+                    }));
+                } else {
+                    console.error('获取聊天记录失败');
+                }
+            } catch (error) {
+                console.error('Error fetching messages:', error);
             }
         }
     };
@@ -55,9 +68,9 @@ function MessagesPage() {
             setFriendMessages((prevMessages) => {
                 const currentMessages = prevMessages[selectedFriend.id] || [];
                 return {
-                    ...prevMessages,
+                   ...prevMessages,
                     [selectedFriend.id]: [
-                        ...currentMessages,
+                       ...currentMessages,
                         { text: newMessage, sender: 'user' }
                     ]
                 };
@@ -68,10 +81,10 @@ function MessagesPage() {
                 setFriendMessages((prevMessages) => {
                     const currentMessages = prevMessages[selectedFriend.id] || [];
                     return {
-                        ...prevMessages,
+                       ...prevMessages,
                         [selectedFriend.id]: [
-                            ...currentMessages,
-                            { text: '我收到你的消息啦！', sender: 'other' }
+                       ...currentMessages,
+                        { text: '我收到你的消息啦！', sender: 'other' }
                         ]
                     };
                 });
@@ -97,9 +110,9 @@ function MessagesPage() {
         const handleClickOutside = (event) => {
             if (
                 emojiPickerRef.current &&
-                !emojiPickerRef.current.contains(event.target) &&
+               !emojiPickerRef.current.contains(event.target) &&
                 emojiIconRef.current &&
-                !emojiIconRef.current.contains(event.target)
+               !emojiIconRef.current.contains(event.target)
             ) {
                 setShowEmojiPicker(false);
             }
@@ -110,6 +123,31 @@ function MessagesPage() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [emojiPickerRef, emojiIconRef]);
+
+    useEffect(() => {
+        const fetchFriends = async () => {
+            if (currentUserId) {
+                try {
+                    const formData = {
+                        userId: currentUserId
+                    };
+                    const response = await apiRequest('/friend-ship', 'POST', formData, navigate);
+                    if (response) {
+                        setFriends(response.friends.map(friendId => ({
+                            id: friendId,
+                            name: `好友${friendId}`,
+                            avatar: 'U'
+                        })));
+                    } else {
+                        console.error('获取好友列表失败');
+                    }
+                } catch (error) {
+                    console.error('Error fetching friends:', error);
+                }
+            }
+        };
+        fetchFriends();
+    }, [currentUserId]);
 
     return (
         <Box
@@ -349,4 +387,4 @@ function MessagesPage() {
     );
 }
 
-export default MessagesPage;
+export default MessagesPage;    
