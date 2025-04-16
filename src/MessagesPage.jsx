@@ -17,6 +17,7 @@ import { useNavigate } from'react-router-dom';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
 import Picker from 'emoji-picker-react';
 import apiRequest from './api.js';
+import { Client } from '@stomp/stompjs';
 
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
@@ -28,6 +29,7 @@ function MessagesPage() {
 
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
+    const stompClientRef = useRef(null);
 
     // 从本地存储获取 userId
     const currentUserId = localStorage.getItem('userId');
@@ -62,33 +64,58 @@ function MessagesPage() {
         }
     };
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (newMessage.trim() === '') return;
         if (selectedFriend) {
-            setFriendMessages((prevMessages) => {
-                const currentMessages = prevMessages[selectedFriend.id] || [];
-                return {
-                   ...prevMessages,
-                    [selectedFriend.id]: [
-                       ...currentMessages,
-                        { text: newMessage, sender: 'user' }
-                    ]
+            try {
+                const sendMessageRequest = {
+                    userIdFrom: currentUserId,
+                    userIdTo: selectedFriend.id,
+                    messageType: 'text',
+                    messageContent: newMessage
                 };
-            });
-            setNewMessage('');
 
-            setTimeout(() => {
-                setFriendMessages((prevMessages) => {
-                    const currentMessages = prevMessages[selectedFriend.id] || [];
-                    return {
-                       ...prevMessages,
-                        [selectedFriend.id]: [
-                       ...currentMessages,
-                        { text: '我收到你的消息啦！', sender: 'other' }
-                        ]
+                const response = await apiRequest('/send-message', 'POST', sendMessageRequest, navigate);
+                if (response && response.code === '200') {
+                    setFriendMessages((prevMessages) => {
+                        const currentMessages = prevMessages[selectedFriend.id] || [];
+                        return {
+                           ...prevMessages,
+                            [selectedFriend.id]: [
+                               ...currentMessages,
+                                { text: newMessage, sender: 'user' }
+                            ]
+                        };
+                    });
+                    setNewMessage('');
+
+                    // 可以在这里添加刷新数据的逻辑
+                    // 例如重新获取聊天记录
+                    const formData = {
+                        userIdFrom: currentUserId,
+                        userIdTo: selectedFriend.id,
+                        curPage: 1,
+                        pageSize: 20
                     };
-                });
-            }, 1000);
+                    const newResponse = await apiRequest('/message-query', 'POST', formData, navigate);
+                    if (newResponse) {
+                        const messages = newResponse.records.map(record => ({
+                            text: record.message,
+                            sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                        }));
+                        setFriendMessages((prevMessages) => ({
+                           ...prevMessages,
+                            [selectedFriend.id]: messages
+                        }));
+                    } else {
+                        console.error('重新获取聊天记录失败');
+                    }
+                } else {
+                    console.error('发送消息失败:', response? response.message : '无响应信息');
+                }
+            } catch (error) {
+                console.error('发送消息请求出错:', error);
+            }
         }
     };
 
@@ -99,7 +126,7 @@ function MessagesPage() {
     };
 
     const handleEmojiClick = (event, emojiObject) => {
-        console.log('Selected emoji object:', emojiObject); 
+        console.log('Selected emoji object:', emojiObject);
         if (emojiObject && emojiObject.emoji) {
             setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
         }
@@ -133,11 +160,26 @@ function MessagesPage() {
                     };
                     const response = await apiRequest('/friend-ship', 'POST', formData, navigate);
                     if (response) {
-                        setFriends(response.friends.map(friendId => ({
-                            id: friendId,
-                            name: `好友${friendId}`,
-                            avatar: 'U'
-                        })));
+                        const friendIds = response.friends;
+                        const updatedFriends = [];
+                        for (const friendId of friendIds) {
+                            const friendInfoFormData = {
+                                userId: friendId
+                            };
+                            const friendInfoResponse = await apiRequest('/friend-info', 'GET', friendInfoFormData, navigate);
+                            if (friendInfoResponse) {
+                                updatedFriends.push({
+                                    id: friendId,
+                                    name: friendInfoResponse.userNickName,
+                                    avatar: 'U'
+                                });
+                            }
+                        }
+                        if (updatedFriends.length > 0) {
+                            setFriends(updatedFriends);
+                        } else {
+                            console.warn('没有获取到有效的好友信息，好友列表为空');
+                        }
                     } else {
                         console.error('获取好友列表失败');
                     }
@@ -148,6 +190,89 @@ function MessagesPage() {
         };
         fetchFriends();
     }, [currentUserId]);
+
+    useEffect(() => {
+        if (currentUserId) {
+            const originalWebSocket = window.WebSocket;
+            window.WebSocket = function (url, protocols) {
+                const socket = new originalWebSocket(url, protocols);
+                // 获取当前页面的所有Cookie
+                const cookies = document.cookie.split('; ').map(c => c.split('=')).reduce((acc, [k, v]) => {
+                    acc[k] = v;
+                    return acc;
+                }, {});
+                let cookieHeader = '';
+                for (const key in cookies) {
+                    cookieHeader += `${key}=${cookies[key]}; `;
+                }
+                // 在WebSocket连接打开时发送Cookie头
+                socket.addEventListener('open', () => {
+                    socket.send(`GET ${url} HTTP/1.1\r\nCookie: ${cookieHeader}\r\n\r\n`);
+                });
+                return socket;
+            };
+
+            stompClientRef.current = new Client({
+                brokerURL: `ws://localhost:60000/chat-websocket?userId=${currentUserId}`,
+                connectHeaders: {
+                    login: 'guest',
+                    passcode: 'guest'
+                },
+                debug: function (str) {
+                    console.log(str);
+                },
+                reconnectDelay: 5000,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000
+            });
+
+            stompClientRef.current.onConnect = (frame) => {
+                console.log('Connected: ', frame);
+                stompClientRef.current.subscribe(`/topic/${currentUserId}`, async (message) => {
+                    const data = JSON.parse(message.body);
+                    if (data.type === 'newMessage' && selectedFriend && data.friendId === selectedFriend.id) {
+                        const formData = {
+                            userIdFrom: currentUserId,
+                            userIdTo: selectedFriend.id,
+                            curPage: 1,
+                            pageSize: 20
+                        };
+                        try {
+                            const response = await apiRequest('/message-query', 'POST', formData, navigate);
+                            if (response) {
+                                const messages = response.records.map(record => ({
+                                    text: record.message,
+                                    sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                                }));
+                                setFriendMessages((prevMessages) => ({
+                                   ...prevMessages,
+                                    [selectedFriend.id]: messages
+                                }));
+                            } else {
+                                console.error('重新获取聊天记录失败');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching messages:', error);
+                        }
+                    }
+                });
+            };
+
+            stompClientRef.current.onStompError = (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+            };
+
+            stompClientRef.current.activate();
+
+            return () => {
+                if (stompClientRef.current) {
+                    stompClientRef.current.deactivate();
+                }
+                window.WebSocket = originalWebSocket;
+            };
+        }
+    }, [currentUserId, selectedFriend]);
 
     return (
         <Box
@@ -223,6 +348,11 @@ function MessagesPage() {
                                     <Typography>{friend.name}</Typography>
                                 </ListItem>
                             ))}
+                            {friends.length === 0 && (
+                                <ListItem sx={{ py: 2, display: 'flex', width: '100%' }}>
+                                    <Typography>暂无好友</Typography>
+                                </ListItem>
+                            )}
                         </List>
                     </Box>
                     <Box
@@ -387,4 +517,4 @@ function MessagesPage() {
     );
 }
 
-export default MessagesPage;    
+export default MessagesPage;
