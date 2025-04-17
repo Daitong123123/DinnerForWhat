@@ -2,7 +2,7 @@ import baseUrl from './config.js';
 
 // 统一的 API 请求方法
 const apiRequest = async (path, method = 'GET', body = null, navigate) => {
-    const url = `${baseUrl}`; // 替换为你的后端 API 基础 URL
+    const url = `http://${baseUrl}`; // 替换为你的后端 API 基础 URL
     let fullUrl = `${url}${path}`;
 
     try {

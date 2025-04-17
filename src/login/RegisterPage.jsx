@@ -23,7 +23,7 @@ function RegisterPage() {
     const handleRegistration = async () => {
         if (password === confirmPassword) {
             try {
-                const response = await fetch(`${baseUrl}/register`, {
+                const response = await fetch(`http://${baseUrl}/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

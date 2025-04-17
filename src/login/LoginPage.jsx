@@ -36,7 +36,7 @@ function LoginPage() {
             loginData = { username, password };
         }
         try {
-            const response = await fetch(`${baseUrl}/login`, {
+            const response = await fetch(`http://${baseUrl}/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

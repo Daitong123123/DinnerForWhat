@@ -1,3 +1,4 @@
+import BottomNavigationBar from './BottomNavigationBar.jsx';
 import React, { useState, useEffect, useRef } from'react';
 import {
     Box,
@@ -14,10 +15,10 @@ import {
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useNavigate } from'react-router-dom';
-import BottomNavigationBar from './BottomNavigationBar.jsx';
 import Picker from 'emoji-picker-react';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
+import baseUrl from './config.js';
 
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
@@ -30,6 +31,7 @@ function MessagesPage() {
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
     const stompClientRef = useRef(null);
+    const chatListRef = useRef(null); // 新增：用于引用聊天记录列表的 ref
 
     // 从本地存储获取 userId
     const currentUserId = localStorage.getItem('userId');
@@ -126,7 +128,6 @@ function MessagesPage() {
     };
 
     const handleEmojiClick = (event, emojiObject) => {
-        console.log('Selected emoji object:', emojiObject);
         if (emojiObject && emojiObject.emoji) {
             setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
         }
@@ -193,27 +194,8 @@ function MessagesPage() {
 
     useEffect(() => {
         if (currentUserId) {
-            const originalWebSocket = window.WebSocket;
-            window.WebSocket = function (url, protocols) {
-                const socket = new originalWebSocket(url, protocols);
-                // 获取当前页面的所有Cookie
-                const cookies = document.cookie.split('; ').map(c => c.split('=')).reduce((acc, [k, v]) => {
-                    acc[k] = v;
-                    return acc;
-                }, {});
-                let cookieHeader = '';
-                for (const key in cookies) {
-                    cookieHeader += `${key}=${cookies[key]}; `;
-                }
-                // 在WebSocket连接打开时发送Cookie头
-                socket.addEventListener('open', () => {
-                    socket.send(`GET ${url} HTTP/1.1\r\nCookie: ${cookieHeader}\r\n\r\n`);
-                });
-                return socket;
-            };
-
             stompClientRef.current = new Client({
-                brokerURL: `ws://localhost:60000/chat-websocket?userId=${currentUserId}`,
+                brokerURL: `ws://${baseUrl}/chat-websocket?userId=${currentUserId}`,
                 connectHeaders: {
                     login: 'guest',
                     passcode: 'guest'
@@ -228,32 +210,43 @@ function MessagesPage() {
 
             stompClientRef.current.onConnect = (frame) => {
                 console.log('Connected: ', frame);
-                stompClientRef.current.subscribe(`/topic/${currentUserId}`, async (message) => {
-                    const data = JSON.parse(message.body);
-                    if (data.type === 'newMessage' && selectedFriend && data.friendId === selectedFriend.id) {
-                        const formData = {
-                            userIdFrom: currentUserId,
-                            userIdTo: selectedFriend.id,
-                            curPage: 1,
-                            pageSize: 20
-                        };
+                stompClientRef.current.subscribe(`/topic/${currentUserId}`, (message) => {
+                    try {
+                        let data;
                         try {
-                            const response = await apiRequest('/message-query', 'POST', formData, navigate);
-                            if (response) {
-                                const messages = response.records.map(record => ({
-                                    text: record.message,
-                                    sender: record.userIdFrom === currentUserId? 'user' : 'other'
-                                }));
-                                setFriendMessages((prevMessages) => ({
-                                   ...prevMessages,
-                                    [selectedFriend.id]: messages
-                                }));
-                            } else {
-                                console.error('重新获取聊天记录失败');
-                            }
-                        } catch (error) {
-                            console.error('Error fetching messages:', error);
+                            data = JSON.parse(message.body);
+                        } catch (jsonError) {
+                            // 如果解析 JSON 失败，将消息作为普通文本处理
+                            data = { type: 'newMessage', content: message.body };
                         }
+                        if (data.type === 'newMessage' && selectedFriend ) {
+                            const formData = {
+                                userIdFrom: currentUserId,
+                                userIdTo: selectedFriend.id,
+                                curPage: 1,
+                                pageSize: 20
+                            };
+                            apiRequest('/message-query', 'POST', formData, navigate)
+                               .then((response) => {
+                                    if (response) {
+                                        const messages = response.records.map((record) => ({
+                                            text: record.message,
+                                            sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                                        }));
+                                        setFriendMessages((prevMessages) => ({
+                                           ...prevMessages,
+                                            [selectedFriend.id]: messages
+                                        }));
+                                    } else {
+                                        console.error('重新获取聊天记录失败');
+                                    }
+                                })
+                               .catch((error) => {
+                                    console.error('Error fetching messages:', error);
+                                });
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing WebSocket message:', parseError);
                     }
                 });
             };
@@ -269,10 +262,16 @@ function MessagesPage() {
                 if (stompClientRef.current) {
                     stompClientRef.current.deactivate();
                 }
-                window.WebSocket = originalWebSocket;
             };
         }
     }, [currentUserId, selectedFriend]);
+
+    useEffect(() => {
+        // 新增：当聊天记录更新时，将滚动条定位到最底部
+        if (chatListRef.current) {
+            chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
+        }
+    }, [friendMessages]);
 
     return (
         <Box
@@ -382,6 +381,7 @@ function MessagesPage() {
                                     </Typography>
                                 </Box>
                                 <List
+                                    ref={chatListRef} // 新增：将 ref 绑定到聊天记录列表
                                     sx={{
                                         maxHeight: 400,
                                         height: 400,
@@ -478,7 +478,7 @@ function MessagesPage() {
                                         sx={{
                                             ml: 4,
                                             mr: 2,
-                                            position:'relative',
+                                            position: 'relative',
                                             pt: 4,
                                             pb: 5,
                                             zIndex: 1
