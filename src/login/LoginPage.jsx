@@ -122,7 +122,7 @@ function LoginPage() {
                             mb: 4
                         }}
                     >
-                        菜菜记
+                        饭菜小记
                     </Typography>
                     <div style={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
                         <Button
