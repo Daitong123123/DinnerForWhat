@@ -19,7 +19,9 @@ import {
     DialogContent,
     DialogContentText,
     Select,
-    MenuItem
+    MenuItem,
+    Stack,
+    Divider
 } from '@mui/material';
 import { useNavigate } from'react-router-dom';
 import apiRequest from './api.js';
@@ -209,22 +211,22 @@ function UnlikePage() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            p: 4,
+            p: 2,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
+            backgroundColor: '#f4f4f4',
             color: '#333'
         }}>
             <Card sx={{
-                p: 4,
+                p: 3,
                 width: '100%',
-                maxWidth: 500,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                background: '#fff',
-                borderRadius: 8,
-                border: '1px solid #ccc'
+                maxWidth: 600,
+                boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                backgroundColor: '#fff',
+                borderRadius: 10,
+                overflow: 'hidden'
             }}>
                 <Typography variant="h4" gutterBottom sx={{
                     background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
@@ -233,7 +235,7 @@ function UnlikePage() {
                     backgroundClip: 'text',
                     textFillColor: 'transparent',
                     textAlign: 'center',
-                    mb: 4
+                    mb: 3
                 }}>
                     喜好管理
                 </Typography>
@@ -247,8 +249,8 @@ function UnlikePage() {
                 <Typography variant="h6" sx={{ mb: 2 }}>
                     不喜欢的菜品
                 </Typography>
-                <TableContainer component={Paper}>
-                    <Table>
+                <TableContainer component={Paper} sx={{ borderRadius: 8, overflow: 'hidden' }}>
+                    <Table sx={{ minWidth: 300 }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell padding="checkbox">
@@ -291,50 +293,54 @@ function UnlikePage() {
                     onChange={handlePageChange}
                     sx={{ mt: 2 }}
                 />
-                <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
+                <Divider sx={{ my: 3 }} />
+                <Typography variant="h6" sx={{ mb: 2 }}>
                     收藏的菜品
                 </Typography>
                 {/* 新增筛选选项 */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Box sx={{ width: 120 }}> {/* 固定筛选框宽度 */}
+                <Stack direction="row" spacing={2} justifyContent="space-between" mb={2}>
+                    <Box sx={{ flex: 1 }}>
                         <Typography sx={{ mr: 1 }}>菜系:</Typography>
                         <Select
                             value={dishFromFilter}
                             onChange={(e) => setDishFromFilter(e.target.value)}
-                            sx={{ width: '100%' }}> {/* 使 Select 组件占满父容器宽度 */}
+                            sx={{ width: '100%' }}
+                        >
                             <MenuItem value="">全部</MenuItem>
                             {dishFromList.map((dishFrom) => (
                                 <MenuItem key={dishFrom} value={dishFrom}>{dishFrom}</MenuItem>
                             ))}
                         </Select>
                     </Box>
-                    <Box sx={{ width: 120 }}> {/* 固定筛选框宽度 */}
+                    <Box sx={{ flex: 1 }}>
                         <Typography sx={{ mr: 1 }}>口味:</Typography>
                         <Select
                             value={tastyFilter}
                             onChange={(e) => setTastyFilter(e.target.value)}
-                            sx={{ width: '100%' }}> {/* 使 Select 组件占满父容器宽度 */}
+                            sx={{ width: '100%' }}
+                        >
                             <MenuItem value="">全部</MenuItem>
                             {tastyList.map((tasty) => (
                                 <MenuItem key={tasty} value={tasty}>{tasty}</MenuItem>
                             ))}
                         </Select>
                     </Box>
-                    <Box sx={{ width: 120 }}> {/* 固定筛选框宽度 */}
+                    <Box sx={{ flex: 1 }}>
                         <Typography sx={{ mr: 1 }}>难度:</Typography>
                         <Select
                             value={complexFilter}
                             onChange={(e) => setComplexFilter(e.target.value)}
-                            sx={{ width: '100%' }}> {/* 使 Select 组件占满父容器宽度 */}
+                            sx={{ width: '100%' }}
+                        >
                             <MenuItem value="">全部</MenuItem>
                             {complexList.map((complex) => (
                                 <MenuItem key={complex} value={complex}>{complex}</MenuItem>
                             ))}
                         </Select>
                     </Box>
-                </Box>
-                <TableContainer component={Paper}>
-                    <Table>
+                </Stack>
+                <TableContainer component={Paper} sx={{ borderRadius: 8, overflow: 'hidden' }}>
+                    <Table sx={{ minWidth: 300 }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell padding="checkbox">

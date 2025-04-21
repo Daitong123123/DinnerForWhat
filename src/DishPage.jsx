@@ -60,6 +60,19 @@ function DishPage() {
         checkLogin();
     }, [navigate]);
 
+    useEffect(() => {
+        // 从 localStorage 中读取数据
+        const savedDishes = localStorage.getItem('dishes');
+        if (savedDishes) {
+            setDishes(JSON.parse(savedDishes));
+        }
+    }, []);
+
+    useEffect(() => {
+        // 将数据保存到 localStorage 中
+        localStorage.setItem('dishes', JSON.stringify(dishes));
+    }, [dishes]);
+
     const handleSubmit = async () => {
         if (!dishNumber || isNaN(parseInt(dishNumber, 10)) || parseInt(dishNumber, 10) > 100 || parseInt(dishNumber, 10) < 1) {
             setError('请输入1到100之间的正整数作为菜的数量');
