@@ -94,7 +94,8 @@ function DishPage() {
         try {
             const response = await apiRequest('/dish', 'POST', formData, navigate);
             if (response) {
-                setDishes(response.data);
+                const newDishes = response.data.map(dish => ({...dish, isLiked: false }));
+                setDishes(newDishes);
             } else {
                 setError(response.message || '请求失败');
             }
@@ -115,6 +116,52 @@ function DishPage() {
                 setDishes(dishes.filter(dish => dish.dishName!== dishName));
             } else {
                 console.error('取消喜欢失败');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleLike = async (dish) => {
+        const formData = {
+            cookBook: {
+                dishFrom: dishTaste,
+                complex: dish.complex,
+                tasty: preference,
+                dishName: dish.dishName,
+                dishStep: dish.dishStep,
+                dishEffect: dish.dishEffect
+            }
+        };
+
+        try {
+            const response = await apiRequest('/add-like', 'POST', formData, navigate);
+            if (response) {
+                setDishes(dishes.map(item =>
+                    item.dishName === dish.dishName? { ...item, isLiked: true } : item
+                ));
+                console.log('收藏成功');
+            } else {
+                console.error('收藏失败');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleUnLikeDelete = async (dish) => {
+        try {
+            const formData = {
+                deleteList: [dish.id]
+            };
+            const response = await apiRequest('/delete-likes', 'POST', formData, navigate);
+            if (response) {
+                setDishes(dishes.map(item =>
+                    item.dishName === dish.dishName? { ...item, isLiked: false } : item
+                ));
+                console.log('取消收藏成功');
+            } else {
+                console.error('取消收藏失败');
             }
         } catch (error) {
             console.error(error);
@@ -378,6 +425,23 @@ function DishPage() {
                                 >
                                     不喜欢
                                 </Button>
+                                {dish.isLiked? (
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        onClick={() => handleUnLikeDelete(dish)}
+                                    >
+                                        已收藏
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        onClick={() => handleLike(dish)}
+                                    >
+                                        收藏
+                                    </Button>
+                                )}
                             </Card>
                         ))}
                     </Box>

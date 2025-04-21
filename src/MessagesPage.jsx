@@ -31,9 +31,8 @@ function MessagesPage() {
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
     const stompClientRef = useRef(null);
-    const chatListRef = useRef(null); // 新增：用于引用聊天记录列表的 ref
+    const chatListRef = useRef(null);
 
-    // 从本地存储获取 userId
     const currentUserId = localStorage.getItem('userId');
 
     const handleFriendSelect = async (friend) => {
@@ -43,7 +42,6 @@ function MessagesPage() {
                 const formData = {
                     userIdFrom: currentUserId,
                     userIdTo: friend.id,
-                    // 假设分页参数默认值
                     curPage: 1,
                     pageSize: 20
                 };
@@ -91,8 +89,6 @@ function MessagesPage() {
                     });
                     setNewMessage('');
 
-                    // 可以在这里添加刷新数据的逻辑
-                    // 例如重新获取聊天记录
                     const formData = {
                         userIdFrom: currentUserId,
                         userIdTo: selectedFriend.id,
@@ -216,10 +212,9 @@ function MessagesPage() {
                         try {
                             data = JSON.parse(message.body);
                         } catch (jsonError) {
-                            // 如果解析 JSON 失败，将消息作为普通文本处理
                             data = { type: 'newMessage', content: message.body };
                         }
-                        if (data.type === 'newMessage' && selectedFriend ) {
+                        if (data.type === 'newMessage' && selectedFriend) {
                             const formData = {
                                 userIdFrom: currentUserId,
                                 userIdTo: selectedFriend.id,
@@ -267,7 +262,6 @@ function MessagesPage() {
     }, [currentUserId, selectedFriend]);
 
     useEffect(() => {
-        // 新增：当聊天记录更新时，将滚动条定位到最底部
         if (chatListRef.current) {
             chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
         }
@@ -277,7 +271,7 @@ function MessagesPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                p: 4,
+                p: { xs: 1, sm: 4 },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -288,7 +282,7 @@ function MessagesPage() {
         >
             <Card
                 sx={{
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                     width: '100%',
                     maxWidth: 800,
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
@@ -325,14 +319,14 @@ function MessagesPage() {
                 </Box>
                 <Box
                     sx={{
-                        display: 'flex',
+                        display: { xs: 'block', sm: 'flex' },
                         width: '100%'
                     }}
                 >
                     <Box
                         sx={{
-                            width: '30%',
-                            borderRight: '1px solid #ccc',
+                            width: { xs: '100%', sm: '30%' },
+                            borderRight: { xs: 'none', sm: '1px solid #ccc' },
                             p: 2
                         }}
                     >
@@ -356,7 +350,7 @@ function MessagesPage() {
                     </Box>
                     <Box
                         sx={{
-                            width: '70%',
+                            width: { xs: '100%', sm: '70%' },
                             p: 2,
                             display: 'flex',
                             flexDirection: 'column',
@@ -381,7 +375,7 @@ function MessagesPage() {
                                     </Typography>
                                 </Box>
                                 <List
-                                    ref={chatListRef} // 新增：将 ref 绑定到聊天记录列表
+                                    ref={chatListRef}
                                     sx={{
                                         maxHeight: 400,
                                         height: 400,
@@ -517,4 +511,4 @@ function MessagesPage() {
     );
 }
 
-export default MessagesPage;
+export default MessagesPage;    
