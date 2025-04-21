@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -11,7 +11,9 @@ import {
     FormControl,
     Avatar,
     Menu,
-    MenuItem as MuiMenuItem
+    MenuItem as MuiMenuItem,
+    Stack,
+    Divider
 } from '@mui/material';
 import { useNavigate } from'react-router-dom';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
@@ -201,7 +203,7 @@ function DishPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                p: 4,
+                p: 2,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -211,14 +213,12 @@ function DishPage() {
             }}
         >
             {user && (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'flex-start',
-                        width: '100%',
-                        mb: 2
-                    }}
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="flex-start"
+                    width="100%"
+                    mb={2}
                 >
                     <Avatar onClick={handleClick} src={user.avatarUrl || ''} />
                     <Typography sx={{ ml: 1 }}>{user.nickname || ''}</Typography>
@@ -233,17 +233,17 @@ function DishPage() {
                     >
                         <MuiMenuItem onClick={handleLogout}>退出</MuiMenuItem>
                     </Menu>
-                </Box>
+                </Stack>
             )}
             <Card
                 sx={{
-                    p: 4,
+                    p: 3,
                     width: '100%',
                     maxWidth: 500,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                     background: '#fff',
-                    borderRadius: 8,
-                    border: '1px solid #ccc'
+                    borderRadius: 10,
+                    overflow: 'hidden'
                 }}
             >
                 <Typography
@@ -256,102 +256,29 @@ function DishPage() {
                         backgroundClip: 'text',
                         textFillColor: 'transparent',
                         textAlign: 'center',
-                        mb: 4
+                        mb: 3
                     }}
                 >
                     菜品推荐
                 </Typography>
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel sx={{ color: '#666' }}>用餐类型</InputLabel>
-                    <Select
-                        value={dishType}
-                        onChange={(e) => setDishType(e.target.value)}
-                        label="用餐类型"
-                        sx={{ color: '#333' }}
-                    >
-                        <MenuItem value="晚餐">晚餐</MenuItem>
-                        <MenuItem value="午餐">午餐</MenuItem>
-                    </Select>
-                </FormControl>
-                <TextField
-                    label="菜的数量"
-                    type="number"
-                    value={dishNumber}
-                    onChange={(e) => setDishNumber(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 3 }}
-                    InputProps={{
-                        sx: { color: '#333' }
-                    }}
-                    InputLabelProps={{
-                        sx: { color: '#666' }
-                    }}
-                />
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel sx={{ color: '#666' }}>菜系</InputLabel>
-                    <Select
-                        value={dishTaste}
-                        onChange={(e) => setDishTaste(e.target.value)}
-                        label="菜系"
-                        sx={{ color: '#333' }}
-                    >
-                        <MenuItem value="四川菜">四川菜</MenuItem>
-                        <MenuItem value="广东菜">广东菜</MenuItem>
-                        <MenuItem value="福建菜">福建菜</MenuItem>
-                        <MenuItem value="江苏菜">江苏菜</MenuItem>
-                        <MenuItem value="湖北菜">湖北菜</MenuItem>
-                        <MenuItem value="江西菜">江西菜</MenuItem>
-                        <MenuItem value="东北菜">东北菜</MenuItem>
-                        <MenuItem value="山东菜">山东菜</MenuItem>
-                        <MenuItem value="广西菜">广西菜</MenuItem>
-                        <MenuItem value="湖南菜">湖南菜</MenuItem>
-                        <MenuItem value="北京菜">北京菜</MenuItem>
-                        <MenuItem value="上海菜">上海菜</MenuItem>
-                        <MenuItem value="云南菜">云南菜</MenuItem>
-                        <MenuItem value="法国菜">法国菜</MenuItem>
-                        <MenuItem value="美国菜">美国菜</MenuItem>
-                        <MenuItem value="泰国菜">泰国菜</MenuItem>
-                        <MenuItem value="日本菜">日本菜</MenuItem>
-                        <MenuItem value="英国菜">英国菜</MenuItem>
-                        <MenuItem value="动画片里出现的菜">动画片</MenuItem>
-                        <MenuItem value="游戏里里出现的菜">游戏</MenuItem>
-                        <MenuItem value="游戏怪物猎人(Monster Hunter)里出现的菜">怪物猎人</MenuItem>
-                        <MenuItem value="游戏饥荒（Dont Starve Together）里出现的菜">饥荒</MenuItem>
-                    </Select>
-                </FormControl>
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel sx={{ color: '#666' }}>口味偏好</InputLabel>
-                    <Select
-                        value={preference}
-                        onChange={(e) => setPreference(e.target.value)}
-                        label="口味偏好"
-                        sx={{ color: '#333' }}
-                    >
-                        <MenuItem value="微辣">微辣</MenuItem>
-                        <MenuItem value="特辣">特辣</MenuItem>
-                        <MenuItem value="麻辣">麻辣</MenuItem>
-                        <MenuItem value="酸辣">酸辣</MenuItem>
-                        <MenuItem value="微甜">微甜</MenuItem>
-                        <MenuItem value="甜">甜</MenuItem>
-                        <MenuItem value="甜辣">甜辣</MenuItem>
-                        <MenuItem value="香辣">香辣</MenuItem>
-                        <MenuItem value="清淡">清淡</MenuItem>
-                    </Select>
-                </FormControl>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mb: 3
-                    }}
-                >
+                <Stack spacing={2}>
+                    <FormControl fullWidth>
+                        <InputLabel sx={{ color: '#666' }}>用餐类型</InputLabel>
+                        <Select
+                            value={dishType}
+                            onChange={(e) => setDishType(e.target.value)}
+                            label="用餐类型"
+                            sx={{ color: '#333' }}
+                        >
+                            <MenuItem value="晚餐">晚餐</MenuItem>
+                            <MenuItem value="午餐">午餐</MenuItem>
+                        </Select>
+                    </FormControl>
                     <TextField
-                        label="菜品制作难度"
-                        placeholder="菜品制作难度"
+                        label="菜的数量"
                         type="number"
-                        value={complexStart}
-                        onChange={(e) => setComplexStart(e.target.value)}
+                        value={dishNumber}
+                        onChange={(e) => setDishNumber(e.target.value)}
                         fullWidth
                         InputProps={{
                             sx: { color: '#333' }
@@ -360,22 +287,89 @@ function DishPage() {
                             sx: { color: '#666' }
                         }}
                     />
-                    <Typography sx={{ color: '#666' }}>-</Typography>
-                    <TextField
-                        label="菜品制作难度"
-                        placeholder="菜品制作难度"
-                        type="number"
-                        value={complexEnd}
-                        onChange={(e) => setComplexEnd(e.target.value)}
-                        fullWidth
-                        InputProps={{
-                            sx: { color: '#333' }
-                        }}
-                        InputLabelProps={{
-                            sx: { color: '#666' }
-                        }}
-                    />
-                </Box>
+                    <FormControl fullWidth>
+                        <InputLabel sx={{ color: '#666' }}>菜系</InputLabel>
+                        <Select
+                            value={dishTaste}
+                            onChange={(e) => setDishTaste(e.target.value)}
+                            label="菜系"
+                            sx={{ color: '#333' }}
+                        >
+                            <MenuItem value="四川菜">四川菜</MenuItem>
+                            <MenuItem value="广东菜">广东菜</MenuItem>
+                            <MenuItem value="福建菜">福建菜</MenuItem>
+                            <MenuItem value="江苏菜">江苏菜</MenuItem>
+                            <MenuItem value="湖北菜">湖北菜</MenuItem>
+                            <MenuItem value="江西菜">江西菜</MenuItem>
+                            <MenuItem value="东北菜">东北菜</MenuItem>
+                            <MenuItem value="山东菜">山东菜</MenuItem>
+                            <MenuItem value="广西菜">广西菜</MenuItem>
+                            <MenuItem value="湖南菜">湖南菜</MenuItem>
+                            <MenuItem value="北京菜">北京菜</MenuItem>
+                            <MenuItem value="上海菜">上海菜</MenuItem>
+                            <MenuItem value="云南菜">云南菜</MenuItem>
+                            <MenuItem value="法国菜">法国菜</MenuItem>
+                            <MenuItem value="美国菜">美国菜</MenuItem>
+                            <MenuItem value="泰国菜">泰国菜</MenuItem>
+                            <MenuItem value="日本菜">日本菜</MenuItem>
+                            <MenuItem value="英国菜">英国菜</MenuItem>
+                            <MenuItem value="动画片里出现的菜">动画片</MenuItem>
+                            <MenuItem value="游戏里里出现的菜">游戏</MenuItem>
+                            <MenuItem value="游戏怪物猎人(Monster Hunter)里出现的菜">怪物猎人</MenuItem>
+                            <MenuItem value="游戏饥荒（Dont Starve Together）里出现的菜">饥荒</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                        <InputLabel sx={{ color: '#666' }}>口味偏好</InputLabel>
+                        <Select
+                            value={preference}
+                            onChange={(e) => setPreference(e.target.value)}
+                            label="口味偏好"
+                            sx={{ color: '#333' }}
+                        >
+                            <MenuItem value="微辣">微辣</MenuItem>
+                            <MenuItem value="特辣">特辣</MenuItem>
+                            <MenuItem value="麻辣">麻辣</MenuItem>
+                            <MenuItem value="酸辣">酸辣</MenuItem>
+                            <MenuItem value="微甜">微甜</MenuItem>
+                            <MenuItem value="甜">甜</MenuItem>
+                            <MenuItem value="甜辣">甜辣</MenuItem>
+                            <MenuItem value="香辣">香辣</MenuItem>
+                            <MenuItem value="清淡">清淡</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <Stack direction="row" alignItems="center" gap={1}>
+                        <TextField
+                            label="菜品制作难度"
+                            placeholder="菜品制作难度"
+                            type="number"
+                            value={complexStart}
+                            onChange={(e) => setComplexStart(e.target.value)}
+                            fullWidth
+                            InputProps={{
+                                sx: { color: '#333' }
+                            }}
+                            InputLabelProps={{
+                                sx: { color: '#666' }
+                            }}
+                        />
+                        <Typography sx={{ color: '#666' }}>-</Typography>
+                        <TextField
+                            label="菜品制作难度"
+                            placeholder="菜品制作难度"
+                            type="number"
+                            value={complexEnd}
+                            onChange={(e) => setComplexEnd(e.target.value)}
+                            fullWidth
+                            InputProps={{
+                                sx: { color: '#333' }
+                            }}
+                            InputLabelProps={{
+                                sx: { color: '#666' }
+                            }}
+                        />
+                    </Stack>
+                </Stack>
                 <Button
                     variant="contained"
                     onClick={handleSubmit}
@@ -388,7 +382,8 @@ function DishPage() {
                         },
                         '&:disabled': {
                             background: '#ccc'
-                        }
+                        },
+                        mt: 3
                     }}
                 >
                     {loading? '请求中...' : '获取菜品'}
@@ -405,17 +400,21 @@ function DishPage() {
                         {error}
                     </Typography>
                 )}
+                <Divider sx={{ my: 3 }} />
                 {dishes.length > 0 && (
-                    <Box sx={{ mt: 4 }}>
+                    <Stack spacing={2}>
                         {dishes.map((dish, index) => (
                             <Card
                                 key={index}
                                 sx={{
-                                    mb: 2,
                                     p: 2,
                                     background: '#f9f9f9',
                                     borderRadius: 8,
-                                    border: '1px solid #ccc'
+                                    border: '1px solid #ccc',
+                                    transition: 'box-shadow 0.3s',
+                                    '&:hover': {
+                                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                                    }
                                 }}
                             >
                                 <Typography variant="h6" sx={{ mb: 1 }}>
@@ -431,33 +430,35 @@ function DishPage() {
                                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
                                     功效: {dish.dishEffect}
                                 </Typography>
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    onClick={() => handleUnlike(dish.dishName)}
-                                >
-                                    不喜欢
-                                </Button>
-                                {dish.isLiked? (
+                                <Stack direction="row" spacing={1}>
                                     <Button
                                         variant="outlined"
-                                        color="primary"
-                                        onClick={() => handleUnLikeDelete(dish)}
+                                        color="error"
+                                        onClick={() => handleUnlike(dish.dishName)}
                                     >
-                                        已收藏
+                                        不喜欢
                                     </Button>
-                                ) : (
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        onClick={() => handleLike(dish)}
-                                    >
-                                        收藏
-                                    </Button>
-                                )}
+                                    {dish.isLiked? (
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={() => handleUnLikeDelete(dish)}
+                                        >
+                                            已收藏
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={() => handleLike(dish)}
+                                        >
+                                            收藏
+                                        </Button>
+                                    )}
+                                </Stack>
                             </Card>
                         ))}
-                    </Box>
+                    </Stack>
                 )}
             </Card>
             <BottomNavigationBar />

@@ -217,7 +217,8 @@ function UnlikePage() {
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: '#f4f4f4',
-            color: '#333'
+            color: '#333',
+            pb: 6 // 添加底部内边距，根据实际情况调整数值
         }}>
             <Card sx={{
                 p: 3,
