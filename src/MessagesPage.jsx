@@ -9,9 +9,17 @@ import {
     Button,
     List,
     ListItem,
+    ListItemText,
     Avatar,
     Divider,
-    IconButton
+    IconButton,
+    Tabs,
+    Tab,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useNavigate } from'react-router-dom';
@@ -27,6 +35,15 @@ function MessagesPage() {
     const [newMessage, setNewMessage] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const navigate = useNavigate();
+    const [selfNickname, setSelfNickname] = useState('');
+    const [selfAvatar, setSelfAvatar] = useState('U');
+    const [selectedTab, setSelectedTab] = useState(0);
+    const [friendRequests, setFriendRequests] = useState([]);
+    const [openAddFriendDialog, setOpenAddFriendDialog] = useState(false);
+    const [addFriendUserId, setAddFriendUserId] = useState('');
+    const [addFriendContent, setAddFriendContent] = useState('');
+    const [openRequestDetail, setOpenRequestDetail] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
 
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
@@ -165,10 +182,11 @@ function MessagesPage() {
                             };
                             const friendInfoResponse = await apiRequest('/friend-info', 'GET', friendInfoFormData, navigate);
                             if (friendInfoResponse) {
+                                const firstChar = friendInfoResponse.userNickName.charAt(0).toUpperCase();
                                 updatedFriends.push({
                                     id: friendId,
                                     name: friendInfoResponse.userNickName,
-                                    avatar: 'U'
+                                    avatar: firstChar
                                 });
                             }
                         }
@@ -186,6 +204,61 @@ function MessagesPage() {
             }
         };
         fetchFriends();
+    }, [currentUserId]);
+
+    useEffect(() => {
+        const fetchSelfInfo = async () => {
+            if (currentUserId) {
+                try {
+                    const formData = {
+                        userId: currentUserId
+                    };
+                    const response = await apiRequest('/friend-info', 'GET', formData, navigate);
+                    if (response) {
+                        setSelfNickname(response.userNickName);
+                        const firstChar = response.userNickName.charAt(0).toUpperCase();
+                        setSelfAvatar(firstChar);
+                    } else {
+                        console.error('获取自己的信息失败');
+                    }
+                } catch (error) {
+                    console.error('Error fetching self info:', error);
+                }
+            }
+        };
+        fetchSelfInfo();
+    }, [currentUserId]);
+
+    useEffect(() => {
+        const fetchFriendRequests = async () => {
+            if (currentUserId) {
+                try {
+                    const formData = {
+                        userId: currentUserId
+                    };
+                    const response = await apiRequest('/friend-request-query', 'POST', formData, navigate);
+                    if (response && response.code === '200') {
+                        const requestsWithNicknames = await Promise.all(
+                            response.friendToBeRequestList.map(async (request) => {
+                                const fromInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestFrom }, navigate);
+                                const toInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestTo }, navigate);
+                                return {
+                                   ...request,
+                                    fromNickname: fromInfo? fromInfo.userNickName : '未知用户',
+                                    toNickname: toInfo? toInfo.userNickName : '未知用户'
+                                };
+                            })
+                        );
+                        setFriendRequests(requestsWithNicknames);
+                    } else {
+                        console.error('获取好友申请列表失败');
+                    }
+                } catch (error) {
+                    console.error('Error fetching friend requests:', error);
+                }
+            }
+        };
+        fetchFriendRequests();
     }, [currentUserId]);
 
     useEffect(() => {
@@ -239,6 +312,32 @@ function MessagesPage() {
                                .catch((error) => {
                                     console.error('Error fetching messages:', error);
                                 });
+                        } else if (['friendRequest', 'friendRequestAgree', 'friendRequestDisagree'].includes(data.type)) {
+                            const formData = {
+                                userId: currentUserId
+                            };
+                            apiRequest('/friend-request-query', 'POST', formData, navigate)
+                               .then(async (response) => {
+                                    if (response && response.code === '200') {
+                                        const requestsWithNicknames = await Promise.all(
+                                            response.friendToBeRequestList.map(async (request) => {
+                                                const fromInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestFrom }, navigate);
+                                                const toInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestTo }, navigate);
+                                                return {
+                                                   ...request,
+                                                    fromNickname: fromInfo? fromInfo.userNickName : '未知用户',
+                                                    toNickname: toInfo? toInfo.userNickName : '未知用户'
+                                                };
+                                            })
+                                        );
+                                        setFriendRequests(requestsWithNicknames);
+                                    } else {
+                                        console.error('获取好友申请列表失败');
+                                    }
+                                })
+                               .catch((error) => {
+                                    console.error('Error fetching friend requests:', error);
+                                });
                         }
                     } catch (parseError) {
                         console.error('Error parsing WebSocket message:', parseError);
@@ -266,6 +365,91 @@ function MessagesPage() {
             chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
         }
     }, [friendMessages]);
+
+    const handleAddFriend = async () => {
+        if (addFriendUserId && currentUserId) {
+            try {
+                const formData = {
+                    userId: currentUserId,
+                    friendId: addFriendUserId,
+                    content: addFriendContent
+                };
+                const response = await apiRequest('/friend-request', 'POST', formData, navigate);
+                if (response && response.code === '200') {
+                    alert('发送申请成功');
+                    setOpenAddFriendDialog(false);
+                    setAddFriendUserId('');
+                    setAddFriendContent('');
+                } else {
+                    console.error('发送好友申请失败:', response? response.message : '无响应信息');
+                }
+            } catch (error) {
+                console.error('发送好友申请请求出错:', error);
+            }
+        }
+    };
+
+    const handleAgreeRequest = async (request) => {
+        if (currentUserId) {
+            try {
+                const formData = {
+                    userId: currentUserId,
+                    friendId: request.requestFrom,
+                    content: request.content
+                };
+                const response = await apiRequest('/friend-request-agree', 'POST', formData, navigate);
+                if (response && response.code === '200') {
+                    const newRequests = friendRequests.filter(req => req.requestFrom!== request.requestFrom);
+                    setFriendRequests(newRequests);
+                    setOpenRequestDetail(false);
+                } else {
+                    console.error('同意好友申请失败:', response? response.message : '无响应信息');
+                }
+            } catch (error) {
+                console.error('同意好友申请请求出错:', error);
+            }
+        }
+    };
+
+    const handleDisagreeRequest = async (request) => {
+        if (currentUserId) {
+            try {
+                const formData = {
+                    userId: currentUserId,
+                    friendId: request.requestFrom,
+                    content: request.content
+                };
+                const response = await apiRequest('/friend-request-disagree', 'POST', formData, navigate);
+                if (response && response.code === '200') {
+                    const newRequests = friendRequests.filter(req => req.requestFrom!== request.requestFrom);
+                    setFriendRequests(newRequests);
+                    setOpenRequestDetail(false);
+                } else {
+                    console.error('拒绝好友申请失败:', response? response.message : '无响应信息');
+                }
+            } catch (error) {
+                console.error('拒绝好友申请请求出错:', error);
+            }
+        }
+    };
+
+    const handleTabChange = (event, newValue) => {
+        setSelectedTab(newValue);
+    };
+
+    const handleRequestClick = (request) => {
+        setSelectedRequest(request);
+        setOpenRequestDetail(true);
+    };
+
+    const getStatusText = (status) => {
+        if (status === '2') {
+            return '对方已拒绝';
+        } else if (status === '1') {
+            return '对方已同意';
+        }
+        return '等待对方回应';
+    };
 
     return (
         <Box
@@ -299,22 +483,16 @@ function MessagesPage() {
                         mb: 4
                     }}
                 >
-                    <Typography
-                        variant="h4"
-                        gutterBottom
-                        sx={{
-                            background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            textFillColor: 'transparent',
-                            textAlign: 'center'
-                        }}
+                    <Tabs
+                        value={selectedTab}
+                        onChange={handleTabChange}
+                        aria-label="friend tabs"
                     >
-                        消息页面
-                    </Typography>
-                    <IconButton>
-                        <ChatBubbleOutlineIcon />
+                        <Tab label="我的好友" />
+                        <Tab label="好友申请" />
+                    </Tabs>
+                    <IconButton onClick={() => setOpenAddFriendDialog(true)}>
+                        +
                     </IconButton>
                 </Box>
                 <Box
@@ -331,20 +509,100 @@ function MessagesPage() {
                         }}
                     >
                         <List>
-                            {friends.map((friend) => (
-                                <ListItem
-                                    key={friend.id}
-                                    onClick={() => handleFriendSelect(friend)}
-                                    sx={{ cursor: 'pointer', py: 2, display: 'flex', width: '100%' }}
-                                >
-                                    <Avatar sx={{ mr: 1 }}>{friend.avatar}</Avatar>
-                                    <Typography>{friend.name}</Typography>
-                                </ListItem>
-                            ))}
-                            {friends.length === 0 && (
-                                <ListItem sx={{ py: 2, display: 'flex', width: '100%' }}>
-                                    <Typography>暂无好友</Typography>
-                                </ListItem>
+                            {selectedTab === 0? (
+                                friends.map((friend) => (
+                                    <ListItem
+                                        key={friend.id}
+                                        onClick={() => handleFriendSelect(friend)}
+                                        sx={{ cursor: 'pointer', py: 2, display: 'flex', width: '100%' }}
+                                    >
+                                        <Avatar sx={{ mr: 1 }}>{friend.avatar}</Avatar>
+                                        <Typography>{friend.name}</Typography>
+                                    </ListItem>
+                                ))
+                            ) : (
+                                <>
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                        好友请求
+                                    </Typography>
+                                    {friendRequests.filter(req => req.requestTo === currentUserId).length === 0 && (
+                                        <ListItem sx={{ py: 2, display: 'flex', width: '100%' }}>
+                                            <Typography>暂无好友请求</Typography>
+                                        </ListItem>
+                                    )}
+                                    {friendRequests.filter(req => req.requestTo === currentUserId).map((request) => (
+                                        <ListItem
+                                            key={request.requestFrom}
+                                            onClick={() => handleRequestClick(request)}
+                                            sx={{ 
+                                                cursor: 'pointer', 
+                                                py: 2, 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'space-between',
+                                                width: '100%' 
+                                            }}
+                                        >
+                                            <Avatar sx={{ mr: 2 }}>{request.fromNickname.charAt(0).toUpperCase()}</Avatar>
+                                            <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+                                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {request.fromNickname}
+                                                </Typography>
+                                                <Typography
+                                                    sx={{
+                                                        color: 'gray',
+                                                        fontSize: '0.8rem',
+                                                        whiteSpace: 'nowrap', 
+                                                        overflow: 'hidden', 
+                                                        textOverflow: 'ellipsis'
+                                                    }}
+                                                >
+                                                    备注: {request.content}
+                                                </Typography>
+                                            </Box>
+                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                <Button variant="outlined" color="primary" onClick={() => handleAgreeRequest(request)}>
+                                                    同意
+                                                </Button>
+                                                <Button variant="outlined" color="secondary" onClick={() => handleDisagreeRequest(request)}>
+                                                    拒绝
+                                                </Button>
+                                            </Box>
+                                        </ListItem>
+                                    ))}
+                                    <Divider sx={{ my: 2 }} />
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                        我的申请
+                                    </Typography>
+                                    {friendRequests.filter(req => req.requestFrom === currentUserId).length === 0 && (
+                                        <ListItem sx={{ py: 2, display: 'flex', width: '100%' }}>
+                                            <Typography>暂无我的申请</Typography>
+                                        </ListItem>
+                                    )}
+                                    {friendRequests.filter(req => req.requestFrom === currentUserId).map((request) => (
+                                        <ListItem
+                                            key={request.requestTo}
+                                            onClick={() => handleRequestClick(request)}
+                                            sx={{ 
+                                                cursor: 'pointer', 
+                                                py: 2, 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'space-between',
+                                                width: '100%' 
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, overflow: 'hidden' }}>
+                                                <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>申请添加</Typography>
+                                                <Avatar sx={{ mx: 1 }}>{request.toNickname.charAt(0).toUpperCase()}</Avatar>
+                                                <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>为好友</Typography>
+                                            </Box>
+                                            <Typography sx={{ color: request.status === '2'? 'red' : 'green' }}>
+                                                {getStatusText(request.status)}
+                                            </Typography>
+                                        </ListItem>
+                                    ))}
+                                </>
                             )}
                         </List>
                     </Box>
@@ -358,7 +616,7 @@ function MessagesPage() {
                             minHeight: 560
                         }}
                     >
-                        {selectedFriend && (
+                        {selectedTab === 0 && selectedFriend && (
                             <>
                                 <Box
                                     sx={{
@@ -400,9 +658,9 @@ function MessagesPage() {
                                             }}
                                         >
                                             {message.sender === 'user' ? (
-                                                <Avatar sx={{ marginLeft: 1 }}>U</Avatar>
+                                                <Avatar sx={{ marginLeft: 1 }}>{selfAvatar}</Avatar>
                                             ) : (
-                                                <Avatar sx={{ marginRight: 1 }}>O</Avatar>
+                                                <Avatar sx={{ marginRight: 1 }}>{selectedFriend.avatar}</Avatar>
                                             )}
                                             <Box
                                                 sx={{
@@ -506,6 +764,75 @@ function MessagesPage() {
                     </Box>
                 </Box>
             </Card>
+            <Dialog
+                open={openAddFriendDialog}
+                onClose={() => setOpenAddFriendDialog(false)}
+                aria-labelledby="form-dialog-title"
+            >
+                <DialogTitle id="form-dialog-title">添加好友</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        请输入对方的用户 ID 和申请备注
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        id="userId"
+                        label="用户 ID"
+                        type="text"
+                        fullWidth
+                        value={addFriendUserId}
+                        onChange={(e) => setAddFriendUserId(e.target.value)}
+                    />
+                    <TextField
+                        margin="dense"
+                        id="content"
+                        label="申请备注"
+                        type="text"
+                        fullWidth
+                        value={addFriendContent}
+                        onChange={(e) => setAddFriendContent(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenAddFriendDialog(false)} color="primary">
+                        取消
+                    </Button>
+                    <Button onClick={handleAddFriend} color="primary">
+                        发送申请
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={openRequestDetail}
+                onClose={() => setOpenRequestDetail(false)}
+                aria-labelledby="request-detail-title"
+            >
+                <DialogTitle id="request-detail-title">好友申请详情</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        申请人: {selectedRequest?.fromNickname}
+                    </DialogContentText>
+                    <DialogContentText>
+                        申请备注: {selectedRequest?.content}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    {selectedRequest?.requestTo === currentUserId && (
+                        <>
+                            <Button onClick={() => handleAgreeRequest(selectedRequest)} color="primary">
+                                同意
+                            </Button>
+                            <Button onClick={() => handleDisagreeRequest(selectedRequest)} color="primary">
+                                拒绝
+                            </Button>
+                        </>
+                    )}
+                    <Button onClick={() => setOpenRequestDetail(false)} color="primary">
+                        关闭
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <BottomNavigationBar />
         </Box>
     );

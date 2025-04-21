@@ -7,6 +7,8 @@ import LoginPage from './login/LoginPage';
 import RegisterPage from './login/RegisterPage';
 import PhoneBindingPage from './login/PhoneBindingPage';
 import MessagesPage from './MessagesPage';
+import UserInfoPage from './UserInfoPage';
+
 
 const AppRoutes = () => {
     return (
@@ -18,6 +20,7 @@ const AppRoutes = () => {
             <Route path="/unlike" element={<UnlikePage />} />
             <Route path="/dish" element={<DishPage />} />
             <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/user" element={<UserInfoPage />} />
             <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
     );
