@@ -8,6 +8,7 @@ import RegisterPage from './login/RegisterPage';
 import PhoneBindingPage from './login/PhoneBindingPage';
 import MessagesPage from './MessagesPage';
 import UserInfoPage from './UserInfoPage';
+import ModelManagementPage from './ModelManagerPage';
 
 
 const AppRoutes = () => {
@@ -16,11 +17,12 @@ const AppRoutes = () => {
             <Route path="/" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/phone-binding" element={<PhoneBindingPage />} />
-            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/admin/upload" element={<UploadPage />} />
             <Route path="/unlike" element={<UnlikePage />} />
             <Route path="/dish" element={<DishPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/user" element={<UserInfoPage />} />
+            <Route path="/admin/model" element={<ModelManagementPage />} />
             <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
     );
