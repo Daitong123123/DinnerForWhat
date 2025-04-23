@@ -12,6 +12,8 @@ import {
     FormControl,
     LinearProgress
 } from '@mui/material';
+import { readdir, readFile, stat } from 'fs/promises';
+import { join } from 'path';
 
 function UploadPage() {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -23,9 +25,40 @@ function UploadPage() {
     const [fileType, setFileType] = useState('backend');
     const [uploadType, setUploadType] = useState('chunk');
     const [isCancelled, setIsCancelled] = useState(false);
+    const [folderPath, setFolderPath] = useState('');
 
-    const handleFileChange = (event) => {
-        setSelectedFile(event.target.files[0]);
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.type === 'application/x-directory') {
+                const files = await readDirectory(file.path);
+                setSelectedFile(files);
+            } else {
+                setSelectedFile([file]);
+            }
+        } else {
+            setSelectedFile(null);
+        }
+    };
+
+    const readDirectory = async (dirPath) => {
+        const files = [];
+        const entries = await readdir(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+            const filePath = join(dirPath, entry.name);
+            const stats = await stat(filePath);
+            if (stats.isDirectory()) {
+                const subFiles = await readDirectory(filePath);
+                files.push(...subFiles);
+            } else {
+                files.push({
+                    name: filePath.replace(dirPath + '/', ''),
+                    path: filePath,
+                    size: stats.size
+                });
+            }
+        }
+        return files;
     };
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -37,85 +70,106 @@ function UploadPage() {
             setUploadError('');
             setIsCancelled(false);
 
-            if (uploadType === 'chunk') {
-                const chunkSize = parseInt(chunkSizeInput, 10) * 1024;
-                const totalChunks = Math.ceil(selectedFile.size / chunkSize);
+            const totalFiles = selectedFile.length;
+            let currentFileIndex = 0;
 
-                for (let i = 0; i < totalChunks; i++) {
-                    if (isCancelled) {
-                        setUploadError('用户取消上传');
-                        setUploading(false);
-                        return;
-                    }
-                    setProgress(Math.round((i / totalChunks) * 100));
-                    let retryCount = 0;
-                    let uploadSuccessForChunk = false;
-                    while (retryCount < 60 && !uploadSuccessForChunk) {
+            for (const fileInfo of selectedFile) {
+                if (isCancelled) {
+                    setUploadError('用户取消上传');
+                    setUploading(false);
+                    return;
+                }
+
+                const file = {
+                    name: fileInfo.name,
+                    size: fileInfo.size
+                };
+
+                if (uploadType === 'chunk') {
+                    const chunkSize = parseInt(chunkSizeInput, 10) * 1024;
+                    const totalChunks = Math.ceil(file.size / chunkSize);
+
+                    for (let i = 0; i < totalChunks; i++) {
                         if (isCancelled) {
                             setUploadError('用户取消上传');
                             setUploading(false);
                             return;
                         }
-                        const start = i * chunkSize;
-                        const end = Math.min(start + chunkSize, selectedFile.size);
-                        const chunk = selectedFile.slice(start, end);
-
-                        const formData = new FormData();
-                        formData.append('chunk', chunk);
-                        formData.append('filename', selectedFile.name);
-                        formData.append('chunkIndex', i);
-                        formData.append('totalChunks', totalChunks);
-                        formData.append('fileType', fileType);
-                        formData.append('uploadType', uploadType);
-
-                        try {
-                            const response = await fetch('http://dinner.daitong.xyz:5000/upload-chunk', {
-                                method: 'POST',
-                                body: formData
-                            });
-
-                            if (response.ok) {
-                                uploadSuccessForChunk = true;
-                            } else {
-                                throw new Error(`上传第 ${i + 1} 片失败`);
+                        setProgress(Math.round(((currentFileIndex * totalChunks + i) / (totalFiles * totalChunks)) * 100));
+                        let retryCount = 0;
+                        let uploadSuccessForChunk = false;
+                        while (retryCount < 60 &&!uploadSuccessForChunk) {
+                            if (isCancelled) {
+                                setUploadError('用户取消上传');
+                                setUploading(false);
+                                return;
                             }
-                        } catch (error) {
-                            console.error(error);
-                            if (retryCount < 240) {
-                                await sleep(5000);
+                            const start = i * chunkSize;
+                            const end = Math.min(start + chunkSize, file.size);
+                            const chunkData = await readFile(fileInfo.path).then(data => data.slice(start, end));
+
+                            const formData = new FormData();
+                            formData.append('chunk', chunkData);
+                            formData.append('filename', file.name);
+                            formData.append('chunkIndex', i);
+                            formData.append('totalChunks', totalChunks);
+                            formData.append('fileType', fileType);
+                            formData.append('uploadType', uploadType);
+                            formData.append('folderPath', folderPath);
+
+                            try {
+                                const response = await fetch('http://dinner.daitong.xyz:5000/upload-chunk', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+
+                                if (response.ok) {
+                                    uploadSuccessForChunk = true;
+                                } else {
+                                    throw new Error(`上传第 ${i + 1} 片失败`);
+                                }
+                            } catch (error) {
+                                console.error(error);
+                                if (retryCount < 240) {
+                                    await sleep(5000);
+                                }
+                                retryCount++;
                             }
-                            retryCount++;
+                        }
+
+                        if (!uploadSuccessForChunk) {
+                            setUploadError(`第 ${i + 1} 片上传失败，达到最大重试次数`);
+                            setUploading(false);
+                            return;
                         }
                     }
+                } else {
+                    const fileData = await readFile(fileInfo.path);
+                    const formData = new FormData();
+                    formData.append('file', fileData);
+                    formData.append('filename', file.name);
+                    formData.append('fileType', fileType);
+                    formData.append('uploadType', uploadType);
+                    formData.append('folderPath', folderPath);
 
-                    if (!uploadSuccessForChunk) {
-                        setUploadError(`第 ${i + 1} 片上传失败，达到最大重试次数`);
+                    try {
+                        const response = await fetch('http://47.108.130.95:5000/upload-chunk', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('直接上传失败');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        setUploadError('直接上传失败');
                         setUploading(false);
                         return;
                     }
                 }
-            } else {
-                const formData = new FormData();
-                formData.append('file', selectedFile);
-                formData.append('filename', selectedFile.name);
-                formData.append('fileType', fileType);
-                formData.append('uploadType', uploadType);
 
-                try {
-                    const response = await fetch('http://47.108.130.95:5000/upload-chunk', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('直接上传失败');
-                    }
-                } catch (error) {
-                    console.error(error);
-                    setUploadError('直接上传失败');
-                    setUploading(false);
-                    return;
-                }
+                currentFileIndex++;
             }
 
             setUploadSuccess(true);
@@ -184,10 +238,10 @@ function UploadPage() {
                         }}
                     >
                         选择文件
-                        <input type="file" hidden onChange={handleFileChange} />
+                        <input type="file" hidden onChange={handleFileChange} webkitdirectory /> {/* 添加 webkitdirectory 属性支持文件夹选择 */}
                     </Button>
                     <Typography variant="caption" sx={{ color: '#777' }}>
-                        {selectedFile ? selectedFile.name : '未选择文件'}
+                        {selectedFile? selectedFile.length > 1? `${selectedFile.length} 个文件` : selectedFile[0].name : '未选择文件'}
                     </Typography>
                 </FormControl>
                 <TextField
@@ -228,10 +282,24 @@ function UploadPage() {
                         <MenuItem value="direct">直接上传</MenuItem>
                     </Select>
                 </FormControl>
+                <TextField
+                    label="文件夹路径（可选）"
+                    type="text"
+                    value={folderPath}
+                    onChange={(e) => setFolderPath(e.target.value)}
+                    fullWidth
+                    sx={{ mb: 3 }}
+                    InputProps={{
+                        sx: { color: '#333' }
+                    }}
+                    InputLabelProps={{
+                        sx: { color: '#777' }
+                    }}
+                />
                 <Button
                     variant="contained"
                     onClick={handleUpload}
-                    disabled={uploading || !selectedFile}
+                    disabled={uploading ||!selectedFile}
                     fullWidth
                     sx={{
                         background: 'linear-gradient(45deg, #64B5F6, #42A5F5)',
@@ -243,7 +311,7 @@ function UploadPage() {
                         }
                     }}
                 >
-                    {uploading ? '上传中...' : '上传 JAR 包'}
+                    {uploading? '上传中...' : '上传文件/文件夹'}
                 </Button>
                 {uploading && (
                     <Button
@@ -267,7 +335,7 @@ function UploadPage() {
                 )}
                 {uploadSuccess && (
                     <Typography color="success.main" align="center" sx={{ mt: 2 }}>
-                        文件上传成功
+                        文件/文件夹上传成功
                     </Typography>
                 )}
                 {uploadType === 'chunk' && uploading && (
@@ -299,4 +367,4 @@ function UploadPage() {
     );
 }
 
-export default UploadPage;    
+export default UploadPage;

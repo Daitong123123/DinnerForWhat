@@ -184,7 +184,6 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
 function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack }) {
     const chatListRef = useRef(null);
     const inputBoxRef = useRef(null);
-    const [navbarHeight, setNavbarHeight] = useState(0);
 
     useEffect(() => {
         if (chatListRef.current) {
@@ -192,26 +191,15 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
         }
     }, [friendMessages]);
 
-    useEffect(() => {
-        const navbar = document.querySelector('.MuiBottomNavigation-root'); 
-        if (navbar) {
-            setNavbarHeight(navbar.offsetHeight);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (inputBoxRef.current && navbarHeight > 0) {
-            inputBoxRef.current.style.bottom = `${navbarHeight}px`;
-        }
-    }, [navbarHeight]);
-
     return (
         <Box
             sx={{
                 width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: '#f9f9f9'
+                backgroundColor: '#f9f9f9',
+                position: 'relative',
+                height: '100vh'
             }}
         >
             <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
@@ -229,10 +217,10 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                 sx={{
                     flexGrow: 1,
                     overflowY: 'auto',
-                    // 增大内边距
-                    padding: '24px', 
+                    padding: '24px',
                     display: 'flex',
-                    flexDirection: 'column'
+                    flexDirection: 'column',
+                    height: 'calc(100vh - 120px)' // 减去 AppBar 和输入框的高度
                 }}
             >
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
@@ -255,8 +243,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                                 backgroundColor: message.sender === 'user'? '#DCF8C6' : '#E5E5EA',
                                 borderRadius: 8,
                                 padding: '8px',
-                                // 增大最大宽度
-                                maxWidth: '80%', 
+                                maxWidth: '80%',
                                 wordBreak: 'break-word',
                                 whiteSpace: 'pre-wrap',
                                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
@@ -275,7 +262,10 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     backgroundColor: '#fff',
                     display: 'flex',
                     alignItems: 'center',
-                    position: 'relative',
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                     zIndex: 1
                 }}
             >
@@ -328,8 +318,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                             borderWidth: '1px',
                             borderRadius: '4px'
                         },
-                        // 减少高度
-                        height: 32, 
+                        height: 32,
                         padding: '4px'
                     }}
                     inputProps={{
@@ -909,7 +898,7 @@ function MessagesPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <BottomNavigationBar />
+            {!selectedFriend && <BottomNavigationBar />}
         </Box>
     );
 }
