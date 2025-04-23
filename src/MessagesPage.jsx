@@ -181,11 +181,27 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
 // 聊天页面组件
 function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef }) {
     const chatListRef = useRef(null);
+    const inputBoxRef = useRef(null);
+    const [navbarHeight, setNavbarHeight] = useState(0);
+
     useEffect(() => {
         if (chatListRef.current) {
             chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
         }
     }, [friendMessages]);
+
+    useEffect(() => {
+        const navbar = document.querySelector('.MuiBottomNavigation-root'); // 根据实际导航栏的类名调整
+        if (navbar) {
+            setNavbarHeight(navbar.offsetHeight);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (inputBoxRef.current && navbarHeight > 0) {
+            inputBoxRef.current.style.bottom = `${navbarHeight}px`;
+        }
+    }, [navbarHeight]);
 
     return (
         <Box
@@ -255,6 +271,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         ))}
                     </List>
                     <Box
+                        ref={inputBoxRef}
                         sx={{
                             padding: '16px',
                             borderTop: '1px solid #e0e0e0',
