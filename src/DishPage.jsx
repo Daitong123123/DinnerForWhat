@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from'react';
 import {
     Box,
     Typography,
@@ -31,6 +31,7 @@ function DishPage() {
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [userNickName, setUserNickName] = useState('');
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -53,9 +54,9 @@ function DishPage() {
             if (cookie) {
                 const sessionId = cookie[1];
                 setUser({ sessionId });
-                console.log('获取到的 sessionId:', sessionId);
+                console.log('获取到的sessionId:', sessionId);
             } else {
-                console.log('未获取到 sessionId，跳转到登录页');
+                console.log('未获取到sessionId，跳转到登录页');
                 navigate('/');
             }
         };
@@ -63,7 +64,23 @@ function DishPage() {
     }, [navigate]);
 
     useEffect(() => {
-        // 从 localStorage 中读取数据
+        const storedUserId = localStorage.getItem('userId');
+        if (storedUserId) {
+            const fetchUserNickName = async () => {
+                try {
+                    const response = await apiRequest(`/friend-info?userId=${storedUserId}`, 'GET', null, navigate);
+                    if (response) {
+                        setUserNickName(response.userNickName || response.userName);
+                    }
+                } catch (error) {
+                    console.error('获取用户昵称失败', error);
+                }
+            };
+            fetchUserNickName();
+        }
+    }, [navigate]);
+
+    useEffect(() => {
         const savedDishes = localStorage.getItem('dishes');
         if (savedDishes) {
             setDishes(JSON.parse(savedDishes));
@@ -71,7 +88,6 @@ function DishPage() {
     }, []);
 
     useEffect(() => {
-        // 将数据保存到 localStorage 中
         localStorage.setItem('dishes', JSON.stringify(dishes));
     }, [dishes]);
 
@@ -153,7 +169,7 @@ function DishPage() {
             const response = await apiRequest('/add-like', 'POST', formData, navigate);
             if (response) {
                 setDishes(dishes.map(item =>
-                    item.dishName === dish.dishName? { ...item, isLiked: true } : item
+                    item.dishName === dish.dishName? {...item, isLiked: true } : item
                 ));
                 console.log('收藏成功');
             } else {
@@ -172,7 +188,7 @@ function DishPage() {
             const response = await apiRequest('/delete-likes', 'POST', formData, navigate);
             if (response) {
                 setDishes(dishes.map(item =>
-                    item.dishName === dish.dishName? { ...item, isLiked: false } : item
+                    item.dishName === dish.dishName? {...item, isLiked: false } : item
                 ));
                 console.log('取消收藏成功');
             } else {
@@ -208,8 +224,9 @@ function DishPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
-                color: '#333'
+                backgroundColor: '#f4f4f4',
+                color: '#333',
+                pb: 6
             }}
         >
             {user && (
@@ -221,9 +238,8 @@ function DishPage() {
                     mb={2}
                 >
                     <Avatar onClick={handleClick} src={user.avatarUrl || ''} />
-                    <Typography sx={{ ml: 1 }}>{user.nickname || ''}</Typography>
                     <Typography sx={{ ml: 1, color: 'black', fontSize: '12px' }}>
-                        {user.nickname || ''}，你好
+                        {userNickName}，你好
                     </Typography>
                     <Menu
                         id="simple-menu"
@@ -239,11 +255,15 @@ function DishPage() {
                 sx={{
                     p: 3,
                     width: '100%',
-                    maxWidth: 500,
+                    maxWidth: 600,
                     boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                    background: '#fff',
+                    backgroundColor: '#fff',
                     borderRadius: 10,
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    '@media (max-width: 600px)': {
+                        p: 2,
+                        maxWidth: '90%'
+                    }
                 }}
             >
                 <Typography
@@ -414,6 +434,9 @@ function DishPage() {
                                     transition: 'box-shadow 0.3s',
                                     '&:hover': {
                                         boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                                    },
+                                    '@media (max-width: 600px)': {
+                                        width: '100%'
                                     }
                                 }}
                             >
@@ -467,3 +490,4 @@ function DishPage() {
 }
 
 export default DishPage;
+    
