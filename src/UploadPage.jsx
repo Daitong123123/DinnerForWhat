@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 
 function UploadPage() {
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [selectedFileOrFolder, setSelectedFileOrFolder] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [uploadError, setUploadError] = useState('');
@@ -26,22 +26,17 @@ function UploadPage() {
     const [folderPath, setFolderPath] = useState('');
 
     const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.type === 'application/x-directory') {
-                // 处理文件夹选择，这里简单示例为记录文件夹对象
-                setSelectedFile([file]);
-            } else {
-                setSelectedFile([file]);
-            }
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            setSelectedFileOrFolder([...files]);
         } else {
-            setSelectedFile(null);
+            setSelectedFileOrFolder(null);
         }
     };
 
     const readDirectoryFiles = async (directory) => {
-        const reader = new FileReader();
         const files = [];
+        const reader = new FileReader();
 
         const readEntries = async (dirEntry) => {
             const entries = await dirEntry.entries();
@@ -63,19 +58,19 @@ function UploadPage() {
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     const handleUpload = async () => {
-        if (selectedFile) {
+        if (selectedFileOrFolder) {
             setUploading(true);
             setUploadSuccess(false);
             setUploadError('');
             setIsCancelled(false);
 
             let filesToUpload = [];
-            for (const file of selectedFile) {
-                if (file.type === 'application/x-directory') {
-                    const dirFiles = await readDirectoryFiles(file);
+            for (const item of selectedFileOrFolder) {
+                if (item.type === 'application/x-directory') {
+                    const dirFiles = await readDirectoryFiles(item);
                     filesToUpload = filesToUpload.concat(dirFiles);
                 } else {
-                    filesToUpload.push(file);
+                    filesToUpload.push(item);
                 }
             }
 
@@ -240,11 +235,20 @@ function UploadPage() {
                             }
                         }}
                     >
-                        选择文件
-                        <input type="file" hidden onChange={handleFileChange} webkitdirectory />
+                        选择文件/文件夹
+                        <input
+                            type="file"
+                            hidden
+                            onChange={handleFileChange}
+                            webkitdirectory
+                        />
                     </Button>
                     <Typography variant="caption" sx={{ color: '#777' }}>
-                        {selectedFile? selectedFile.length > 1? `${selectedFile.length} 个文件` : selectedFile[0].name : '未选择文件'}
+                        {selectedFileOrFolder
+                           ? selectedFileOrFolder.length > 1
+                                ? `${selectedFileOrFolder.length} 个文件`
+                                 : selectedFileOrFolder[0].name
+                            : '未选择文件/文件夹'}
                     </Typography>
                 </FormControl>
                 <TextField
@@ -302,7 +306,7 @@ function UploadPage() {
                 <Button
                     variant="contained"
                     onClick={handleUpload}
-                    disabled={uploading ||!selectedFile}
+                    disabled={uploading ||!selectedFileOrFolder}
                     fullWidth
                     sx={{
                         background: 'linear-gradient(45deg, #64B5F6, #42A5F5)',
