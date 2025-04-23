@@ -20,9 +20,12 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    Slide
+    Slide,
+    AppBar,
+    Toolbar
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from'react-router-dom';
 import Picker from 'emoji-picker-react';
 import apiRequest from './api.js';
@@ -37,8 +40,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
     return (
         <Box
             sx={{
-                width: { xs: '100%', sm: '30%' },
-                borderRight: '1px solid #e0e0e0',
+                width: '100%',
                 backgroundColor: '#fff',
                 display: 'flex',
                 flexDirection: 'column'
@@ -179,7 +181,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
 }
 
 // 聊天页面组件
-function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef }) {
+function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack }) {
     const chatListRef = useRef(null);
     const inputBoxRef = useRef(null);
     const [navbarHeight, setNavbarHeight] = useState(0);
@@ -191,7 +193,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
     }, [friendMessages]);
 
     useEffect(() => {
-        const navbar = document.querySelector('.MuiBottomNavigation-root'); // 根据实际导航栏的类名调整
+        const navbar = document.querySelector('.MuiBottomNavigation-root'); 
         if (navbar) {
             setNavbarHeight(navbar.offsetHeight);
         }
@@ -206,160 +208,151 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
     return (
         <Box
             sx={{
-                width: { xs: '100%', sm: '70%' },
-                display: { xs: selectedFriend? 'flex' : 'none', sm: 'flex' },
+                width: '100%',
+                display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: '#f9f9f9'
             }}
         >
-            {selectedFriend && (
-                <>
-                    <Box
+            <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
+                <Toolbar>
+                    <IconButton onClick={onBack}>
+                        <ArrowBack />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {selectedFriend.name}
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <List
+                ref={chatListRef}
+                sx={{
+                    flexGrow: 1,
+                    overflowY: 'auto',
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}
+            >
+                {friendMessages[selectedFriend.id]?.map((message, index) => (
+                    <ListItem
+                        key={index}
+                        alignItems="flex-start"
                         sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '16px',
-                            borderBottom: '1px solid #e0e0e0',
-                            backgroundColor: '#fff'
+                            justifyContent: message.sender === 'user'? 'flex-end' : 'flex-start',
+                            mb: 2,
+                            flexDirection: message.sender === 'user'? 'row-reverse' : 'row'
                         }}
                     >
-                        <Avatar sx={{ mr: 2 }}>{selectedFriend.avatar}</Avatar>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {selectedFriend.name}
-                        </Typography>
-                    </Box>
-                    <List
-                        ref={chatListRef}
-                        sx={{
-                            flexGrow: 1,
-                            overflowY: 'auto',
-                            padding: '16px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            maxHeight: 'calc(100vh - 200px)'
-                        }}
-                    >
-                        {friendMessages[selectedFriend.id]?.map((message, index) => (
-                            <ListItem
-                                key={index}
-                                alignItems="flex-start"
-                                sx={{
-                                    justifyContent: message.sender === 'user'? 'flex-end' : 'flex-start',
-                                    mb: 2,
-                                    flexDirection: message.sender === 'user'? 'row-reverse' : 'row'
-                                }}
-                            >
-                                {message.sender === 'user' ? (
-                                    <Avatar sx={{ marginLeft: 2 }}>{selfAvatar}</Avatar>
-                                ) : (
-                                    <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
-                                )}
-                                <Box
-                                    sx={{
-                                        backgroundColor: message.sender === 'user'? '#DCF8C6' : '#E5E5EA',
-                                        borderRadius: 8,
-                                        padding: '8px',
-                                        maxWidth: '70%',
-                                        wordBreak: 'break-word',
-                                        whiteSpace: 'pre-wrap',
-                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                                    }}
-                                >
-                                    {message.text}
-                                </Box>
-                            </ListItem>
-                        ))}
-                    </List>
-                    <Box
-                        ref={inputBoxRef}
-                        sx={{
-                            padding: '16px',
-                            borderTop: '1px solid #e0e0e0',
-                            backgroundColor: '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            position: 'relative',
-                            zIndex: 1
-                        }}
-                    >
-                        <IconButton
-                            ref={emojiIconRef}
-                            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                            sx={{
-                                width: 40,
-                                height: 40
-                            }}
-                        >
-                            😊
-                        </IconButton>
-                        {showEmojiPicker && (
-                            <Slide
-                                direction="up"
-                                in={showEmojiPicker}
-                                mountOnEnter
-                                unmountOnExit
-                                style={{ position: 'absolute', bottom: 60, left: 16, zIndex: 2 }}
-                            >
-                                <Box
-                                    ref={emojiPickerRef}
-                                    sx={{
-                                        backgroundColor: '#fff',
-                                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-                                        borderRadius: 8,
-                                        padding: '8px'
-                                    }}
-                                >
-                                    <Picker
-                                        onEmojiClick={handleEmojiClick}
-                                    />
-                                </Box>
-                            </Slide>
+                        {message.sender === 'user'? (
+                            <Avatar sx={{ marginLeft: 2 }}>{selfAvatar}</Avatar>
+                        ) : (
+                            <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
                         )}
-                        <TextField
-                            ref={inputRef}
-                            fullWidth
-                            multiline
-                            rows={1}
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            placeholder="输入消息..."
+                        <Box
                             sx={{
-                                ml: 1,
-                                mr: 1,
-                                '& fieldset': {
-                                    borderWidth: '1px',
-                                    borderRadius: '4px'
-                                },
-                                height: 40
-                            }}
-                            inputProps={{
-                                style: {
-                                    paddingTop: '2px',
-                                    paddingBottom: '2px',
-                                    fontSize: '14px'
-                                }
-                            }}
-                        />
-                        <Button
-                            variant="contained"
-                            onClick={handleSendMessage}
-                            sx={{
-                                background: '#0084ff',
-                                '&:hover': {
-                                    background: '#0066cc'
-                                },
-                                marginLeft: 1,
-                                height: 40,
-                                width: 40,
-                                borderRadius: 50
+                                backgroundColor: message.sender === 'user'? '#DCF8C6' : '#E5E5EA',
+                                borderRadius: 8,
+                                padding: '8px',
+                                maxWidth: '70%',
+                                wordBreak: 'break-word',
+                                whiteSpace: 'pre-wrap',
+                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
                             }}
                         >
-                            <IoSend />
-                        </Button>
-                    </Box>
-                </>
-            )}
+                            {message.text}
+                        </Box>
+                    </ListItem>
+                ))}
+            </List>
+            <Box
+                ref={inputBoxRef}
+                sx={{
+                    padding: '16px',
+                    borderTop: '1px solid #e0e0e0',
+                    backgroundColor: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    position: 'relative',
+                    zIndex: 1
+                }}
+            >
+                <IconButton
+                    ref={emojiIconRef}
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    sx={{
+                        width: 40,
+                        height: 40
+                    }}
+                >
+                    😊
+                </IconButton>
+                {showEmojiPicker && (
+                    <Slide
+                        direction="up"
+                        in={showEmojiPicker}
+                        mountOnEnter
+                        unmountOnExit
+                        style={{ position: 'absolute', bottom: 60, left: 16, zIndex: 2 }}
+                    >
+                        <Box
+                            ref={emojiPickerRef}
+                            sx={{
+                                backgroundColor: '#fff',
+                                boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+                                borderRadius: 8,
+                                padding: '8px'
+                            }}
+                        >
+                            <Picker
+                                onEmojiClick={handleEmojiClick}
+                            />
+                        </Box>
+                    </Slide>
+                )}
+                <TextField
+                    ref={inputRef}
+                    fullWidth
+                    multiline
+                    rows={1}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="输入消息..."
+                    sx={{
+                        ml: 1,
+                        mr: 1,
+                        '& fieldset': {
+                            borderWidth: '1px',
+                            borderRadius: '4px'
+                        },
+                        height: 40
+                    }}
+                    inputProps={{
+                        style: {
+                            paddingTop: '2px',
+                            paddingBottom: '2px',
+                            fontSize: '14px'
+                        }
+                    }}
+                />
+                <Button
+                    variant="contained"
+                    onClick={handleSendMessage}
+                    sx={{
+                        background: '#0084ff',
+                        '&:hover': {
+                            background: '#0066cc'
+                        },
+                        marginLeft: 1,
+                        height: 40,
+                        width: 40,
+                        borderRadius: 50
+                    }}
+                >
+                    <IoSend />
+                </Button>
+            </Box>
         </Box>
     );
 }
@@ -397,8 +390,6 @@ function MessagesPage() {
                 const formData = {
                     userIdFrom: currentUserId,
                     userIdTo: friend.id,
-                    // curPage: 1,
-                    // pageSize: 20
                 };
                 const response = await apiRequest('/message-query', 'POST', formData, navigate);
                 if (response) {
@@ -800,6 +791,10 @@ function MessagesPage() {
         return '等待对方回应';
     };
 
+    const handleBack = () => {
+        setSelectedFriend(null);
+    };
+
     return (
         <Box
             sx={{
@@ -814,56 +809,57 @@ function MessagesPage() {
                 sx={{
                     flexGrow: 1,
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-                    borderRadius: 0,
-                    display: { xs: 'block', sm: 'flex' },
-                    flexDirection: 'row',
+                    borderRadius: '8px',
+                    margin: '16px',
                     overflow: 'hidden'
                 }}
             >
-                <ChatListPage
-                    friends={friends}
-                    onFriendSelect={handleFriendSelect}
-                    selectedTab={selectedTab}
-                    friendRequests={friendRequests}
-                    onAddFriendClick={() => setOpenAddFriendDialog(true)}
-                    onRequestClick={handleRequestClick}
-                    handleAgreeRequest={handleAgreeRequest}
-                    handleDisagreeRequest={handleDisagreeRequest}
-                    getStatusText={getStatusText}
-                />
-                <ChatPage
-                    selectedFriend={selectedFriend}
-                    friendMessages={friendMessages}
-                    newMessage={newMessage}
-                    setNewMessage={setNewMessage}
-                    handleSendMessage={handleSendMessage}
-                    handleKeyPress={handleKeyPress}
-                    showEmojiPicker={showEmojiPicker}
-                    setShowEmojiPicker={setShowEmojiPicker}
-                    handleEmojiClick={handleEmojiClick}
-                    emojiIconRef={emojiIconRef}
-                    emojiPickerRef={emojiPickerRef}
-                    selfAvatar={selfAvatar}
-                    inputRef={inputRef}
-                />
+                {selectedFriend? (
+                    <ChatPage
+                        selectedFriend={selectedFriend}
+                        friendMessages={friendMessages}
+                        newMessage={newMessage}
+                        setNewMessage={setNewMessage}
+                        handleSendMessage={handleSendMessage}
+                        handleKeyPress={handleKeyPress}
+                        showEmojiPicker={showEmojiPicker}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        handleEmojiClick={handleEmojiClick}
+                        emojiIconRef={emojiIconRef}
+                        emojiPickerRef={emojiPickerRef}
+                        selfAvatar={selfAvatar}
+                        inputRef={inputRef}
+                        onBack={handleBack}
+                    />
+                ) : (
+                    <ChatListPage
+                        friends={friends}
+                        onFriendSelect={handleFriendSelect}
+                        selectedTab={selectedTab}
+                        friendRequests={friendRequests}
+                        onAddFriendClick={() => setOpenAddFriendDialog(true)}
+                        onRequestClick={handleRequestClick}
+                        handleAgreeRequest={handleAgreeRequest}
+                        handleDisagreeRequest={handleDisagreeRequest}
+                        getStatusText={getStatusText}
+                    />
+                )}
             </Card>
             <Dialog
                 open={openAddFriendDialog}
                 onClose={() => setOpenAddFriendDialog(false)}
                 aria-labelledby="form-dialog-title"
-                TransitionComponent={Slide}
-                TransitionProps={{ direction: 'up' }}
             >
                 <DialogTitle id="form-dialog-title">添加好友</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        请输入对方的用户 ID 和申请备注
+                        请输入对方的用户ID和备注信息
                     </DialogContentText>
                     <TextField
                         autoFocus
                         margin="dense"
-                        id="userId"
-                        label="用户 ID"
+                        id="add-friend-user-id"
+                        label="用户ID"
                         type="text"
                         fullWidth
                         value={addFriendUserId}
@@ -871,8 +867,8 @@ function MessagesPage() {
                     />
                     <TextField
                         margin="dense"
-                        id="content"
-                        label="申请备注"
+                        id="add-friend-content"
+                        label="备注信息"
                         type="text"
                         fullWidth
                         value={addFriendContent}
@@ -891,38 +887,28 @@ function MessagesPage() {
             <Dialog
                 open={openRequestDetail}
                 onClose={() => setOpenRequestDetail(false)}
-                aria-labelledby="request-detail-title"
-                TransitionComponent={Slide}
-                TransitionProps={{ direction: 'up' }}
+                aria-labelledby="request-detail-dialog-title"
             >
-                <DialogTitle id="request-detail-title">好友申请详情</DialogTitle>
+                <DialogTitle id="request-detail-dialog-title">好友申请详情</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        申请人: {selectedRequest?.fromNickname}
-                    </DialogContentText>
-                    <DialogContentText>
-                        申请备注: {selectedRequest?.content}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    {selectedRequest?.requestTo === currentUserId && (
+                    {selectedRequest && (
                         <>
-                            <Button onClick={() => handleAgreeRequest(selectedRequest)} color="primary">
-                                同意
-                            </Button>
-                            <Button onClick={() => handleDisagreeRequest(selectedRequest)} color="primary">
-                                拒绝
-                            </Button>
+                            <Typography variant="subtitle1">申请人: {selectedRequest.fromNickname}</Typography>
+                            <Typography variant="subtitle1">备注信息: {selectedRequest.content}</Typography>
+                            <Typography variant="subtitle1">状态: {getStatusText(selectedRequest.status)}</Typography>
                         </>
                     )}
+                </DialogContent>
+                <DialogActions>
                     <Button onClick={() => setOpenRequestDetail(false)} color="primary">
                         关闭
                     </Button>
                 </DialogActions>
             </Dialog>
-            {!isInputFocused &&!isKeyboardVisible && <BottomNavigationBar />}
+            <BottomNavigationBar />
         </Box>
     );
 }
 
-export default MessagesPage;    
+export default MessagesPage;
+    
