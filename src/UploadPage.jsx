@@ -57,7 +57,7 @@ function UploadPage() {
                         formData.append('uploadType', uploadType);
 
                         try {
-                            const response = await fetch('http://47.108.130.95:5000/upload-chunk', {
+                            const response = await fetch('http://dinner.daitong.xyz:5000/upload-chunk', {
                                 method: 'POST',
                                 body: formData
                             });
