@@ -45,6 +45,7 @@ function MessagesPage() {
     const [openRequestDetail, setOpenRequestDetail] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [isInputFocused, setIsInputFocused] = useState(false);
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
@@ -166,6 +167,23 @@ function MessagesPage() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [emojiPickerRef, emojiIconRef]);
+
+    useEffect(() => {
+        const handleKeyboardVisibilityChange = () => {
+            setIsKeyboardVisible(window.innerHeight < document.documentElement.clientHeight);
+        };
+
+        window.addEventListener('resize', handleKeyboardVisibilityChange);
+        return () => {
+            window.removeEventListener('resize', handleKeyboardVisibilityChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (isKeyboardVisible === false && isInputFocused === false) {
+            setShowEmojiPicker(false);
+        }
+    }, [isKeyboardVisible, isInputFocused]);
 
     useEffect(() => {
         const fetchFriends = async () => {
@@ -739,7 +757,8 @@ function MessagesPage() {
                                             '& fieldset': {
                                                 borderWidth: '1px',
                                                 borderRadius: '4px'
-                                            }
+                                            },
+                                            height: 40 // 设置输入框高度和按钮一致
                                         }}
                                         inputProps={{
                                             style: {
@@ -748,7 +767,10 @@ function MessagesPage() {
                                                 fontSize: '14px'
                                             }
                                         }}
-                                        onFocus={() => setIsInputFocused(true)}
+                                        onFocus={() => {
+                                            setIsInputFocused(true);
+                                            setShowEmojiPicker(false); // 聚焦输入框时隐藏表情选择器
+                                        }}
                                         onBlur={() => setIsInputFocused(false)}
                                     />
                                     <Button
@@ -759,7 +781,8 @@ function MessagesPage() {
                                             '&:hover': {
                                                 background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
                                             },
-                                            marginLeft: 1
+                                            marginLeft: 1,
+                                            height: 40 // 确保按钮高度
                                         }}
                                     >
                                         发送
@@ -839,7 +862,7 @@ function MessagesPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-            {!isInputFocused && <BottomNavigationBar />}
+            {!isInputFocused &&!isKeyboardVisible && <BottomNavigationBar />}
         </Box>
     );
 }
