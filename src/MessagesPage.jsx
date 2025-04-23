@@ -49,6 +49,7 @@ function MessagesPage() {
     const emojiIconRef = useRef(null);
     const stompClientRef = useRef(null);
     const chatListRef = useRef(null);
+    const inputRef = useRef(null);
 
     const currentUserId = localStorage.getItem('userId');
 
@@ -683,21 +684,21 @@ function MessagesPage() {
                                 </List>
                                 <Box
                                     sx={{
-                                        position: 'relative',
-                                        display: 'flex',
-                                        alignItems: 'center',
+                                        position: 'sticky',
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        backgroundColor: '#fff',
                                         borderTop: '1px solid #ccc',
-                                        pt: 2
+                                        padding: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center'
                                     }}
                                 >
                                     <IconButton
                                         ref={emojiIconRef}
                                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                                         sx={{
-                                            position: 'absolute',
-                                            top: 5,
-                                            left: 10,
-                                            zIndex: 1,
                                             width: 40,
                                             height: 40
                                         }}
@@ -709,7 +710,7 @@ function MessagesPage() {
                                             ref={emojiPickerRef}
                                             sx={{
                                                 position: 'absolute',
-                                                bottom: 190,
+                                                bottom: 50,
                                                 left: 15,
                                                 zIndex: 1
                                             }}
@@ -720,20 +721,17 @@ function MessagesPage() {
                                         </Box>
                                     )}
                                     <TextField
+                                        ref={inputRef}
                                         fullWidth
                                         multiline
-                                        rows={3}
+                                        rows={1}
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         onKeyPress={handleKeyPress}
                                         placeholder="输入消息..."
                                         sx={{
-                                            ml: 4,
-                                            mr: 2,
-                                            position: 'relative',
-                                            pt: 4,
-                                            pb: 5,
-                                            zIndex: 1
+                                            ml: 1,
+                                            mr: 1
                                         }}
                                         inputProps={{
                                             style: {
@@ -750,10 +748,7 @@ function MessagesPage() {
                                             '&:hover': {
                                                 background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
                                             },
-                                            position: 'absolute',
-                                            bottom: 1,
-                                            right: 17,
-                                            zIndex: 1
+                                            marginLeft: 1
                                         }}
                                     >
                                         发送
