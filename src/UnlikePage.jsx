@@ -142,10 +142,7 @@ function UnlikePage() {
         const selectedLikeIds = likes.filter(like => selectedDishes.includes(like.dishName)).map(like => like.id);
         if (selectedLikeIds.length === 0) return;
         try {
-            const formData = {
-                deleteList: selectedLikeIds
-            };
-            const response = await apiRequest('/delete-likes', 'POST', formData, navigate);
+            const response = await apiRequest('/delete-likes', 'POST', selectedLikeIds, navigate);
             if (response) {
                 setLikes(likes.filter(like =>!selectedLikeIds.includes(like.id)));
                 setSelectedDishes([]);

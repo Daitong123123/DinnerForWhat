@@ -38,8 +38,9 @@ function ModelManagementPage() {
     const [currentModel, setCurrentModel] = useState(null);
     const [editModel, setEditModel] = useState(null);
     const [openEditDialog, setOpenEditDialog] = useState(false);
-    const [openAddDialog, setOpenAddDialog] = useState(false); // 新增状态用于控制添加模型对话框的显示
+    const [openAddDialog, setOpenAddDialog] = useState(false); 
     const navigate = useNavigate();
+    const [selectedModelType, setSelectedModelType] = useState(''); 
 
     // 获取模型类型列表
     useEffect(() => {
@@ -176,7 +177,7 @@ function ModelManagementPage() {
         if (selectedConfigs.length === 0) return;
         const ids = selectedConfigs.map(config => config.id);
         try {
-            const response = await apiRequest('/admin/delete-model', 'POST', { deleteList: ids }, navigate);
+            const response = await apiRequest('/admin/delete-model', 'POST', ids , navigate);
             if (response) {
                 const formData = {
                     curPage,
@@ -258,7 +259,10 @@ function ModelManagementPage() {
                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                 backgroundColor: '#fff',
                 borderRadius: 10,
-                overflow: 'hidden'
+                overflow: 'hidden',
+                '@media (max-width: 600px)': {
+                    p: 2
+                }
             }}>
                 <Typography variant="h4" gutterBottom sx={{
                     background: 'linear-gradient(45deg, #64B5F6, #42A5F5)',
@@ -287,13 +291,30 @@ function ModelManagementPage() {
                     <Box sx={{ flex: 1 }}>
                         <Typography sx={{ mr: 1 }}>模型类型:</Typography>
                         <Select
-                            value=""
-                            onChange={(e) => fetchModelsByType(e.target.value)}
-                            sx={{ width: '100%' }}
+                            value={selectedModelType}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setSelectedModelType(value);
+                                if (value === '') {
+                                    const formData = {
+                                        curPage,
+                                        pageSize
+                                    };
+                                    apiRequest('/admin/model-list', 'POST', formData, navigate).then(response => {
+                                        if (response) {
+                                            setModelConfigs(response.data);
+                                            setTotal(response.total);
+                                        }
+                                    });
+                                } else {
+                                    fetchModelsByType(value);
+                                }
+                            }}
+                            sx={{ width: '100%', fontSize: '0.9rem', minHeight: '32px' }}
                         >
                             <MenuItem value="">全部</MenuItem>
                             {modelTypes.map(type => (
-                                <MenuItem key={type} value={type}>{type}</MenuItem>
+                                <MenuItem key={type} value={type}>{type.length > 10? type.slice(0, 10) + '...' : type}</MenuItem>
                             ))}
                         </Select>
                     </Box>
@@ -301,6 +322,7 @@ function ModelManagementPage() {
                         variant="contained"
                         color="primary"
                         onClick={handleOpenAddDialog}
+                        sx={{ fontSize: '0.9rem', minHeight: '32px', padding: '0 12px' }}
                     >
                         添加模型
                     </Button>
@@ -339,7 +361,7 @@ function ModelManagementPage() {
                                             variant="outlined"
                                             color="primary"
                                             onClick={() => handleOpenEditDialog(config)}
-                                            sx={{ mr: 1 }}
+                                            sx={{ mr: 1, fontSize: '0.8rem', padding: '3px 6px' }}
                                         >
                                             编辑
                                         </Button>
@@ -348,6 +370,7 @@ function ModelManagementPage() {
                                             color="error"
                                             onClick={() => handleSwitchModel(config.modelType, config.model)}
                                             disabled={currentModel && currentModel.id === config.id}
+                                            sx={{ fontSize: '0.8rem', padding: '3px 6px' }}
                                         >
                                             {currentModel && currentModel.id === config.id? '当前使用' : '切换'}
                                         </Button>
@@ -362,7 +385,7 @@ function ModelManagementPage() {
                     color="error"
                     onClick={handleDeleteModel}
                     disabled={selectedConfigs.length === 0}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, fontSize: '0.8rem', padding: '4px 8px' }}
                 >
                     删除选中模型
                 </Button>
@@ -377,36 +400,40 @@ function ModelManagementPage() {
                 sx={{
                     '&.MuiPaper-root': {
                         borderRadius: 10,
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)'
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+                        '@media (max-width: 600px)': {
+                            width: '90%',
+                            maxWidth: 'none'
+                        }
                     }
                 }}>
                 <DialogTitle>编辑模型配置</DialogTitle>
                 <DialogContent>
                     {editModel && (
                         <>
-                            <DialogContentText>
-                                <Typography sx={{ mb: 1 }}>模型:</Typography>
+                            <Stack direction="row" alignItems="center" mb={2} sx={{ justifyContent: 'space-between' }}>
+                                <Typography sx={{ width: '80px', textAlign: 'right', mr: 2 }}>模型:</Typography>
                                 <input
                                     type="text"
                                     value={editModel.model}
                                     onChange={(e) => setEditModel({...editModel, model: e.target.value })}
-                                    sx={{ width: '100%', mb: 2 }}
+                                    sx={{ flex: 1, fontSize: '0.9rem' }}
                                 />
-                            </DialogContentText>
-                            <DialogContentText>
-                                <Typography sx={{ mb: 1 }}>模型名称:</Typography>
+                            </Stack>
+                            <Stack direction="row" alignItems="center" mb={2} sx={{ justifyContent: 'space-between' }}>
+                                <Typography sx={{ width: '80px', textAlign: 'right', mr: 2 }}>模型名称:</Typography>
                                 <input
                                     type="text"
                                     value={editModel.modelName}
                                     onChange={(e) => setEditModel({...editModel, modelName: e.target.value })}
-                                    sx={{ width: '100%', mb: 2 }}
+                                    sx={{ flex: 1, fontSize: '0.9rem' }}
                                 />
-                            </DialogContentText>
+                            </Stack>
                             <Button
                                 variant="contained"
                                 color="primary"
                                 onClick={() => handleUpdateModel(editModel)}
-                                sx={{ mt: 2 }}
+                                sx={{ mt: 2, fontSize: '0.9rem', padding: '6px 12px' }}
                             >
                                 保存修改
                             </Button>
@@ -418,55 +445,58 @@ function ModelManagementPage() {
                 sx={{
                     '&.MuiPaper-root': {
                         borderRadius: 10,
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)'
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)',
+                        '@media (max-width: 600px)': {
+                            width: '90%',
+                            maxWidth: 'none'
+                        }
                     }
                 }}>
                 <DialogTitle>添加模型配置</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        <Typography sx={{ mb: 1 }}>模型类型:</Typography>
+                    <Stack direction="row" alignItems="center" mb={2} sx={{ justifyContent: 'space-between' }}>
+                        <Typography sx={{ width: '80px', textAlign: 'right', mr: 2 }}>模型类型:</Typography>
                         <Select
-                            value=""
+                            value={editModel? editModel.modelType : ''}
                             onChange={(e) => setEditModel({...editModel, modelType: e.target.value })}
-                            sx={{ width: '100%', mb: 2 }}
+                            sx={{ flex: 1, mb: 0, fontSize: '0.9rem' }}
                         >
                             <MenuItem value="">请选择</MenuItem>
                             {modelTypes.map(type => (
-                                <MenuItem key={type} value={type}>{type}</MenuItem>
+                                <MenuItem key={type} value={type}>{type.length > 10? type.slice(0, 10) + '...' : type}</MenuItem>
                             ))}
                         </Select>
-                    </DialogContentText>
-                    <DialogContentText>
-                        <Typography sx={{ mb: 1 }}>模型:</Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" mb={2} sx={{ justifyContent: 'space-between' }}>
+                        <Typography sx={{ width: '80px', textAlign: 'right', mr: 2 }}>模型:</Typography>
                         <input
                             type="text"
-                            value=""
+                            value={editModel? editModel.model : ''}
                             onChange={(e) => setEditModel({...editModel, model: e.target.value })}
-                            sx={{ width: '100%', mb: 2 }}
+                            sx={{ flex: 1, fontSize: '0.9rem' }}
                         />
-                    </DialogContentText>
-                    <DialogContentText>
-                        <Typography sx={{ mb: 1 }}>模型名称:</Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" mb={2} sx={{ justifyContent: 'space-between' }}>
+                        <Typography sx={{ width: '80px', textAlign: 'right', mr: 2 }}>模型名称:</Typography>
                         <input
                             type="text"
-                            value=""
+                            value={editModel? editModel.modelName : ''}
                             onChange={(e) => setEditModel({...editModel, modelName: e.target.value })}
-                            sx={{ width: '100%', mb: 2 }}
+                            sx={{ flex: 1, fontSize: '0.9rem' }}
                         />
-                    </DialogContentText>
+                    </Stack>
                     <Button
                         variant="contained"
                         color="primary"
                         onClick={() => handleAddModel(editModel)}
-                        sx={{ mt: 2 }}
+                        sx={{ mt: 2, fontSize: '0.9rem', padding: '6px 12px' }}
                     >
                         保存添加
                     </Button>
                 </DialogContent>
             </Dialog>
-            <BottomNavigationBar />
         </Box>
     );
 }
 
-export default ModelManagementPage;
+export default ModelManagementPage;    
