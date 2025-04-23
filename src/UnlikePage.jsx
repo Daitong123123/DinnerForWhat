@@ -137,7 +137,9 @@ function UnlikePage() {
             console.error(error);
         }
     };
-
+    useEffect(() => {
+        document.title = '今天吃什么';
+    }, []);
     const handleDeleteLikes = async () => {
         const selectedLikeIds = likes.filter(like => selectedDishes.includes(like.dishName)).map(like => like.id);
         if (selectedLikeIds.length === 0) return;

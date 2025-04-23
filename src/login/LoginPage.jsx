@@ -1,4 +1,4 @@
-import React, { useState } from'react';
+import React, { useState , useEffect} from'react';
 import {
     Box,
     Typography,
@@ -70,6 +70,10 @@ function LoginPage() {
         setOpenDialog(false);
         setIsLoginWithPhone(false);
     };
+
+    useEffect(() => {
+        document.title = '今天吃什么';
+    }, []);
 
     return (
         <Box

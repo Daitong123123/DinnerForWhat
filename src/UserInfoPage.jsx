@@ -20,8 +20,8 @@ function UserInfoPage() {
     const [userAvatar, setUserAvatar] = useState('U'); // 这里可以根据实际情况设置默认头像，比如从后端获取
     const [editing, setEditing] = useState(false);
     const [editedUserName, setEditedUserName] = useState('');
-
     useEffect(() => {
+        document.title = '今天吃什么';
         const storedUserId = localStorage.getItem('userId');
         if (storedUserId) {
             setUserId(storedUserId);

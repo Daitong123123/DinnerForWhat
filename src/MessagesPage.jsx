@@ -31,6 +31,8 @@ import baseUrl from './config.js';
 import { FaUserPlus } from'react-icons/fa';
 import { IoSend } from'react-icons/io5';
 
+
+
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [friends, setFriends] = useState([]);
@@ -57,7 +59,9 @@ function MessagesPage() {
     const inputRef = useRef(null);
 
     const currentUserId = localStorage.getItem('userId');
-
+    useEffect(() => {
+        document.title = '今天吃什么';
+    }, []);
     const handleFriendSelect = async (friend) => {
         setSelectedFriend(friend);
         if (friend && currentUserId) {
