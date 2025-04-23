@@ -44,6 +44,7 @@ function MessagesPage() {
     const [addFriendContent, setAddFriendContent] = useState('');
     const [openRequestDetail, setOpenRequestDetail] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
+    const [isInputFocused, setIsInputFocused] = useState(false);
 
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
@@ -690,9 +691,12 @@ function MessagesPage() {
                                         right: 0,
                                         backgroundColor: '#fff',
                                         borderTop: '1px solid #ccc',
-                                        padding: '10px',
+                                        padding: '5px 10px',
                                         display: 'flex',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        pointerEvents: 'auto',
+                                        userSelect: 'none',
+                                        touchAction: 'none'
                                     }}
                                 >
                                     <IconButton
@@ -731,14 +735,21 @@ function MessagesPage() {
                                         placeholder="输入消息..."
                                         sx={{
                                             ml: 1,
-                                            mr: 1
+                                            mr: 1,
+                                            '& fieldset': {
+                                                borderWidth: '1px',
+                                                borderRadius: '4px'
+                                            }
                                         }}
                                         inputProps={{
                                             style: {
                                                 paddingTop: '2px',
-                                                paddingBottom: '2px'
+                                                paddingBottom: '2px',
+                                                fontSize: '14px'
                                             }
                                         }}
+                                        onFocus={() => setIsInputFocused(true)}
+                                        onBlur={() => setIsInputFocused(false)}
                                     />
                                     <Button
                                         variant="contained"
@@ -828,7 +839,7 @@ function MessagesPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <BottomNavigationBar />
+            {!isInputFocused && <BottomNavigationBar />}
         </Box>
     );
 }
