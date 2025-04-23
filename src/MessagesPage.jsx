@@ -229,7 +229,8 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                 sx={{
                     flexGrow: 1,
                     overflowY: 'auto',
-                    padding: '16px',
+                    // 增大内边距
+                    padding: '24px', 
                     display: 'flex',
                     flexDirection: 'column'
                 }}
@@ -254,7 +255,8 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                                 backgroundColor: message.sender === 'user'? '#DCF8C6' : '#E5E5EA',
                                 borderRadius: 8,
                                 padding: '8px',
-                                maxWidth: '70%',
+                                // 增大最大宽度
+                                maxWidth: '80%', 
                                 wordBreak: 'break-word',
                                 whiteSpace: 'pre-wrap',
                                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
@@ -326,7 +328,9 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                             borderWidth: '1px',
                             borderRadius: '4px'
                         },
-                        height: 40
+                        // 减少高度
+                        height: 32, 
+                        padding: '4px'
                     }}
                     inputProps={{
                         style: {
@@ -910,5 +914,4 @@ function MessagesPage() {
     );
 }
 
-export default MessagesPage;
-    
+export default MessagesPage;    
