@@ -31,8 +31,6 @@ import baseUrl from './config.js';
 import { FaUserPlus } from'react-icons/fa';
 import { IoSend } from'react-icons/io5';
 
-
-
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [friends, setFriends] = useState([]);
@@ -59,9 +57,7 @@ function MessagesPage() {
     const inputRef = useRef(null);
 
     const currentUserId = localStorage.getItem('userId');
-    useEffect(() => {
-        document.title = '今天吃什么';
-    }, []);
+
     const handleFriendSelect = async (friend) => {
         setSelectedFriend(friend);
         if (friend && currentUserId) {
@@ -493,7 +489,7 @@ function MessagesPage() {
                     flexGrow: 1,
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
                     borderRadius: 0,
-                    display: 'flex',
+                    display: { xs: 'block', sm: 'flex' },
                     flexDirection: 'row',
                     overflow: 'hidden'
                 }}
@@ -641,7 +637,7 @@ function MessagesPage() {
                 <Box
                     sx={{
                         width: { xs: '100%', sm: '70%' },
-                        display: 'flex',
+                        display: { xs: selectedTab === 0 && selectedFriend? 'flex' : 'none', sm: 'flex' },
                         flexDirection: 'column',
                         backgroundColor: '#f9f9f9'
                     }}
@@ -669,7 +665,8 @@ function MessagesPage() {
                                     overflowY: 'auto',
                                     padding: '16px',
                                     display: 'flex',
-                                    flexDirection: 'column'
+                                    flexDirection: 'column',
+                                    maxHeight: 'calc(100vh - 200px)'
                                 }}
                             >
                                 {friendMessages[selectedFriend.id]?.map((message, index) => (
