@@ -19,7 +19,8 @@ import {
     DialogActions,
     DialogContent,
     DialogContentText,
-    DialogTitle
+    DialogTitle,
+    Slide
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { useNavigate } from'react-router-dom';
@@ -27,6 +28,8 @@ import Picker from 'emoji-picker-react';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
+import { FaUserPlus } from'react-icons/fa';
+import { IoSend } from'react-icons/io5';
 
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
@@ -475,328 +478,327 @@ function MessagesPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                p: { xs: 1, sm: 4 },
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: '#f9f9f9',
-                color: '#333'
+                backgroundColor: '#f5f5f5',
+                fontFamily: 'Inter, sans-serif'
             }}
         >
             <Card
                 sx={{
-                    p: { xs: 2, sm: 4 },
-                    width: '100%',
-                    maxWidth: 800,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                    background: '#fff',
-                    borderRadius: 8,
-                    border: '1px solid #ccc'
+                    flexGrow: 1,
+                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+                    borderRadius: 0,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    overflow: 'hidden'
                 }}
             >
                 <Box
                     sx={{
+                        width: { xs: '100%', sm: '30%' },
+                        borderRight: '1px solid #e0e0e0',
+                        backgroundColor: '#fff',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 4
+                        flexDirection: 'column'
                     }}
                 >
-                    <Tabs
-                        value={selectedTab}
-                        onChange={handleTabChange}
-                        aria-label="friend tabs"
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '16px',
+                            borderBottom: '1px solid #e0e0e0'
+                        }}
                     >
-                        <Tab label="我的好友" />
-                        <Tab label="好友申请" />
-                    </Tabs>
-                    <IconButton onClick={() => setOpenAddFriendDialog(true)}>
-                        +
-                    </IconButton>
+                        <Tabs
+                            value={selectedTab}
+                            onChange={handleTabChange}
+                            aria-label="friend tabs"
+                            textColor="primary"
+                            indicatorColor="primary"
+                        >
+                            <Tab label="我的好友" />
+                            <Tab label="好友申请" />
+                        </Tabs>
+                        <IconButton onClick={() => setOpenAddFriendDialog(true)}>
+                            <FaUserPlus />
+                        </IconButton>
+                    </Box>
+                    <List
+                        sx={{
+                            flexGrow: 1,
+                            overflowY: 'auto'
+                        }}
+                    >
+                        {selectedTab === 0? (
+                            friends.map((friend) => (
+                                <ListItem
+                                    key={friend.id}
+                                    onClick={() => handleFriendSelect(friend)}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        padding: '16px',
+                                        '&:hover': {
+                                            backgroundColor: '#f0f0f0'
+                                        },
+                                        transition: 'background-color 0.2s ease'
+                                    }}
+                                >
+                                    <Avatar sx={{ mr: 2 }}>{friend.avatar}</Avatar>
+                                    <Typography variant="subtitle1">{friend.name}</Typography>
+                                </ListItem>
+                            ))
+                        ) : (
+                            <>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', padding: '16px' }}>
+                                    好友请求
+                                </Typography>
+                                {friendRequests.filter(req => req.requestTo === currentUserId).length === 0 && (
+                                    <ListItem sx={{ padding: '16px' }}>
+                                        <Typography>暂无好友请求</Typography>
+                                    </ListItem>
+                                )}
+                                {friendRequests.filter(req => req.requestTo === currentUserId).map((request) => (
+                                    <ListItem
+                                        key={request.requestFrom}
+                                        onClick={() => handleRequestClick(request)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            padding: '16px',
+                                            '&:hover': {
+                                                backgroundColor: '#f0f0f0'
+                                            },
+                                            transition: 'background-color 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                    >
+                                        <Avatar sx={{ mr: 2 }}>{request.fromNickname.charAt(0).toUpperCase()}</Avatar>
+                                        <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                                {request.fromNickname}
+                                            </Typography>
+                                            <Typography sx={{ color: 'gray', fontSize: '0.8rem' }}>
+                                                备注: {request.content}
+                                            </Typography>
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <Button variant="outlined" color="primary" onClick={() => handleAgreeRequest(request)}>
+                                                同意
+                                            </Button>
+                                            <Button variant="outlined" color="secondary" onClick={() => handleDisagreeRequest(request)}>
+                                                拒绝
+                                            </Button>
+                                        </Box>
+                                    </ListItem>
+                                ))}
+                                <Divider sx={{ my: 2 }} />
+                                <Typography variant="h6" sx={{ fontWeight: 'bold', padding: '16px' }}>
+                                    我的申请
+                                </Typography>
+                                {friendRequests.filter(req => req.requestFrom === currentUserId).length === 0 && (
+                                    <ListItem sx={{ padding: '16px' }}>
+                                        <Typography>暂无我的申请</Typography>
+                                    </ListItem>
+                                )}
+                                {friendRequests.filter(req => req.requestFrom === currentUserId).map((request) => (
+                                    <ListItem
+                                        key={request.requestTo}
+                                        onClick={() => handleRequestClick(request)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            padding: '16px',
+                                            '&:hover': {
+                                                backgroundColor: '#f0f0f0'
+                                            },
+                                            transition: 'background-color 0.2s ease',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, overflow: 'hidden' }}>
+                                            <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>申请添加</Typography>
+                                            <Avatar sx={{ mx: 1 }}>{request.toNickname.charAt(0).toUpperCase()}</Avatar>
+                                            <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>为好友</Typography>
+                                        </Box>
+                                        <Typography sx={{ color: request.status === '2'? 'red' : 'green' }}>
+                                            {getStatusText(request.status)}
+                                        </Typography>
+                                    </ListItem>
+                                ))}
+                            </>
+                        )}
+                    </List>
                 </Box>
                 <Box
                     sx={{
-                        display: { xs: 'block', sm: 'flex' },
-                        width: '100%'
+                        width: { xs: '100%', sm: '70%' },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: '#f9f9f9'
                     }}
                 >
-                    <Box
-                        sx={{
-                            width: { xs: '100%', sm: '30%' },
-                            borderRight: { xs: 'none', sm: '1px solid #ccc' },
-                            p: 2
-                        }}
-                    >
-                        <List>
-                            {selectedTab === 0? (
-                                friends.map((friend) => (
+                    {selectedTab === 0 && selectedFriend && (
+                        <>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '16px',
+                                    borderBottom: '1px solid #e0e0e0',
+                                    backgroundColor: '#fff'
+                                }}
+                            >
+                                <Avatar sx={{ mr: 2 }}>{selectedFriend.avatar}</Avatar>
+                                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                                    {selectedFriend.name}
+                                </Typography>
+                            </Box>
+                            <List
+                                ref={chatListRef}
+                                sx={{
+                                    flexGrow: 1,
+                                    overflowY: 'auto',
+                                    padding: '16px',
+                                    display: 'flex',
+                                    flexDirection: 'column'
+                                }}
+                            >
+                                {friendMessages[selectedFriend.id]?.map((message, index) => (
                                     <ListItem
-                                        key={friend.id}
-                                        onClick={() => handleFriendSelect(friend)}
-                                        sx={{ cursor: 'pointer', py: 2, display: 'flex', width: '100%' }}
-                                    >
-                                        <Avatar sx={{ mr: 1 }}>{friend.avatar}</Avatar>
-                                        <Typography>{friend.name}</Typography>
-                                    </ListItem>
-                                ))
-                            ) : (
-                                <>
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                        好友请求
-                                    </Typography>
-                                    {friendRequests.filter(req => req.requestTo === currentUserId).length === 0 && (
-                                        <ListItem sx={{ py: 2, display: 'flex', width: '100%' }}>
-                                            <Typography>暂无好友请求</Typography>
-                                        </ListItem>
-                                    )}
-                                    {friendRequests.filter(req => req.requestTo === currentUserId).map((request) => (
-                                        <ListItem
-                                            key={request.requestFrom}
-                                            onClick={() => handleRequestClick(request)}
-                                            sx={{ 
-                                                cursor: 'pointer', 
-                                                py: 2, 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                justifyContent: 'space-between',
-                                                width: '100%' 
-                                            }}
-                                        >
-                                            <Avatar sx={{ mr: 2 }}>{request.fromNickname.charAt(0).toUpperCase()}</Avatar>
-                                            <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
-                                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                    {request.fromNickname}
-                                                </Typography>
-                                                <Typography
-                                                    sx={{
-                                                        color: 'gray',
-                                                        fontSize: '0.8rem',
-                                                        whiteSpace: 'nowrap', 
-                                                        overflow: 'hidden', 
-                                                        textOverflow: 'ellipsis'
-                                                    }}
-                                                >
-                                                    备注: {request.content}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                                <Button variant="outlined" color="primary" onClick={() => handleAgreeRequest(request)}>
-                                                    同意
-                                                </Button>
-                                                <Button variant="outlined" color="secondary" onClick={() => handleDisagreeRequest(request)}>
-                                                    拒绝
-                                                </Button>
-                                            </Box>
-                                        </ListItem>
-                                    ))}
-                                    <Divider sx={{ my: 2 }} />
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                        我的申请
-                                    </Typography>
-                                    {friendRequests.filter(req => req.requestFrom === currentUserId).length === 0 && (
-                                        <ListItem sx={{ py: 2, display: 'flex', width: '100%' }}>
-                                            <Typography>暂无我的申请</Typography>
-                                        </ListItem>
-                                    )}
-                                    {friendRequests.filter(req => req.requestFrom === currentUserId).map((request) => (
-                                        <ListItem
-                                            key={request.requestTo}
-                                            onClick={() => handleRequestClick(request)}
-                                            sx={{ 
-                                                cursor: 'pointer', 
-                                                py: 2, 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                justifyContent: 'space-between',
-                                                width: '100%' 
-                                            }}
-                                        >
-                                            <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, overflow: 'hidden' }}>
-                                                <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>申请添加</Typography>
-                                                <Avatar sx={{ mx: 1 }}>{request.toNickname.charAt(0).toUpperCase()}</Avatar>
-                                                <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>为好友</Typography>
-                                            </Box>
-                                            <Typography sx={{ color: request.status === '2'? 'red' : 'green' }}>
-                                                {getStatusText(request.status)}
-                                            </Typography>
-                                        </ListItem>
-                                    ))}
-                                </>
-                            )}
-                        </List>
-                    </Box>
-                    <Box
-                        sx={{
-                            width: { xs: '100%', sm: '70%' },
-                            p: 2,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'flex-start',
-                            minHeight: 560
-                        }}
-                    >
-                        {selectedTab === 0 && selectedFriend && (
-                            <>
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        mb: 2,
-                                        borderBottom: '1px solid #ccc',
-                                        pb: 2
-                                    }}
-                                >
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                        与 {selectedFriend.name} 的聊天
-                                    </Typography>
-                                </Box>
-                                <List
-                                    ref={chatListRef}
-                                    sx={{
-                                        maxHeight: 400,
-                                        height: 400,
-                                        overflowY: 'auto',
-                                        mb: 2,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        width: '100%'
-                                    }}
-                                >
-                                    {friendMessages[selectedFriend.id]?.map((message, index) => (
-                                        <ListItem
-                                            key={index}
-                                            alignItems="flex-start"
-                                            sx={{
-                                                justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
-                                                mb: 1,
-                                                flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
-                                                display: 'flex',
-                                                width: '100%',
-                                                minWidth: 0
-                                            }}
-                                        >
-                                            {message.sender === 'user' ? (
-                                                <Avatar sx={{ marginLeft: 1 }}>{selfAvatar}</Avatar>
-                                            ) : (
-                                                <Avatar sx={{ marginRight: 1 }}>{selectedFriend.avatar}</Avatar>
-                                            )}
-                                            <Box
-                                                sx={{
-                                                    backgroundColor: message.sender === 'user' ? '#DCF8C6' : '#E5E5EA',
-                                                    borderRadius: 8,
-                                                    padding: '8px',
-                                                    mt: 1,
-                                                    maxWidth: '80%',
-                                                    wordBreak: 'break-word',
-                                                    whiteSpace: 'pre-wrap',
-                                                    marginLeft: message.sender === 'user' ? 'auto' : 0,
-                                                    marginRight: message.sender === 'user' ? 0 : 'auto',
-                                                    boxSizing: 'border-box'
-                                                }}
-                                            >
-                                                {message.text}
-                                            </Box>
-                                        </ListItem>
-                                    ))}
-                                </List>
-                                <Box
-                                    sx={{
-                                        position: 'sticky',
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        backgroundColor: '#fff',
-                                        borderTop: '1px solid #ccc',
-                                        padding: '5px 10px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        pointerEvents: 'auto',
-                                        userSelect: 'none',
-                                        touchAction: 'none'
-                                    }}
-                                >
-                                    <IconButton
-                                        ref={emojiIconRef}
-                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        key={index}
+                                        alignItems="flex-start"
                                         sx={{
-                                            width: 40,
-                                            height: 40
+                                            justifyContent: message.sender === 'user'? 'flex-end' : 'flex-start',
+                                            mb: 2,
+                                            flexDirection: message.sender === 'user'? 'row-reverse' : 'row'
                                         }}
                                     >
-                                        😊
-                                    </IconButton>
-                                    {showEmojiPicker && (
+                                        {message.sender === 'user' ? (
+                                            <Avatar sx={{ marginLeft: 2 }}>{selfAvatar}</Avatar>
+                                        ) : (
+                                            <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
+                                        )}
+                                        <Box
+                                            sx={{
+                                                backgroundColor: message.sender === 'user'? '#DCF8C6' : '#E5E5EA',
+                                                borderRadius: 8,
+                                                padding: '8px',
+                                                maxWidth: '70%',
+                                                wordBreak: 'break-word',
+                                                whiteSpace: 'pre-wrap',
+                                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                                            }}
+                                        >
+                                            {message.text}
+                                        </Box>
+                                    </ListItem>
+                                ))}
+                            </List>
+                            <Box
+                                sx={{
+                                    padding: '16px',
+                                    borderTop: '1px solid #e0e0e0',
+                                    backgroundColor: '#fff',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <IconButton
+                                    ref={emojiIconRef}
+                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                    sx={{
+                                        width: 40,
+                                        height: 40
+                                    }}
+                                >
+                                    😊
+                                </IconButton>
+                                {showEmojiPicker && (
+                                    <Slide
+                                        direction="up"
+                                        in={showEmojiPicker}
+                                        mountOnEnter
+                                        unmountOnExit
+                                        style={{ position: 'absolute', bottom: 60, left: 16, zIndex: 1 }}
+                                    >
                                         <Box
                                             ref={emojiPickerRef}
                                             sx={{
-                                                position: 'absolute',
-                                                bottom: 50,
-                                                left: 15,
-                                                zIndex: 1
+                                                backgroundColor: '#fff',
+                                                boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+                                                borderRadius: 8,
+                                                padding: '8px'
                                             }}
                                         >
                                             <Picker
                                                 onEmojiClick={handleEmojiClick}
                                             />
                                         </Box>
-                                    )}
-                                    <TextField
-                                        ref={inputRef}
-                                        fullWidth
-                                        multiline
-                                        rows={1}
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        onKeyPress={handleKeyPress}
-                                        placeholder="输入消息..."
-                                        sx={{
-                                            ml: 1,
-                                            mr: 1,
-                                            '& fieldset': {
-                                                borderWidth: '1px',
-                                                borderRadius: '4px'
-                                            },
-                                            height: 40 // 设置输入框高度和按钮一致
-                                        }}
-                                        inputProps={{
-                                            style: {
-                                                paddingTop: '2px',
-                                                paddingBottom: '2px',
-                                                fontSize: '14px'
-                                            }
-                                        }}
-                                        onFocus={() => {
-                                            setIsInputFocused(true);
-                                            setShowEmojiPicker(false); // 聚焦输入框时隐藏表情选择器
-                                        }}
-                                        onBlur={() => setIsInputFocused(false)}
-                                    />
-                                    <Button
-                                        variant="contained"
-                                        onClick={handleSendMessage}
-                                        sx={{
-                                            background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                                            '&:hover': {
-                                                background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
-                                            },
-                                            marginLeft: 1,
-                                            height: 40 // 确保按钮高度
-                                        }}
-                                    >
-                                        发送
-                                    </Button>
-                                </Box>
-                            </>
-                        )}
-                    </Box>
+                                    </Slide>
+                                )}
+                                <TextField
+                                    ref={inputRef}
+                                    fullWidth
+                                    multiline
+                                    rows={1}
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    placeholder="输入消息..."
+                                    sx={{
+                                        ml: 1,
+                                        mr: 1,
+                                        '& fieldset': {
+                                            borderWidth: '1px',
+                                            borderRadius: '4px'
+                                        },
+                                        height: 40
+                                    }}
+                                    inputProps={{
+                                        style: {
+                                            paddingTop: '2px',
+                                            paddingBottom: '2px',
+                                            fontSize: '14px'
+                                        }
+                                    }}
+                                    onFocus={() => {
+                                        setIsInputFocused(true);
+                                        setShowEmojiPicker(false);
+                                    }}
+                                    onBlur={() => setIsInputFocused(false)}
+                                />
+                                <Button
+                                    variant="contained"
+                                    onClick={handleSendMessage}
+                                    sx={{
+                                        background: '#0084ff',
+                                        '&:hover': {
+                                            background: '#0066cc'
+                                        },
+                                        marginLeft: 1,
+                                        height: 40,
+                                        width: 40,
+                                        borderRadius: 50
+                                    }}
+                                >
+                                    <IoSend />
+                                </Button>
+                            </Box>
+                        </>
+                    )}
                 </Box>
             </Card>
             <Dialog
                 open={openAddFriendDialog}
                 onClose={() => setOpenAddFriendDialog(false)}
                 aria-labelledby="form-dialog-title"
+                TransitionComponent={Slide}
+                TransitionProps={{ direction: 'up' }}
             >
                 <DialogTitle id="form-dialog-title">添加好友</DialogTitle>
                 <DialogContent>
@@ -836,6 +838,8 @@ function MessagesPage() {
                 open={openRequestDetail}
                 onClose={() => setOpenRequestDetail(false)}
                 aria-labelledby="request-detail-title"
+                TransitionComponent={Slide}
+                TransitionProps={{ direction: 'up' }}
             >
                 <DialogTitle id="request-detail-title">好友申请详情</DialogTitle>
                 <DialogContent>
