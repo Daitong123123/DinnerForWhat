@@ -460,7 +460,7 @@ function MessagesPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
+                background: '#f9f9f9',
                 color: '#333'
             }}
         >

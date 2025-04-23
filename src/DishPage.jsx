@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -11,15 +11,14 @@ import {
     FormControl,
     Avatar,
     Menu,
-    MenuItem as MuiMenuItem,
     Stack,
     Divider
 } from '@mui/material';
-import { useNavigate } from'react-router-dom';
-import BottomNavigationBar from './BottomNavigationBar.jsx';
+import { useNavigate } from 'react-router-dom';
 import apiRequest from './api.js';
+import BottomNavigationBar from './BottomNavigationBar.jsx';
 
-function DishPage() {
+const DishPage = () => {
     const [dishType, setDishType] = useState('晚餐');
     const [dishNumber, setDishNumber] = useState('3');
     const [dishTaste, setDishTaste] = useState('四川菜');
@@ -54,9 +53,7 @@ function DishPage() {
             if (cookie) {
                 const sessionId = cookie[1];
                 setUser({ sessionId });
-                console.log('获取到的sessionId:', sessionId);
             } else {
-                console.log('未获取到sessionId，跳转到登录页');
                 navigate('/');
             }
         };
@@ -131,7 +128,7 @@ function DishPage() {
                 setError(response.message || '请求失败');
             }
         } catch (error) {
-            console.error(error);
+            console.error('请求出错:', error);
         } finally {
             setLoading(false);
         }
@@ -149,7 +146,7 @@ function DishPage() {
                 console.error('取消喜欢失败');
             }
         } catch (error) {
-            console.error(error);
+            console.error('取消喜欢请求出错:', error);
         }
     };
 
@@ -176,7 +173,7 @@ function DishPage() {
                 console.error('收藏失败');
             }
         } catch (error) {
-            console.error(error);
+            console.error('收藏请求出错:', error);
         }
     };
 
@@ -195,7 +192,7 @@ function DishPage() {
                 console.error('取消收藏失败');
             }
         } catch (error) {
-            console.error(error);
+            console.error('取消收藏请求出错:', error);
         }
     };
 
@@ -247,7 +244,7 @@ function DishPage() {
                         open={Boolean(anchorEl)}
                         onClose={handleClose}
                     >
-                        <MuiMenuItem onClick={handleLogout}>退出</MuiMenuItem>
+                        <MenuItem onClick={handleLogout}>退出</MenuItem>
                     </Menu>
                 </Stack>
             )}
@@ -464,10 +461,10 @@ function DishPage() {
                                     {dish.isLiked? (
                                         <Button
                                             variant="outlined"
-                                            color="primary"
+                                            color="secondary"
                                             onClick={() => handleUnLikeDelete(dish)}
                                         >
-                                            已收藏
+                                            取消收藏
                                         </Button>
                                     ) : (
                                         <Button
@@ -487,7 +484,6 @@ function DishPage() {
             <BottomNavigationBar />
         </Box>
     );
-}
+};
 
 export default DishPage;
-    

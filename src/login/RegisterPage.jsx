@@ -50,34 +50,43 @@ function RegisterPage() {
     };
 
     return (
-        <Box sx={{
-            minHeight: '100vh',
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
-            color: '#333'
-        }}>
-            <Card sx={{
-                p: 4,
-                width: '100%',
-                maxWidth: 500,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                background: '#fff',
-                borderRadius: 8,
-                border: '1px solid #ccc'
-            }}>
-                <Typography variant="h4" gutterBottom sx={{
-                    background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textFillColor: 'transparent',
-                    textAlign: 'center',
-                    mb: 4
-                }}>
+        <Box
+            sx={{
+                minHeight: '100vh',
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f4f4f4',
+                color: '#333',
+                pb: 6
+            }}
+        >
+            <Card
+                sx={{
+                    p: 3,
+                    width: '100%',
+                    maxWidth: 600,
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    backgroundColor: '#fff',
+                    borderRadius: 10,
+                    overflow: 'hidden'
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        textFillColor: 'transparent',
+                        textAlign: 'center',
+                        mb: 3
+                    }}
+                >
                     菜谱项目注册
                 </Typography>
                 <TextField
@@ -136,6 +145,18 @@ function RegisterPage() {
                     注册
                 </Button>
             </Card>
+            <Box sx={{ width: '100%', maxWidth: 600 }}>
+                <Box sx={{ borderTop: '1px solid #ccc', mb: 2 }} />
+                <Typography
+                    variant="body2"
+                    sx={{
+                        color: '#999',
+                        textAlign: 'left'
+                    }}
+                >
+                    鄂ICP备2025107386号
+                </Typography>
+            </Box>
         </Box>
     );
 }

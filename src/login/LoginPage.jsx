@@ -13,7 +13,8 @@ import {
     Alert,
     Dialog,
     DialogContent,
-    DialogTitle
+    DialogTitle,
+    DialogContentText
 } from '@mui/material';
 import { useNavigate } from'react-router-dom';
 import baseUrl from '../config.js';
@@ -74,23 +75,25 @@ function LoginPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                p: 4,
+                p: 2,
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
                 alignItems: 'center',
-                background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
-                color: '#333'
+                justifyContent: 'center',
+                backgroundColor: '#f4f4f4',
+                color: '#333',
+                pb: 6
             }}
         >
-            <Box
+            <Card
                 sx={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '100%'
+                    p: 3,
+                    width: '100%',
+                    maxWidth: 600,
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    backgroundColor: '#fff',
+                    borderRadius: 10,
+                    overflow: 'hidden'
                 }}
             >
                 {errorMessage && (
@@ -98,69 +101,43 @@ function LoginPage() {
                         {errorMessage}
                     </Alert>
                 )}
-                <Card
+                <Typography
+                    variant="h4"
+                    gutterBottom
                     sx={{
-                        p: 4,
-                        width: '100%',
-                        maxWidth: 500,
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                        background: '#fff',
-                        borderRadius: 8,
-                        border: '1px solid #ccc'
+                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        textFillColor: 'transparent',
+                        textAlign: 'center',
+                        mb: 3
                     }}
                 >
-                    <Typography
-                        variant="h4"
-                        gutterBottom
-                        sx={{
-                            background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                            textFillColor: 'transparent',
-                            textAlign: 'center',
-                            mb: 4
-                        }}
+                    饭菜小记
+                </Typography>
+                <div style={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                    <Button
+                        variant="contained"
+                        sx={{ mr: 2, backgroundColor:!isLoginWithPhone? '#FF6F61' : '#ccc', color: 'white' }}
+                        onClick={() => setIsLoginWithPhone(false)}
                     >
-                        饭菜小记
-                    </Typography>
-                    <div style={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-                        <Button
-                            variant="contained"
-                            sx={{ mr: 2, backgroundColor:!isLoginWithPhone? '#FF6F61' : '#ccc', color: 'white' }}
-                            onClick={() => setIsLoginWithPhone(false)}
-                        >
-                            用户名登录
-                        </Button>
-                        <Button
-                            variant="contained"
-                            sx={{ backgroundColor: isLoginWithPhone? '#FF6F61' : '#ccc', color: 'white' }}
-                            onClick={handlePhoneLoginClick}
-                        >
-                            手机号登录
-                        </Button>
-                    </div>
-                    {!isLoginWithPhone && (
-                        <TextField
-                            label="用户名"
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            fullWidth
-                            sx={{ mb: 3 }}
-                            InputProps={{
-                                sx: { color: '#333' }
-                            }}
-                            InputLabelProps={{
-                                sx: { color: '#666' }
-                            }}
-                        />
-                    )}
+                        用户名登录
+                    </Button>
+                    <Button
+                        variant="contained"
+                        sx={{ backgroundColor: isLoginWithPhone? '#FF6F61' : '#ccc', color: 'white' }}
+                        onClick={handlePhoneLoginClick}
+                    >
+                        手机号登录
+                    </Button>
+                </div>
+                {!isLoginWithPhone && (
                     <TextField
-                        label="密码"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        label="用户名"
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         fullWidth
                         sx={{ mb: 3 }}
                         InputProps={{
@@ -170,29 +147,63 @@ function LoginPage() {
                             sx: { color: '#666' }
                         }}
                     />
-                    <Button
-                        variant="contained"
-                        onClick={handleLogin}
-                        fullWidth
-                        sx={{
-                            background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                            '&:hover': {
-                                background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
-                            }
-                        }}
-                    >
-                        登录
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        onClick={() => navigate('/register')}
-                        sx={{ mt: 2 }}
-                    >
-                        立即注册
-                    </Button>
-                </Card>
-            </Box>
-            <Box sx={{ width: '100%', maxWidth: 500 }}>
+                )}
+                <TextField
+                    label="密码"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    fullWidth
+                    sx={{ mb: 3 }}
+                    InputProps={{
+                        sx: { color: '#333' }
+                    }}
+                    InputLabelProps={{
+                        sx: { color: '#666' }
+                    }}
+                />
+                <Button
+                    variant="contained"
+                    onClick={handleLogin}
+                    fullWidth
+                    sx={{
+                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        '&:hover': {
+                            background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
+                        }
+                    }}
+                >
+                    登录
+                </Button>
+                <Button
+                    variant="outlined"
+                    onClick={() => navigate('/register')}
+                    sx={{ mt: 2 }}
+                >
+                    立即注册
+                </Button>
+            </Card>
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                aria-labelledby="phone-login-dialog-title"
+                sx={{
+                    '&.MuiPaper-root': {
+                        backgroundImage: 'url("https://example.com/book-background.jpg")', // 替换为真实的书本背景图片地址
+                        backgroundSize: 'cover',
+                        borderRadius: 10,
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)'
+                    }
+                }}
+            >
+                <DialogTitle id="phone-login-dialog-title" sx={{ fontFamily: '楷体' }}>手机号登录</DialogTitle>
+                <DialogContent sx={{ fontFamily: '楷体' }}>
+                    <DialogContentText>
+                        暂不支持手机号登录，请使用用户名登录。
+                    </DialogContentText>
+                </DialogContent>
+            </Dialog>
+            <Box sx={{ width: '100%', maxWidth: 600 }}>
                 <Box sx={{ borderTop: '1px solid #ccc', mb: 2 }} />
                 <Typography
                     variant="body2"
@@ -208,4 +219,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;    
+export default LoginPage;
