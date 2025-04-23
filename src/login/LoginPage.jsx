@@ -3,13 +3,8 @@ import {
     Box,
     Typography,
     Card,
-    CardContent,
     Button,
     TextField,
-    Select,
-    MenuItem,
-    InputLabel,
-    FormControl,
     Alert,
     Dialog,
     DialogContent,
@@ -23,7 +18,6 @@ function LoginPage() {
     const [isLoginWithPhone, setIsLoginWithPhone] = useState(false);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [phone, setPhone] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();

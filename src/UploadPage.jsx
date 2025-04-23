@@ -12,8 +12,6 @@ import {
     FormControl,
     LinearProgress
 } from '@mui/material';
-import { readdir, readFile, stat } from 'fs/promises';
-import { join } from 'path';
 
 function UploadPage() {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -27,12 +25,12 @@ function UploadPage() {
     const [isCancelled, setIsCancelled] = useState(false);
     const [folderPath, setFolderPath] = useState('');
 
-    const handleFileChange = async (event) => {
+    const handleFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
             if (file.type === 'application/x-directory') {
-                const files = await readDirectory(file.path);
-                setSelectedFile(files);
+                // 处理文件夹选择，这里简单示例为记录文件夹对象
+                setSelectedFile([file]);
             } else {
                 setSelectedFile([file]);
             }
@@ -41,23 +39,24 @@ function UploadPage() {
         }
     };
 
-    const readDirectory = async (dirPath) => {
+    const readDirectoryFiles = async (directory) => {
+        const reader = new FileReader();
         const files = [];
-        const entries = await readdir(dirPath, { withFileTypes: true });
-        for (const entry of entries) {
-            const filePath = join(dirPath, entry.name);
-            const stats = await stat(filePath);
-            if (stats.isDirectory()) {
-                const subFiles = await readDirectory(filePath);
-                files.push(...subFiles);
-            } else {
-                files.push({
-                    name: filePath.replace(dirPath + '/', ''),
-                    path: filePath,
-                    size: stats.size
-                });
+
+        const readEntries = async (dirEntry) => {
+            const entries = await dirEntry.entries();
+            for await (const [, entry] of entries) {
+                if (entry.isDirectory) {
+                    await readEntries(entry);
+                } else {
+                    const file = await entry.file();
+                    files.push(file);
+                }
             }
-        }
+        };
+
+        await readEntries(directory);
+
         return files;
     };
 
@@ -70,20 +69,25 @@ function UploadPage() {
             setUploadError('');
             setIsCancelled(false);
 
-            const totalFiles = selectedFile.length;
+            let filesToUpload = [];
+            for (const file of selectedFile) {
+                if (file.type === 'application/x-directory') {
+                    const dirFiles = await readDirectoryFiles(file);
+                    filesToUpload = filesToUpload.concat(dirFiles);
+                } else {
+                    filesToUpload.push(file);
+                }
+            }
+
+            const totalFiles = filesToUpload.length;
             let currentFileIndex = 0;
 
-            for (const fileInfo of selectedFile) {
+            for (const file of filesToUpload) {
                 if (isCancelled) {
                     setUploadError('用户取消上传');
                     setUploading(false);
                     return;
                 }
-
-                const file = {
-                    name: fileInfo.name,
-                    size: fileInfo.size
-                };
 
                 if (uploadType === 'chunk') {
                     const chunkSize = parseInt(chunkSizeInput, 10) * 1024;
@@ -106,7 +110,7 @@ function UploadPage() {
                             }
                             const start = i * chunkSize;
                             const end = Math.min(start + chunkSize, file.size);
-                            const chunkData = await readFile(fileInfo.path).then(data => data.slice(start, end));
+                            const chunkData = file.slice(start, end);
 
                             const formData = new FormData();
                             formData.append('chunk', chunkData);
@@ -144,9 +148,8 @@ function UploadPage() {
                         }
                     }
                 } else {
-                    const fileData = await readFile(fileInfo.path);
                     const formData = new FormData();
-                    formData.append('file', fileData);
+                    formData.append('file', file);
                     formData.append('filename', file.name);
                     formData.append('fileType', fileType);
                     formData.append('uploadType', uploadType);
@@ -238,7 +241,7 @@ function UploadPage() {
                         }}
                     >
                         选择文件
-                        <input type="file" hidden onChange={handleFileChange} webkitdirectory /> {/* 添加 webkitdirectory 属性支持文件夹选择 */}
+                        <input type="file" hidden onChange={handleFileChange} webkitdirectory />
                     </Button>
                     <Typography variant="caption" sx={{ color: '#777' }}>
                         {selectedFile? selectedFile.length > 1? `${selectedFile.length} 个文件` : selectedFile[0].name : '未选择文件'}

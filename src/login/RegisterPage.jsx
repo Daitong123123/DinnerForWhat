@@ -4,13 +4,8 @@ import {
     Box,
     Typography,
     Card,
-    CardContent,
     Button,
-    TextField,
-    Select,
-    MenuItem,
-    InputLabel,
-    FormControl
+    TextField
 } from '@mui/material';
 import { useNavigate } from'react-router-dom';
 

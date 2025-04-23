@@ -3,7 +3,6 @@ import {
     Box,
     Typography,
     Card,
-    CardContent,
     Button,
     Table,
     TableBody,
@@ -17,7 +16,6 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogContentText,
     Select,
     MenuItem,
     Stack,
@@ -25,7 +23,6 @@ import {
 } from '@mui/material';
 import { useNavigate } from'react-router-dom';
 import apiRequest from './api.js'; 
-import BottomNavigationBar from './BottomNavigationBar.jsx'; 
 
 function ModelManagementPage() {
     const [modelConfigs, setModelConfigs] = useState([]);

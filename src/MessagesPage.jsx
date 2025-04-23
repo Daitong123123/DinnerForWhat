@@ -4,12 +4,10 @@ import {
     Box,
     Typography,
     Card,
-    CardContent,
     TextField,
     Button,
     List,
     ListItem,
-    ListItemText,
     Avatar,
     Divider,
     IconButton,
@@ -24,7 +22,6 @@ import {
     AppBar,
     Toolbar
 } from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from'react-router-dom';
 import Picker from 'emoji-picker-react';
