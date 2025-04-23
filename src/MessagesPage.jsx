@@ -59,8 +59,8 @@ function MessagesPage() {
                 const formData = {
                     userIdFrom: currentUserId,
                     userIdTo: friend.id,
-                    curPage: 1,
-                    pageSize: 20
+                    // curPage: 1,
+                    // pageSize: 20
                 };
                 const response = await apiRequest('/message-query', 'POST', formData, navigate);
                 if (response) {
