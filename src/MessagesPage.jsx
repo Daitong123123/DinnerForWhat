@@ -363,14 +363,14 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     >
                         <span style={{ fontSize: '20px' }}>😊</span>
                     </IconButton>
-                    <IconButton sx={{ width: 40, height: 40 }}>
-                        <FaImage />
+                    <IconButton sx={{ width: 40, height: 40, color: '#0084ff' }}>
+                        <FaImage size={24} />
                     </IconButton>
-                    <IconButton sx={{ width: 40, height: 40 }}>
-                        <FaCamera />
+                    <IconButton sx={{ width: 40, height: 40, color: '#0084ff' }}>
+                        <FaCamera size={24} />
                     </IconButton>
-                    <IconButton sx={{ width: 40, height: 40 }}>
-                        <FaMicrophone />
+                    <IconButton sx={{ width: 40, height: 40, color: '#666' }}>
+                        <FaMicrophone size={20} />
                     </IconButton>
                 </Box>
                 {showEmojiPicker && (
