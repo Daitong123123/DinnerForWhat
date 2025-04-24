@@ -1,5 +1,5 @@
 import BottomNavigationBar from './BottomNavigationBar.jsx';
-import React, { useState, useEffect, useRef } from'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     Typography,
@@ -23,16 +23,16 @@ import {
     Toolbar
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { useNavigate } from'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Picker from 'emoji-picker-react';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
-import { FaUserPlus } from'react-icons/fa';
-import { IoSend } from'react-icons/io5';
+import { FaUserPlus, FaCamera, FaMicrophone, FaImage } from 'react-icons/fa';
+import { IoSend } from 'react-icons/io5';
 
 // 聊天列表页面组件
-function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, onAddFriendClick, onRequestClick, handleAgreeRequest, handleDisagreeRequest, getStatusText }) {
+function ChatListPage({ friends, onFriendSelect, selectedTab, setSelectedTab, friendRequests, onAddFriendClick, onRequestClick, handleAgreeRequest, handleDisagreeRequest, getStatusText }) {
     const currentUserId = localStorage.getItem('userId');
     return (
         <Box
@@ -54,7 +54,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
             >
                 <Tabs
                     value={selectedTab}
-                    onChange={(e, newValue) => selectedTab = newValue}
+                    onChange={(e, newValue) => setSelectedTab(newValue)}
                     aria-label="friend tabs"
                     textColor="primary"
                     indicatorColor="primary"
@@ -72,7 +72,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
                     overflowY: 'auto'
                 }}
             >
-                {selectedTab === 0? (
+                {selectedTab === 0 ? (
                     friends.map((friend) => (
                         <ListItem
                             key={friend.id}
@@ -165,7 +165,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, friendRequests, on
                                     <Avatar sx={{ mx: 1 }}>{request.toNickname.charAt(0).toUpperCase()}</Avatar>
                                     <Typography sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>为好友</Typography>
                                 </Box>
-                                <Typography sx={{ color: request.status === '2'? 'red' : 'green' }}>
+                                <Typography sx={{ color: request.status === '2' ? 'red' : 'green' }}>
                                     {getStatusText(request.status)}
                                 </Typography>
                             </ListItem>
@@ -205,7 +205,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         <ArrowBack />
                     </IconButton>
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {selectedFriend.name}
+                        正在和 {selectedFriend.name} 聊天
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -225,29 +225,47 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         key={index}
                         alignItems="flex-start"
                         sx={{
-                            justifyContent: message.sender === 'user'? 'flex-end' : 'flex-start',
+                            justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
                             mb: 2,
-                            flexDirection: message.sender === 'user'? 'row-reverse' : 'row'
+                            flexDirection: 'row'
                         }}
                     >
-                        {message.sender === 'user'? (
-                            <Avatar sx={{ marginLeft: 2 }}>{selfAvatar}</Avatar>
+                        {message.sender === 'user' ? (
+                            <>
+                                <Box
+                                    sx={{
+                                        backgroundColor: '#DCF8C6',
+                                        borderRadius: 8,
+                                        padding: '8px',
+                                        maxWidth: '80%',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'pre-wrap',
+                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                                        marginRight: 2
+                                    }}
+                                >
+                                    {message.text}
+                                </Box>
+                                <Avatar>{selfAvatar}</Avatar>
+                            </>
                         ) : (
-                            <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
+                            <>
+                                <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
+                                <Box
+                                    sx={{
+                                        backgroundColor: '#E5E5EA',
+                                        borderRadius: 8,
+                                        padding: '8px',
+                                        maxWidth: '80%',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'pre-wrap',
+                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                                    }}
+                                >
+                                    {message.text}
+                                </Box>
+                            </>
                         )}
-                        <Box
-                            sx={{
-                                backgroundColor: message.sender === 'user'? '#DCF8C6' : '#E5E5EA',
-                                borderRadius: 8,
-                                padding: '8px',
-                                maxWidth: '80%',
-                                wordBreak: 'break-word',
-                                whiteSpace: 'pre-wrap',
-                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                            }}
-                        >
-                            {message.text}
-                        </Box>
                     </ListItem>
                 ))}
             </List>
@@ -276,6 +294,15 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                 >
                     😊
                 </IconButton>
+                <IconButton sx={{ width: 40, height: 40 }}>
+                    <FaImage />
+                </IconButton>
+                <IconButton sx={{ width: 40, height: 40 }}>
+                    <FaCamera />
+                </IconButton>
+                <IconButton sx={{ width: 40, height: 40 }}>
+                    <FaMicrophone />
+                </IconButton>
                 {showEmojiPicker && (
                     <Slide
                         direction="up"
@@ -299,6 +326,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         </Box>
                     </Slide>
                 )}
+                {/* 假设新的输入框，这里简单示例，你可根据实际情况修改 */}
                 <TextField
                     ref={inputRef}
                     fullWidth
@@ -312,17 +340,18 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         ml: 1,
                         mr: 1,
                         '& fieldset': {
-                            borderWidth: '1px',
-                            borderRadius: '4px'
+                            borderWidth: '2px',
+                            borderRadius: '10px'
                         },
-                        height: 32,
-                        padding: '4px'
+                        height: 60,
+                        padding: '2px',
+                        backgroundColor: '#f5f5f5'
                     }}
                     inputProps={{
                         style: {
-                            paddingTop: '2px',
-                            paddingBottom: '2px',
-                            fontSize: '14px'
+                            paddingTop: '0px',
+                            paddingBottom: '0px',
+                            fontSize: '18px'
                         }
                     }}
                 />
@@ -385,10 +414,10 @@ function MessagesPage() {
                 if (response) {
                     const messages = response.records.map(record => ({
                         text: record.message,
-                        sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                        sender: record.userIdFrom === currentUserId ? 'user' : 'other'
                     }));
                     setFriendMessages((prevMessages) => ({
-                       ...prevMessages,
+                        ...prevMessages,
                         [friend.id]: messages
                     }));
                 } else {
@@ -416,9 +445,9 @@ function MessagesPage() {
                     setFriendMessages((prevMessages) => {
                         const currentMessages = prevMessages[selectedFriend.id] || [];
                         return {
-                           ...prevMessages,
+                            ...prevMessages,
                             [selectedFriend.id]: [
-                               ...currentMessages,
+                                ...currentMessages,
                                 { text: newMessage, sender: 'user' }
                             ]
                         };
@@ -435,17 +464,17 @@ function MessagesPage() {
                     if (newResponse) {
                         const messages = newResponse.records.map(record => ({
                             text: record.message,
-                            sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                            sender: record.userIdFrom === currentUserId ? 'user' : 'other'
                         }));
                         setFriendMessages((prevMessages) => ({
-                           ...prevMessages,
+                            ...prevMessages,
                             [selectedFriend.id]: messages
                         }));
                     } else {
                         console.error('重新获取聊天记录失败');
                     }
                 } else {
-                    console.error('发送消息失败:', response? response.message : '无响应信息');
+                    console.error('发送消息失败:', response ? response.message : '无响应信息');
                 }
             } catch (error) {
                 console.error('发送消息请求出错:', error);
@@ -470,9 +499,9 @@ function MessagesPage() {
         const handleClickOutside = (event) => {
             if (
                 emojiPickerRef.current &&
-               !emojiPickerRef.current.contains(event.target) &&
+                !emojiPickerRef.current.contains(event.target) &&
                 emojiIconRef.current &&
-               !emojiIconRef.current.contains(event.target)
+                !emojiIconRef.current.contains(event.target)
             ) {
                 setShowEmojiPicker(false);
             }
@@ -579,9 +608,9 @@ function MessagesPage() {
                                 const fromInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestFrom }, navigate);
                                 const toInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestTo }, navigate);
                                 return {
-                                   ...request,
-                                    fromNickname: fromInfo? fromInfo.userNickName : '未知用户',
-                                    toNickname: toInfo? toInfo.userNickName : '未知用户'
+                                    ...request,
+                                    fromNickname: fromInfo ? fromInfo.userNickName : '未知用户',
+                                    toNickname: toInfo ? toInfo.userNickName : '未知用户'
                                 };
                             })
                         );
@@ -631,21 +660,21 @@ function MessagesPage() {
                                 pageSize: 20
                             };
                             apiRequest('/message-query', 'POST', formData, navigate)
-                               .then((response) => {
+                                .then((response) => {
                                     if (response) {
                                         const messages = response.records.map((record) => ({
                                             text: record.message,
-                                            sender: record.userIdFrom === currentUserId? 'user' : 'other'
+                                            sender: record.userIdFrom === currentUserId ? 'user' : 'other'
                                         }));
                                         setFriendMessages((prevMessages) => ({
-                                           ...prevMessages,
+                                            ...prevMessages,
                                             [selectedFriend.id]: messages
                                         }));
                                     } else {
                                         console.error('重新获取聊天记录失败');
                                     }
                                 })
-                               .catch((error) => {
+                                .catch((error) => {
                                     console.error('Error fetching messages:', error);
                                 });
                         } else if (['friendRequest', 'friendRequestAgree', 'friendRequestDisagree'].includes(data.type)) {
@@ -653,16 +682,16 @@ function MessagesPage() {
                                 userId: currentUserId
                             };
                             apiRequest('/friend-request-query', 'POST', formData, navigate)
-                               .then(async (response) => {
+                                .then(async (response) => {
                                     if (response && response.code === '200') {
                                         const requestsWithNicknames = await Promise.all(
                                             response.friendToBeRequestList.map(async (request) => {
                                                 const fromInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestFrom }, navigate);
                                                 const toInfo = await apiRequest('/friend-info', 'GET', { userId: request.requestTo }, navigate);
                                                 return {
-                                                   ...request,
-                                                    fromNickname: fromInfo? fromInfo.userNickName : '未知用户',
-                                                    toNickname: toInfo? toInfo.userNickName : '未知用户'
+                                                    ...request,
+                                                    fromNickname: fromInfo ? fromInfo.userNickName : '未知用户',
+                                                    toNickname: toInfo ? toInfo.userNickName : '未知用户'
                                                 };
                                             })
                                         );
@@ -671,7 +700,7 @@ function MessagesPage() {
                                         console.error('获取好友申请列表失败');
                                     }
                                 })
-                               .catch((error) => {
+                                .catch((error) => {
                                     console.error('Error fetching friend requests:', error);
                                 });
                         }
@@ -711,7 +740,7 @@ function MessagesPage() {
                     setAddFriendUserId('');
                     setAddFriendContent('');
                 } else {
-                    console.error('发送好友申请失败:', response? response.message : '无响应信息');
+                    console.error('发送好友申请失败:', response ? response.message : '无响应信息');
                 }
             } catch (error) {
                 console.error('发送好友申请请求出错:', error);
@@ -729,11 +758,11 @@ function MessagesPage() {
                 };
                 const response = await apiRequest('/friend-request-agree', 'POST', formData, navigate);
                 if (response && response.code === '200') {
-                    const newRequests = friendRequests.filter(req => req.requestFrom!== request.requestFrom);
+                    const newRequests = friendRequests.filter(req => req.requestFrom !== request.requestFrom);
                     setFriendRequests(newRequests);
                     setOpenRequestDetail(false);
                 } else {
-                    console.error('同意好友申请失败:', response? response.message : '无响应信息');
+                    console.error('同意好友申请失败:', response ? response.message : '无响应信息');
                 }
             } catch (error) {
                 console.error('同意好友申请请求出错:', error);
@@ -751,11 +780,11 @@ function MessagesPage() {
                 };
                 const response = await apiRequest('/friend-request-disagree', 'POST', formData, navigate);
                 if (response && response.code === '200') {
-                    const newRequests = friendRequests.filter(req => req.requestFrom!== request.requestFrom);
+                    const newRequests = friendRequests.filter(req => req.requestFrom !== request.requestFrom);
                     setFriendRequests(newRequests);
                     setOpenRequestDetail(false);
                 } else {
-                    console.error('拒绝好友申请失败:', response? response.message : '无响应信息');
+                    console.error('拒绝好友申请失败:', response ? response.message : '无响应信息');
                 }
             } catch (error) {
                 console.error('拒绝好友申请请求出错:', error);
@@ -804,7 +833,7 @@ function MessagesPage() {
                     overflow: 'hidden'
                 }}
             >
-                {selectedFriend? (
+                {selectedFriend ? (
                     <ChatPage
                         selectedFriend={selectedFriend}
                         friendMessages={friendMessages}
@@ -826,6 +855,7 @@ function MessagesPage() {
                         friends={friends}
                         onFriendSelect={handleFriendSelect}
                         selectedTab={selectedTab}
+                        setSelectedTab={setSelectedTab}
                         friendRequests={friendRequests}
                         onAddFriendClick={() => setOpenAddFriendDialog(true)}
                         onRequestClick={handleRequestClick}
@@ -900,4 +930,4 @@ function MessagesPage() {
     );
 }
 
-export default MessagesPage;    
+export default MessagesPage;
