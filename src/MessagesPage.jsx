@@ -196,7 +196,8 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                 flexDirection: 'column',
                 backgroundColor: '#f9f9f9',
                 position: 'relative',
-                height: '100vh'
+                height: '100vh',
+                paddingBottom: '120px'
             }}
         >
             <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
@@ -227,7 +228,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     padding: '24px',
                     display: 'flex',
                     flexDirection: 'column',
-                    height: 'calc(100vh - 120px)' // 减去 AppBar 和输入框的高度
+                    marginBottom: '80px'
                 }}
             >
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
@@ -280,47 +281,105 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                 ))}
             </List>
             <Box
-                ref={inputBoxRef}
                 sx={{
-                    padding: '16px',
-                    borderTop: '1px solid #e0e0e0',
-                    backgroundColor: '#fff',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: 'column',
                     position: 'fixed',
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    zIndex: 1
+                    zIndex: 1,
+                    backgroundColor: '#fff',
+                    borderTop: '1px solid #e0e0e0',
+                    height: '80px'
                 }}
             >
-                <IconButton
-                    ref={emojiIconRef}
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                <Box
                     sx={{
-                        width: 40,
-                        height: 40,
-                        color: 'inherit'
+                        padding: '8px 16px',
+                        display: 'flex',
+                        alignItems: 'center'
                     }}
                 >
-                    <span style={{ fontSize: '20px' }}>😊</span>
-                </IconButton>
-                <IconButton sx={{ width: 40, height: 40 }}>
-                    <FaImage />
-                </IconButton>
-                <IconButton sx={{ width: 40, height: 40 }}>
-                    <FaCamera />
-                </IconButton>
-                <IconButton sx={{ width: 40, height: 40 }}>
-                    <FaMicrophone />
-                </IconButton>
+                    <TextField
+                        ref={inputRef}
+                        fullWidth
+                        multiline
+                        rows={1}
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="输入消息..."
+                        sx={{
+                            '& fieldset': {
+                                borderWidth: '2px',
+                                borderRadius: '10px'
+                            },
+                            height: 60,
+                            padding: '2px',
+                            backgroundColor: '#f5f5f5'
+                        }}
+                        inputProps={{
+                            style: {
+                                paddingTop: '0px',
+                                paddingBottom: '0px',
+                                fontSize: '18px'
+                            }
+                        }}
+                    />
+                    <Button
+                        variant="contained"
+                        onClick={handleSendMessage}
+                        sx={{
+                            background: '#0084ff',
+                            '&:hover': {
+                                background: '#0066cc'
+                            },
+                            marginLeft: 1,
+                            height: 40,
+                            width: 40,
+                            borderRadius: 50
+                        }}
+                    >
+                        <IoSend />
+                    </Button>
+                </Box>
+                <Box
+                    sx={{
+                        padding: '8px 16px',
+                        display: 'flex',
+                        justifyContent: 'space-around',
+                        borderTop: '1px solid #f0f0f0'
+                    }}
+                >
+                    <IconButton
+                        ref={emojiIconRef}
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            color: 'inherit'
+                        }}
+                    >
+                        <span style={{ fontSize: '20px' }}>😊</span>
+                    </IconButton>
+                    <IconButton sx={{ width: 40, height: 40 }}>
+                        <FaImage />
+                    </IconButton>
+                    <IconButton sx={{ width: 40, height: 40 }}>
+                        <FaCamera />
+                    </IconButton>
+                    <IconButton sx={{ width: 40, height: 40 }}>
+                        <FaMicrophone />
+                    </IconButton>
+                </Box>
                 {showEmojiPicker && (
                     <Slide
                         direction="up"
                         in={showEmojiPicker}
                         mountOnEnter
                         unmountOnExit
-                        style={{ position: 'absolute', bottom: 60, left: 16, zIndex: 2 }}
+                        style={{ position: 'absolute', bottom: 120, left: 16, zIndex: 2 }}
                     >
                         <Box
                             ref={emojiPickerRef}
@@ -337,51 +396,6 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         </Box>
                     </Slide>
                 )}
-                {/* 假设新的输入框，这里简单示例，你可根据实际情况修改 */}
-                <TextField
-                    ref={inputRef}
-                    fullWidth
-                    multiline
-                    rows={1}
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="输入消息..."
-                    sx={{
-                        ml: 1,
-                        mr: 1,
-                        '& fieldset': {
-                            borderWidth: '2px',
-                            borderRadius: '10px'
-                        },
-                        height: 60,
-                        padding: '2px',
-                        backgroundColor: '#f5f5f5'
-                    }}
-                    inputProps={{
-                        style: {
-                            paddingTop: '0px',
-                            paddingBottom: '0px',
-                            fontSize: '18px'
-                        }
-                    }}
-                />
-                <Button
-                    variant="contained"
-                    onClick={handleSendMessage}
-                    sx={{
-                        background: '#0084ff',
-                        '&:hover': {
-                            background: '#0066cc'
-                        },
-                        marginLeft: 1,
-                        height: 40,
-                        width: 40,
-                        borderRadius: 50
-                    }}
-                >
-                    <IoSend />
-                </Button>
             </Box>
         </Box>
     );

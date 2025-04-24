@@ -31,6 +31,14 @@ function UploadPage() {
         const files = event.target.files;
         if (files && files.length > 0) {
             setSelectedFileOrFolder([...files]);
+            
+            // 根据文件名自动设置项目类型
+            const firstFile = files[0];
+            if (firstFile.name.endsWith('.jar')) {
+                setFileType('backend');
+            } else if (firstFile.name.startsWith('build.')) {
+                setFileType('frontend');
+            }
         } else {
             setSelectedFileOrFolder(null);
         }
