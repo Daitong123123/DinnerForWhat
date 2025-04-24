@@ -196,8 +196,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                 flexDirection: 'column',
                 backgroundColor: '#f9f9f9',
                 position: 'relative',
-                height: '100vh',
-                paddingBottom: '120px'
+                height: '100vh'
             }}
         >
             <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
@@ -228,7 +227,9 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     padding: '24px',
                     display: 'flex',
                     flexDirection: 'column',
-                    marginBottom: '80px'
+                    height: 'calc(100vh - 120px)',
+                paddingBottom: '120px', // 为底部输入框预留空间
+                marginBottom: '0'
                 }}
             >
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
@@ -290,8 +291,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     right: 0,
                     zIndex: 1,
                     backgroundColor: '#fff',
-                    borderTop: '1px solid #e0e0e0',
-                    height: '80px'
+                    borderTop: '1px solid #e0e0e0'
                 }}
             >
                 <Box
@@ -363,14 +363,47 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     >
                         <span style={{ fontSize: '20px' }}>😊</span>
                     </IconButton>
-                    <IconButton sx={{ width: 40, height: 40, color: '#0084ff' }}>
-                        <FaImage size={24} />
+                    <IconButton 
+                        sx={{ width: 40, height: 40 }}
+                        onClick={() => document.getElementById('fileInput').click()}
+                    >
+                        <FaImage />
+                        <input
+                            id="fileInput"
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    // 这里可以添加处理图片文件的逻辑
+                                    console.log('Selected file:', file);
+                                }
+                            }}
+                        />
                     </IconButton>
-                    <IconButton sx={{ width: 40, height: 40, color: '#0084ff' }}>
-                        <FaCamera size={24} />
+                    <IconButton 
+                        sx={{ width: 40, height: 40 }}
+                        onClick={() => document.getElementById('cameraInput').click()}
+                    >
+                        <FaCamera />
+                        <input
+                            id="cameraInput"
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    // 这里可以添加处理拍照文件的逻辑
+                                    console.log('拍照文件:', file);
+                                }
+                            }}
+                        />
                     </IconButton>
-                    <IconButton sx={{ width: 40, height: 40, color: '#666' }}>
-                        <FaMicrophone size={20} />
+                    <IconButton sx={{ width: 40, height: 40 }}>
+                        <FaMicrophone />
                     </IconButton>
                 </Box>
                 {showEmojiPicker && (
