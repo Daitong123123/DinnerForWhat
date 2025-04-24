@@ -204,8 +204,18 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     <IconButton onClick={onBack}>
                         <ArrowBack />
                     </IconButton>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        正在和 {selectedFriend.name} 聊天
+                    <Typography variant="h6" sx={{ 
+                        fontWeight: 'bold', 
+                        flexGrow: 1, 
+                        textAlign: 'center', 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        maxWidth: '60%',
+                        color: '#333',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                    }}>
+                        {selectedFriend ? `正在和 ${selectedFriend.name} 聊天` : '请选择好友开始聊天'}
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -289,10 +299,11 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                     sx={{
                         width: 40,
-                        height: 40
+                        height: 40,
+                        color: 'inherit'
                     }}
                 >
-                    😊
+                    <span style={{ fontSize: '20px' }}>😊</span>
                 </IconButton>
                 <IconButton sx={{ width: 40, height: 40 }}>
                     <FaImage />

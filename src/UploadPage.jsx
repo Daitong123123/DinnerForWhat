@@ -19,6 +19,8 @@ function UploadPage() {
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const [progress, setProgress] = useState(0);
+    const [startBackStatus, setStartBackStatus] = useState(null);
+    const [startFrontStatus, setStartFrontStatus] = useState(null);
     const [chunkSizeInput, setChunkSizeInput] = useState('34');
     const [fileType, setFileType] = useState('backend');
     const [uploadType, setUploadType] = useState('chunk');
@@ -367,6 +369,76 @@ function UploadPage() {
                 {uploadError && (
                     <Typography color="error" align="center" sx={{ mt: 2 }}>
                         {uploadError}
+                    </Typography>
+                )}
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                    <Button
+                        variant="contained"
+                        onClick={async () => {
+                            try {
+                                const response = await fetch('http://dinner.daitong.xyz:5000/startBack');
+                                if (response.ok) {
+                                    setStartBackStatus('success');
+                                } else {
+                                    setStartBackStatus('error');
+                                }
+                            } catch (error) {
+                                setStartBackStatus('error');
+                            }
+                        }}
+                        sx={{
+                            flex: 1,
+                            background: 'linear-gradient(45deg, #4CAF50, #2E7D32)',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #2E7D32, #4CAF50)'
+                            }
+                        }}
+                    >
+                        Run Backend
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={async () => {
+                            try {
+                                const response = await fetch('http://dinner.daitong.xyz:5000/startFront');
+                                if (response.ok) {
+                                    setStartFrontStatus('success');
+                                } else {
+                                    setStartFrontStatus('error');
+                                }
+                            } catch (error) {
+                                setStartFrontStatus('error');
+                            }
+                        }}
+                        sx={{
+                            flex: 1,
+                            background: 'linear-gradient(45deg, #2196F3, #1565C0)',
+                            '&:hover': {
+                                background: 'linear-gradient(45deg, #1565C0, #2196F3)'
+                            }
+                        }}
+                    >
+                        Build Frontend
+                    </Button>
+                </Box>
+                {startBackStatus === 'success' && (
+                    <Typography color="success.main" align="center" sx={{ mt: 2 }}>
+                        ✓ Backend started successfully
+                    </Typography>
+                )}
+                {startBackStatus === 'error' && (
+                    <Typography color="error" align="center" sx={{ mt: 2 }}>
+                        ✗ Failed to start backend
+                    </Typography>
+                )}
+                {startFrontStatus === 'success' && (
+                    <Typography color="success.main" align="center" sx={{ mt: 2 }}>
+                        ✓ Frontend built successfully
+                    </Typography>
+                )}
+                {startFrontStatus === 'error' && (
+                    <Typography color="error" align="center" sx={{ mt: 2 }}>
+                        ✗ Failed to build frontend
                     </Typography>
                 )}
             </Card>
