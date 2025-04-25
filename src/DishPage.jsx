@@ -85,7 +85,9 @@ const DishPage = () => {
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('dishes', JSON.stringify(dishes));
+        if (dishes.length > 0) {
+            localStorage.setItem('dishes', JSON.stringify(dishes));
+        }
     }, [dishes]);
 
     const handleSubmit = async () => {
@@ -112,8 +114,14 @@ const DishPage = () => {
         try {
             const response = await apiRequest('/dish', 'POST', formData, navigate);
             if (response) {
-                const newDishes = response.data.map(dish => ({...dish, isLiked: false }));
-                setDishes(newDishes);
+                const dishesWithLikeStatus = await Promise.all(response.data.map(async dish => {
+                    const likeResponse = await apiRequest(`/isLike?dishId=${dish.id}`, 'GET', null, navigate);
+                    return {
+                        ...dish,
+                        isLiked: likeResponse?.data === true
+                    };
+                }));
+                setDishes(dishesWithLikeStatus);
             } else {
                 setError(response.message || '请求失败');
             }
@@ -124,14 +132,14 @@ const DishPage = () => {
         }
     };
 
-    const handleUnlike = async (dishName) => {
+    const handleUnlike = async (dishId) => {
         try {
             const response = await apiRequest('/unlike', 'POST', {
-                "unlikes": [dishName]
+                "unlikes": [dishId]
             }, navigate);
 
             if (response) {
-                setDishes(dishes.filter(dish => dish.dishName!== dishName));
+                setDishes(dishes.filter(dish => dish.id!== dishId));
             } else {
                 console.error('取消喜欢失败');
             }
@@ -142,16 +150,7 @@ const DishPage = () => {
 
     const handleLike = async (dish) => {
         const formData = {
-            cookBook: {
-                dishFrom: dishTaste,
-                complex: dish.complex,
-                tasty: preference,
-                dishName: dish.dishName,
-                dishStep: dish.dishStep,
-                dishEffect: dish.dishEffect,
-                dishIngredients: dish.dishIngredients,
-                dishCost: dish.dishCost
-            }
+            dishId: dish.id
         };
 
         try {
@@ -171,12 +170,12 @@ const DishPage = () => {
 
     const handleUnLikeDelete = async (dishId) => {
         try {
-            const formData = {
-                deleteList: [dishId]
-            };
-            const response = await apiRequest('/delete-likes', 'POST', formData, navigate);
+            
+            const response = await apiRequest('/delete-likes', 'POST', [dishId], navigate);
             if (response) {
-                setDishes(dishes.filter(dish => dish.id!== dishId));
+                setDishes(dishes.map(dish => 
+                    dish.id === dishId ? {...dish, isLiked: false} : dish
+                ));
                 console.log('取消收藏成功');
             } else {
                 console.error('取消收藏失败');
@@ -450,7 +449,7 @@ const DishPage = () => {
                                     <Button
                                         variant="outlined"
                                         color="error"
-                                        onClick={() => handleUnlike(dish.dishName)}
+                                        onClick={() => handleUnlike(dish.id)}
                                     >
                                         不喜欢
                                     </Button>
@@ -482,4 +481,4 @@ const DishPage = () => {
     );
 };
 
-export default DishPage;    
+export default DishPage;
