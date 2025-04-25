@@ -99,24 +99,14 @@ const DishPage = () => {
         }
         setLoading(true);
         setError('');
-        let complex = '';
-        if (complexStart!== '' && complexEnd!== '') {
-            if (complexStart === complexEnd) {
-                complex = `${complexStart}星`;
-            } else {
-                complex = `${complexStart}到${complexEnd}星`;
-            }
-        } else if (complexStart!== '') {
-            complex = `${complexStart}星及以上`;
-        } else if (complexEnd!== '') {
-            complex = `低于${complexEnd}星`;
-        }
+
         const formData = {
             dishType,
             dishNumber,
             dishTaste,
             preference,
-            complex
+            complexStart: parseInt(complexStart, 10),
+            complexEnd: parseInt(complexEnd, 10)
         };
 
         try {
@@ -158,7 +148,9 @@ const DishPage = () => {
                 tasty: preference,
                 dishName: dish.dishName,
                 dishStep: dish.dishStep,
-                dishEffect: dish.dishEffect
+                dishEffect: dish.dishEffect,
+                dishIngredients: dish.dishIngredients,
+                dishCost: dish.dishCost
             }
         };
 
@@ -177,16 +169,14 @@ const DishPage = () => {
         }
     };
 
-    const handleUnLikeDelete = async (dish) => {
+    const handleUnLikeDelete = async (dishId) => {
         try {
             const formData = {
-                deleteList: [dish.id]
+                deleteList: [dishId]
             };
             const response = await apiRequest('/delete-likes', 'POST', formData, navigate);
             if (response) {
-                setDishes(dishes.map(item =>
-                    item.dishName === dish.dishName? {...item, isLiked: false } : item
-                ));
+                setDishes(dishes.filter(dish => dish.id!== dishId));
                 console.log('取消收藏成功');
             } else {
                 console.error('取消收藏失败');
@@ -357,7 +347,7 @@ const DishPage = () => {
                     </FormControl>
                     <Stack direction="row" alignItems="center" gap={1}>
                         <TextField
-                            label="菜品制作难度"
+                            label="菜品制作难度（起始）"
                             placeholder="菜品制作难度"
                             type="number"
                             value={complexStart}
@@ -372,7 +362,7 @@ const DishPage = () => {
                         />
                         <Typography sx={{ color: '#666' }}>-</Typography>
                         <TextField
-                            label="菜品制作难度"
+                            label="菜品制作难度（终止）"
                             placeholder="菜品制作难度"
                             type="number"
                             value={complexEnd}
@@ -448,7 +438,13 @@ const DishPage = () => {
                                 </Typography>
                                 <hr style={{ border: '0.5px solid #ccc', margin: '10px 0' }} />
                                 <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
-                                    功效: {dish.dishEffect}
+                                    <span style={{ color: 'green' }}>功效:</span> {dish.dishEffect}
+                                </Typography>
+                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
+                                    <span style={{ color: 'brown' }}>食材:</span> {dish.dishIngredients}
+                                </Typography>
+                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
+                                    <span style={{ color: 'orange' }}>花费:</span> {dish.dishCost}
                                 </Typography>
                                 <Stack direction="row" spacing={1}>
                                     <Button
@@ -462,7 +458,7 @@ const DishPage = () => {
                                         <Button
                                             variant="outlined"
                                             color="secondary"
-                                            onClick={() => handleUnLikeDelete(dish)}
+                                            onClick={() => handleUnLikeDelete(dish.id)}
                                         >
                                             取消收藏
                                         </Button>
@@ -486,4 +482,4 @@ const DishPage = () => {
     );
 };
 
-export default DishPage;
+export default DishPage;    
