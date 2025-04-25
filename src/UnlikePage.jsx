@@ -402,41 +402,65 @@ function UnlikePage() {
                     </Typography>
                 </Box>
             </Card>
-            <Dialog open={openDialog} onClose={handleCloseDialog}
-                sx={{
-                    '&.MuiPaper-root': {
-                        backgroundImage: 'url("https://example.com/book-background.jpg")', // 替换为真实的书本背景图片地址
-                        backgroundSize: 'cover',
-                        borderRadius: 10,
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)'
-                    }
+            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+                <Card sx={{
+                    p: 3,
+                    width: '100%',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    backgroundColor: '#fff',
+                    borderRadius: 10,
+                    overflow: 'hidden'
                 }}>
-                <DialogTitle sx={{ fontFamily: '楷体' }}>菜品详情</DialogTitle>
-                <DialogContent sx={{ fontFamily: '楷体' }}>
                     {selectedLike && (
                         <>
-                            <DialogContentText>
-                                <strong>菜品名称:</strong> {selectedLike.dishName}
-                            </DialogContentText>
-                            <DialogContentText>
-                                <strong>菜系:</strong> {selectedLike.dishFrom}
-                            </DialogContentText>
-                            <DialogContentText>
-                                <strong>口味:</strong> {selectedLike.tasty}
-                            </DialogContentText>
-                            <DialogContentText>
-                                <strong>制作难度:</strong> {renderStars(selectedLike.complex)}
-                            </DialogContentText>
-                            <DialogContentText>
-                                <strong>制作步骤:</strong>
-                                <pre style={{ whiteSpace: 'pre-wrap' }}>{selectedLike.dishStep}</pre>
-                            </DialogContentText>
-                            <DialogContentText>
-                                <strong>功效:</strong> {selectedLike.dishEffect}
-                            </DialogContentText>
+                            <Typography variant="h4" gutterBottom sx={{
+                                background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                textFillColor: 'transparent',
+                                textAlign: 'center',
+                                mb: 3
+                            }}>
+                                {selectedLike.dishName}
+                            </Typography>
+                            
+                            <Stack spacing={2}>
+                                <Typography variant="body1">
+                                    <span style={{ color: '#666' }}>菜系:</span> {selectedLike.dishFrom}
+                                </Typography>
+                                <Typography variant="body1">
+                                    <span style={{ color: '#666' }}>口味:</span> {selectedLike.tasty}
+                                </Typography>
+                                <Typography variant="body1">
+                                    <span style={{ color: '#666' }}>制作难度:</span> {renderStars(selectedLike.complex)}
+                                </Typography>
+                                
+                                <Divider />
+                                
+                                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    {selectedLike.dishStep}
+                                </Typography>
+                                
+                                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                    <span style={{ color: 'green' }}>功效:</span> {selectedLike.dishEffect}
+                                </Typography>
+                                
+                                {selectedLike.dishIngredients && (
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                        <span style={{ color: 'brown' }}>食材:</span> {selectedLike.dishIngredients}
+                                    </Typography>
+                                )}
+                                
+                                {selectedLike.dishCost && (
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                        <span style={{ color: 'orange' }}>花费:</span> {selectedLike.dishCost}
+                                    </Typography>
+                                )}
+                            </Stack>
                         </>
                     )}
-                </DialogContent>
+                </Card>
             </Dialog>
             <BottomNavigationBar />
         </Box>
