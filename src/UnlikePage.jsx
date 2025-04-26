@@ -402,9 +402,25 @@ function UnlikePage() {
                     </Typography>
                 </Box>
             </Card>
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+            <Dialog 
+                open={openDialog} 
+                onClose={handleCloseDialog} 
+                maxWidth="md" 
+                fullWidth
+                sx={{
+                    '& .MuiDialog-paper': {
+                        width: '90%',
+                        maxWidth: 'none',
+                        margin: '16px',
+                        '@media (max-width: 600px)': {
+                            width: '95%',
+                            margin: '8px'
+                        }
+                    }
+                }}
+            >
                 <Card sx={{
-                    p: 3,
+                    p: { xs: 2, sm: 3 },
                     width: '100%',
                     boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
                     backgroundColor: '#fff',
@@ -420,41 +436,60 @@ function UnlikePage() {
                                 backgroundClip: 'text',
                                 textFillColor: 'transparent',
                                 textAlign: 'center',
-                                mb: 3
+                                mb: 3,
+                                fontSize: { xs: '1.5rem', sm: '2.125rem' }
                             }}>
                                 {selectedLike.dishName}
                             </Typography>
                             
-                            <Stack spacing={2}>
-                                <Typography variant="body1">
+                            <Stack spacing={{ xs: 1, sm: 2 }}>
+                                <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                                     <span style={{ color: '#666' }}>菜系:</span> {selectedLike.dishFrom}
                                 </Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                                     <span style={{ color: '#666' }}>口味:</span> {selectedLike.tasty}
                                 </Typography>
-                                <Typography variant="body1">
+                                <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                                     <span style={{ color: '#666' }}>制作难度:</span> {renderStars(selectedLike.complex)}
                                 </Typography>
                                 
                                 <Divider />
                                 
-                                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                                <Divider />
+                                
+                                <Typography variant="body1" sx={{ 
+                                    whiteSpace: 'pre-wrap',
+                                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                                    lineHeight: 1.6
+                                }}>
                                     {selectedLike.dishStep}
                                 </Typography>
                                 
-                                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                                    <span style={{ color: 'green' }}>功效:</span> {selectedLike.dishEffect}
+                                <Typography variant="body1" sx={{ 
+                                    whiteSpace: 'pre-wrap',
+                                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                                    lineHeight: 1.6
+                                }}>
+                                    <span style={{ color: 'green', fontWeight: 'bold' }}>功效:</span> {selectedLike.dishEffect}
                                 </Typography>
                                 
                                 {selectedLike.dishIngredients && (
-                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                                        <span style={{ color: 'brown' }}>食材:</span> {selectedLike.dishIngredients}
+                                    <Typography variant="body1" sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                                        lineHeight: 1.6
+                                    }}>
+                                        <span style={{ color: 'brown', fontWeight: 'bold' }}>食材:</span> {selectedLike.dishIngredients}
                                     </Typography>
                                 )}
                                 
                                 {selectedLike.dishCost && (
-                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                                        <span style={{ color: 'orange' }}>花费:</span> {selectedLike.dishCost}
+                                    <Typography variant="body1" sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                                        lineHeight: 1.6
+                                    }}>
+                                        <span style={{ color: 'orange', fontWeight: 'bold' }}>花费:</span> {selectedLike.dishCost}
                                     </Typography>
                                 )}
                             </Stack>

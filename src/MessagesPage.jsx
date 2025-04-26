@@ -28,7 +28,7 @@ import Picker from 'emoji-picker-react';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
-import { FaUserPlus, FaCamera, FaMicrophone, FaImage } from 'react-icons/fa';
+import { FaUserPlus, FaCamera, FaMicrophone, FaImage, FaBookOpen } from 'react-icons/fa';
 import { IoSend } from 'react-icons/io5';
 
 // 聊天列表页面组件
@@ -178,7 +178,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
 }
 
 // 聊天页面组件
-function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack }) {
+function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack ,handleShareCookbookClick}) {
     const chatListRef = useRef(null);
     const inputBoxRef = useRef(null);
 
@@ -228,8 +228,8 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     display: 'flex',
                     flexDirection: 'column',
                     height: 'calc(100vh - 120px)',
-                paddingBottom: '120px', // 为底部输入框预留空间
-                marginBottom: '0'
+                    paddingBottom: '120px', // 为底部输入框预留空间
+                    marginBottom: '0'
                 }}
             >
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
@@ -402,6 +402,12 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                             }}
                         />
                     </IconButton>
+                    <IconButton 
+                        sx={{ width: 40, height: 40 }}
+                        onClick={handleShareCookbookClick}
+                    >
+                        <FaBookOpen />
+                    </IconButton>
                     <IconButton sx={{ width: 40, height: 40 }}>
                         <FaMicrophone />
                     </IconButton>
@@ -452,6 +458,8 @@ function MessagesPage() {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+    const [shareOptions, setShareOptions] = useState([]);
+    const [openShareDialog, setOpenShareDialog] = useState(false);
 
     const emojiPickerRef = useRef(null);
     const emojiIconRef = useRef(null);
@@ -480,6 +488,63 @@ function MessagesPage() {
                     }));
                 } else {
                     console.error('获取聊天记录失败');
+                }
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+            }
+        }
+    };
+
+    const handleTakeDish = async (dishId) => {
+        if (dishId) {
+            try {
+                const dishResponse = await apiRequest('/query-dish-by-id', 'GET', {dishId:dishId}, navigate);
+                if (dishResponse&&dishResponse.data) {
+                    console.log('分享菜谱:', JSON.stringify(dishResponse.data));
+                    const sendMessageRequest = {
+                        userIdFrom: currentUserId,
+                        userIdTo: selectedFriend.id,
+                        messageType: 'text',
+                    };
+                    sendMessageRequest.messageContent = JSON.stringify(dishResponse.data);
+                    const response = await apiRequest('/send-message', 'POST', sendMessageRequest, navigate);
+                    if (response && response.code === '200') {
+                        setFriendMessages((prevMessages) => {
+                            const currentMessages = prevMessages[selectedFriend.id] || [];
+                            return {
+                                ...prevMessages,
+                                [selectedFriend.id]: [
+                                    ...currentMessages,
+                                    { text: newMessage, sender: 'user' }
+                                ]
+                            };
+                        });
+                        setNewMessage('');
+    
+                        const formData = {
+                            userIdFrom: currentUserId,
+                            userIdTo: selectedFriend.id,
+                            curPage: 1,
+                            pageSize: 20
+                        };
+                        const newResponse = await apiRequest('/message-query', 'POST', formData, navigate);
+                        if (newResponse) {
+                            const messages = newResponse.records.map(record => ({
+                                text: record.message,
+                                sender: record.userIdFrom === currentUserId ? 'user' : 'other'
+                            }));
+                            setFriendMessages((prevMessages) => ({
+                                ...prevMessages,
+                                [selectedFriend.id]: messages
+                            }));
+                        } else {
+                            console.error('重新获取聊天记录失败');
+                        }
+                    } else {
+                        console.error('发送消息失败:', response ? response.message : '无响应信息');
+                    }
+                } else {
+                    console.error('获取菜谱详情失败');
                 }
             } catch (error) {
                 console.error('Error fetching messages:', error);
@@ -872,6 +937,21 @@ function MessagesPage() {
         setSelectedFriend(null);
     };
 
+    const handleShareCookbookClick = async () => {
+        try {
+            const response = await apiRequest('/query-likes-name', 'GET', null, navigate);
+            if (response && response.code === '200') {
+                setShareOptions(response.data);
+                setOpenShareDialog(true);
+            } else {
+                console.error('获取分享选项失败:', response ? response.message : '无响应信息');
+            }
+        } catch (error) {
+            console.error('获取分享选项请求出错:', error);
+        }
+    };
+
+
     return (
         <Box
             sx={{
@@ -907,6 +987,7 @@ function MessagesPage() {
                         selfAvatar={selfAvatar}
                         inputRef={inputRef}
                         onBack={handleBack}
+                        handleShareCookbookClick={handleShareCookbookClick}
                     />
                 ) : (
                     <ChatListPage
@@ -954,7 +1035,7 @@ function MessagesPage() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenAddFriendDialog(false)} color="primary">
+                    <Button onClick={() => setOpenAddFriendDialog(false)} color="secondary">
                         取消
                     </Button>
                     <Button onClick={handleAddFriend} color="primary">
@@ -965,27 +1046,72 @@ function MessagesPage() {
             <Dialog
                 open={openRequestDetail}
                 onClose={() => setOpenRequestDetail(false)}
-                aria-labelledby="request-detail-dialog-title"
+                aria-labelledby="request-detail-title"
             >
-                <DialogTitle id="request-detail-dialog-title">好友申请详情</DialogTitle>
+                <DialogTitle id="request-detail-title">好友申请详情</DialogTitle>
                 <DialogContent>
                     {selectedRequest && (
                         <>
-                            <Typography variant="subtitle1">申请人: {selectedRequest.fromNickname}</Typography>
-                            <Typography variant="subtitle1">备注信息: {selectedRequest.content}</Typography>
-                            <Typography variant="subtitle1">状态: {getStatusText(selectedRequest.status)}</Typography>
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenRequestDetail(false)} color="primary">
-                        关闭
-                    </Button>
-                </DialogActions>
-            </Dialog>
-            {!selectedFriend && <BottomNavigationBar />}
-        </Box>
-    );
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                            申请人: {selectedRequest.fromNickname}
+                        </Typography>
+                        <Typography variant="body1">
+                            备注: {selectedRequest.content}
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: selectedRequest.status === '2' ? 'red' : 'green' }}>
+                            状态: {getStatusText(selectedRequest.status)}
+                        </Typography>
+                        {selectedRequest.status === '0' && (
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                                <Button variant="outlined" color="primary" onClick={() => handleAgreeRequest(selectedRequest)}>
+                                    同意
+                                </Button>
+                                <Button variant="outlined" color="secondary" onClick={() => handleDisagreeRequest(selectedRequest)} style={{ marginLeft: '8px' }}>
+                                    拒绝
+                                </Button>
+                            </Box>
+                        )}
+                    </>
+                )}
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setOpenRequestDetail(false)} color="secondary">
+                    关闭
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <Dialog
+            open={openShareDialog}
+            onClose={() => setOpenShareDialog(false)}
+            aria-labelledby="share-dialog-title"
+        >
+            <DialogTitle id="share-dialog-title">选择分享的菜谱</DialogTitle>
+            <DialogContent>
+                <List>
+                    {shareOptions.map((option, index) => (
+                        <ListItem
+                            key={index}
+                            button
+                            onClick={() => {
+                                // 这里可以添加分享逻辑
+                                handleTakeDish(option.dishId);
+                                setOpenShareDialog(false);
+                            }}
+                        >
+                            <Typography>{option.dishName}</Typography>
+                        </ListItem>
+                    ))}
+                </List>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setOpenShareDialog(false)} color="secondary">
+                    取消
+                </Button>
+            </DialogActions>
+        </Dialog>
+        <BottomNavigationBar />
+    </Box>
+);
 }
 
 export default MessagesPage;

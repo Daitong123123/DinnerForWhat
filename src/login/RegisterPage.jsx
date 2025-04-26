@@ -5,14 +5,20 @@ import {
     Typography,
     Card,
     Button,
-    TextField
+    TextField,
+    Alert,
+    IconButton,
+    InputAdornment
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from'react-router-dom';
 
 function RegisterPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const navigate = useNavigate();
 
     const handleRegistration = async () => {
@@ -30,17 +36,21 @@ function RegisterPage() {
                 });
                 const result = await response.json();
                 if (result.code === '200') {
-                    // 注册成功，跳转到dish页面
-                    navigate('/dish');
+                    // 注册成功，显示成功提示
+                    setError('');
+                    setSuccess('注册成功！即将跳转...');
+                    setTimeout(() => {
+                        navigate('/dish');
+                    }, 1500);
                 } else {
-                    alert(result.message);
+                    setError(result.message);
                 }
             } catch (error) {
                 console.error('注册请求出错:', error);
                 alert('注册请求出错，请稍后再试');
             }
         } else {
-            alert('两次输入的密码不一致');
+            setError('两次输入的密码不一致');
         }
     };
 
@@ -88,16 +98,41 @@ function RegisterPage() {
                     label="用户名"
                     type="text"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => {
+                        setUsername(e.target.value);
+                        setError('');
+                    }}
                     fullWidth
                     sx={{ mb: 3 }}
                     InputProps={{
-                        sx: { color: '#333' }
+                        sx: { color: '#333' },
+                        endAdornment: error && (
+                            <InputAdornment position="end">
+                                <IconButton
+                                    edge="end"
+                                    onClick={() => setError('')}
+                                >
+                                    <CloseIcon color="error" />
+                                </IconButton>
+                            </InputAdornment>
+                        )
                     }}
                     InputLabelProps={{
                         sx: { color: '#666' }
                     }}
+                    error={!!error}
+                    helperText={error}
                 />
+                {error && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                        {error}
+                    </Alert>
+                )}
+                {success && (
+                    <Alert severity="success" sx={{ mb: 3 }}>
+                        {success}
+                    </Alert>
+                )}
                 <TextField
                     label="密码"
                     type="password"
