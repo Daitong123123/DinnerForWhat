@@ -17,6 +17,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import apiRequest from './api.js';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
+import { FaRobot } from 'react-icons/fa';
 
 const DishPage = () => {
     const [dishType, setDishType] = useState('晚餐');
@@ -170,11 +171,10 @@ const DishPage = () => {
 
     const handleUnLikeDelete = async (dishId) => {
         try {
-            
             const response = await apiRequest('/delete-likes', 'POST', [dishId], navigate);
             if (response) {
-                setDishes(dishes.map(dish => 
-                    dish.id === dishId ? {...dish, isLiked: false} : dish
+                setDishes(dishes.map(dish =>
+                    dish.id === dishId? {...dish, isLiked: false } : dish
                 ));
                 console.log('取消收藏成功');
             } else {
@@ -408,12 +408,22 @@ const DishPage = () => {
                             background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
                         },
                         '&:disabled': {
-                            background: '#ccc'
+                            background: '#a0a0a0',
+                            color: '#fff'
                         },
                         mt: 3
                     }}
                 >
-                    {loading? '请求中...' : '获取菜品'}
+                    <span style={{ minWidth: '200px', display: 'inline-block' }}>
+                        {loading? (
+                            <span>
+                                <FaRobot style={{ marginRight: 8 }} />
+                                 小菜正在努力翻阅菜谱<span className="loading-spinner"></span>
+                            </span>
+                        ) : (
+                            '获取菜品'
+                        )}
+                    </span>
                 </Button>
                 <Button
                     variant="outlined"
@@ -502,4 +512,27 @@ const DishPage = () => {
     );
 };
 
-export default DishPage;
+const styles = `
+.loading-spinner {
+    display: inline-block;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #fff;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+`;
+
+// 创建一个 style 元素并插入到文档头部
+const styleElement = document.createElement('style');
+styleElement.textContent = styles;
+document.head.appendChild(styleElement);
+
+export default DishPage;    
