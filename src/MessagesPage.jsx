@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import Picker from 'emoji-picker-react';
+import EmojiPicker  from 'emoji-picker-react';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
@@ -543,7 +543,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                                 padding: '8px'
                             }}
                         >
-                            <Picker
+                            <EmojiPicker 
                                 onEmojiClick={handleEmojiClick}
                             />
                         </Box>
@@ -724,8 +724,9 @@ function MessagesPage() {
     };
 
     const handleEmojiClick = (event, emojiObject) => {
-        if (emojiObject && emojiObject.emoji) {
-            setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
+        console.log("emoji:"+emojiObject.emoji);
+        if (emojiObject && event.emoji) {
+            setNewMessage((prevMessage) => prevMessage + event.emoji);
         }
         setShowEmojiPicker(false);
     };
