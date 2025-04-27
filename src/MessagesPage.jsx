@@ -31,6 +31,112 @@ import baseUrl from './config.js';
 import { FaUserPlus, FaCamera, FaMicrophone, FaImage, FaBookOpen } from 'react-icons/fa';
 import { IoSend } from 'react-icons/io5';
 
+// 渲染星星的函数
+const renderStars = (complex) => {
+    const stars = [];
+    for (let i = 0; i < 10; i++) {
+        if (i < parseInt(complex, 10)) {
+            stars.push(<span key={i} style={{ color: '#FFD700' }}>★</span>);
+        } else {
+            stars.push(<span key={i} style={{ color: '#ccc' }}>☆</span>);
+        }
+    }
+    return stars;
+};
+
+
+// 渲染菜谱卡片的函数
+const renderCookbookCard = (cookbook) => {
+    return (
+        <Card
+            sx={{
+                p: 3,
+                background: '#f5e9d7', // 米色背景，模拟纸张颜色
+                borderRadius: 8,
+                border: '1px solid #d6c6b4',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                transition: 'box-shadow 0.3s',
+                '&:hover': {
+                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)'
+                },
+                '@media (max-width: 600px)': {
+                    width: '100%',
+                    p: 2
+                },
+                maxWidth: '80%',
+                fontFamily: 'Georgia, serif', // 更具亲和力的字体
+                position: 'relative',
+                overflow: 'hidden'
+            }}
+        >
+            <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold' }}>
+                {cookbook.dishName}
+            </Typography>
+            <Typography variant="caption" sx={{ mb: 1, color: '#666' }}>
+                复杂度: {renderStars(parseInt(cookbook.complex, 10))}
+            </Typography>
+            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
+                {cookbook.dishStep}
+            </Typography>
+            <hr style={{ border: '0.5px solid #d6c6b4', margin: '16px 0' }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                <div>
+                    <Typography variant="body2" sx={{ color: 'green', fontWeight: 'bold' }}>
+                        功效:
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {cookbook.dishEffect}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography variant="body2" sx={{ color: 'brown', fontWeight: 'bold' }}>
+                        食材:
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {cookbook.dishIngredients}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography variant="body2" sx={{ color: 'orange', fontWeight: 'bold' }}>
+                        花费:
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {cookbook.dishCost}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography variant="body2" sx={{ color: 'blue', fontWeight: 'bold' }}>
+                        菜系:
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {cookbook.dishFrom}
+                    </Typography>
+                </div>
+                <div>
+                    <Typography variant="body2" sx={{ color: 'purple', fontWeight: 'bold' }}>
+                        口味:
+                    </Typography>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {cookbook.tasty}
+                    </Typography>
+                </div>
+            </div>
+            {/* 模拟书页的阴影效果 */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0))',
+                    pointerEvents: 'none'
+                }}
+            />
+        </Card>
+    );
+};    
+
 // 聊天列表页面组件
 function ChatListPage({ friends, onFriendSelect, selectedTab, setSelectedTab, friendRequests, onAddFriendClick, onRequestClick, handleAgreeRequest, handleDisagreeRequest, getStatusText }) {
     const currentUserId = localStorage.getItem('userId');
@@ -178,7 +284,7 @@ function ChatListPage({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
 }
 
 // 聊天页面组件
-function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack ,handleShareCookbookClick}) {
+function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack, handleShareCookbookClick }) {
     const chatListRef = useRef(null);
     const inputBoxRef = useRef(null);
 
@@ -204,13 +310,13 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     <IconButton onClick={onBack}>
                         <ArrowBack />
                     </IconButton>
-                    <Typography variant="h6" sx={{ 
-                        fontWeight: 'bold', 
-                        flexGrow: 1, 
-                        textAlign: 'center', 
-                        whiteSpace: 'nowrap', 
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis', 
+                    <Typography variant="h6" sx={{
+                        fontWeight: 'bold',
+                        flexGrow: 1,
+                        textAlign: 'center',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                         maxWidth: '60%',
                         color: '#333',
                         textShadow: '0 1px 2px rgba(0,0,0,0.1)'
@@ -244,38 +350,46 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     >
                         {message.sender === 'user' ? (
                             <>
-                                <Box
-                                    sx={{
-                                        backgroundColor: '#DCF8C6',
-                                        borderRadius: 8,
-                                        padding: '8px',
-                                        maxWidth: '80%',
-                                        wordBreak: 'break-word',
-                                        whiteSpace: 'pre-wrap',
-                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                                        marginRight: 2
-                                    }}
-                                >
-                                    {message.text}
-                                </Box>
+                                {message.messageType === 'cookBook' ? (
+                                    renderCookbookCard(JSON.parse(message.text))
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            backgroundColor: '#DCF8C6',
+                                            borderRadius: 8,
+                                            padding: '8px',
+                                            maxWidth: '80%',
+                                            wordBreak: 'break-word',
+                                            whiteSpace: 'pre-wrap',
+                                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                                            marginRight: 2
+                                        }}
+                                    >
+                                        {message.text}
+                                    </Box>
+                                )}
                                 <Avatar>{selfAvatar}</Avatar>
                             </>
                         ) : (
                             <>
                                 <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
-                                <Box
-                                    sx={{
-                                        backgroundColor: '#E5E5EA',
-                                        borderRadius: 8,
-                                        padding: '8px',
-                                        maxWidth: '80%',
-                                        wordBreak: 'break-word',
-                                        whiteSpace: 'pre-wrap',
-                                        boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
-                                    }}
-                                >
-                                    {message.text}
-                                </Box>
+                                {message.messageType === 'cookBook' ? (
+                                    renderCookbookCard(JSON.parse(message.text))
+                                ) : (
+                                    <Box
+                                        sx={{
+                                            backgroundColor: '#E5E5EA',
+                                            borderRadius: 8,
+                                            padding: '8px',
+                                            maxWidth: '80%',
+                                            wordBreak: 'break-word',
+                                            whiteSpace: 'pre-wrap',
+                                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                                        }}
+                                    >
+                                        {message.text}
+                                    </Box>
+                                )}
                             </>
                         )}
                     </ListItem>
@@ -363,7 +477,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     >
                         <span style={{ fontSize: '20px' }}>😊</span>
                     </IconButton>
-                    <IconButton 
+                    <IconButton
                         sx={{ width: 40, height: 40 }}
                         onClick={() => document.getElementById('fileInput').click()}
                     >
@@ -382,7 +496,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                             }}
                         />
                     </IconButton>
-                    <IconButton 
+                    <IconButton
                         sx={{ width: 40, height: 40 }}
                         onClick={() => document.getElementById('cameraInput').click()}
                     >
@@ -402,7 +516,7 @@ function ChatPage({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                             }}
                         />
                     </IconButton>
-                    <IconButton 
+                    <IconButton
                         sx={{ width: 40, height: 40 }}
                         onClick={handleShareCookbookClick}
                     >
@@ -480,7 +594,8 @@ function MessagesPage() {
                 if (response) {
                     const messages = response.records.map(record => ({
                         text: record.message,
-                        sender: record.userIdFrom === currentUserId ? 'user' : 'other'
+                        sender: record.userIdFrom === currentUserId ? 'user' : 'other',
+                        messageType: record.messageType
                     }));
                     setFriendMessages((prevMessages) => ({
                         ...prevMessages,
@@ -498,54 +613,50 @@ function MessagesPage() {
     const handleTakeDish = async (dishId) => {
         if (dishId) {
             try {
-                const dishResponse = await apiRequest('/query-dish-by-id', 'GET', {dishId:dishId}, navigate);
-                if (dishResponse&&dishResponse.data) {
-                    console.log('分享菜谱:', JSON.stringify(dishResponse.data));
-                    const sendMessageRequest = {
+                const sendMessageRequest = {
+                    userIdFrom: currentUserId,
+                    userIdTo: selectedFriend.id,
+                    messageType: 'cookBook',
+                };
+                sendMessageRequest.messageContent = dishId;
+                const response = await apiRequest('/send-message', 'POST', sendMessageRequest, navigate);
+                if (response && response.code === '200') {
+                    setFriendMessages((prevMessages) => {
+                        const currentMessages = prevMessages[selectedFriend.id] || [];
+                        return {
+                            ...prevMessages,
+                            [selectedFriend.id]: [
+                                ...currentMessages,
+                                { text: newMessage, sender: 'user' }
+                            ]
+                        };
+                    });
+                    setNewMessage('');
+
+                    const formData = {
                         userIdFrom: currentUserId,
                         userIdTo: selectedFriend.id,
-                        messageType: 'text',
+                        curPage: 1,
+                        pageSize: 20
                     };
-                    sendMessageRequest.messageContent = JSON.stringify(dishResponse.data);
-                    const response = await apiRequest('/send-message', 'POST', sendMessageRequest, navigate);
-                    if (response && response.code === '200') {
-                        setFriendMessages((prevMessages) => {
-                            const currentMessages = prevMessages[selectedFriend.id] || [];
-                            return {
-                                ...prevMessages,
-                                [selectedFriend.id]: [
-                                    ...currentMessages,
-                                    { text: newMessage, sender: 'user' }
-                                ]
-                            };
-                        });
-                        setNewMessage('');
-    
-                        const formData = {
-                            userIdFrom: currentUserId,
-                            userIdTo: selectedFriend.id,
-                            curPage: 1,
-                            pageSize: 20
-                        };
-                        const newResponse = await apiRequest('/message-query', 'POST', formData, navigate);
-                        if (newResponse) {
-                            const messages = newResponse.records.map(record => ({
-                                text: record.message,
-                                sender: record.userIdFrom === currentUserId ? 'user' : 'other'
-                            }));
-                            setFriendMessages((prevMessages) => ({
-                                ...prevMessages,
-                                [selectedFriend.id]: messages
-                            }));
-                        } else {
-                            console.error('重新获取聊天记录失败');
-                        }
+                    const newResponse = await apiRequest('/message-query', 'POST', formData, navigate);
+                    if (newResponse) {
+                        const messages = newResponse.records.map(record => ({
+                            text: record.message,
+                            sender: record.userIdFrom === currentUserId ? 'user' : 'other',
+                            messageType: record.messageType
+                        }));
+                        setFriendMessages((prevMessages) => ({
+                            ...prevMessages,
+                            [selectedFriend.id]: messages
+                        }));
                     } else {
-                        console.error('发送消息失败:', response ? response.message : '无响应信息');
+                        console.error('重新获取聊天记录失败');
                     }
                 } else {
-                    console.error('获取菜谱详情失败');
+                    console.error('发送消息失败:', response ? response.message : '无响应信息');
                 }
+
             } catch (error) {
                 console.error('Error fetching messages:', error);
             }
@@ -571,7 +682,7 @@ function MessagesPage() {
                             ...prevMessages,
                             [selectedFriend.id]: [
                                 ...currentMessages,
-                                { text: newMessage, sender: 'user' }
+                                { text: newMessage, sender: 'user', messageType: 'text' }
                             ]
                         };
                     });
@@ -587,7 +698,8 @@ function MessagesPage() {
                     if (newResponse) {
                         const messages = newResponse.records.map(record => ({
                             text: record.message,
-                            sender: record.userIdFrom === currentUserId ? 'user' : 'other'
+                            sender: record.userIdFrom === currentUserId ? 'user' : 'other',
+                            messageType: record.messageType
                         }));
                         setFriendMessages((prevMessages) => ({
                             ...prevMessages,
@@ -787,7 +899,8 @@ function MessagesPage() {
                                     if (response) {
                                         const messages = response.records.map((record) => ({
                                             text: record.message,
-                                            sender: record.userIdFrom === currentUserId ? 'user' : 'other'
+                                            sender: record.userIdFrom === currentUserId ? 'user' : 'other',
+                                            messageType: record.messageType
                                         }));
                                         setFriendMessages((prevMessages) => ({
                                             ...prevMessages,
@@ -884,6 +997,32 @@ function MessagesPage() {
                     const newRequests = friendRequests.filter(req => req.requestFrom !== request.requestFrom);
                     setFriendRequests(newRequests);
                     setOpenRequestDetail(false);
+                    // 重新获取好友列表
+                    const friendShipFormData = {
+                        userId: currentUserId
+                    };
+                    const friendShipResponse = await apiRequest('/friend-ship', 'POST', friendShipFormData, navigate);
+                    if (friendShipResponse) {
+                        const friendIds = friendShipResponse.friends;
+                        const updatedFriends = [];
+                        for (const friendId of friendIds) {
+                            const friendInfoFormData = {
+                                userId: friendId
+                            };
+                            const friendInfoResponse = await apiRequest('/friend-info', 'GET', friendInfoFormData, navigate);
+                            if (friendInfoResponse) {
+                                const firstChar = friendInfoResponse.userNickName.charAt(0).toUpperCase();
+                                updatedFriends.push({
+                                    id: friendId,
+                                    name: friendInfoResponse.userNickName,
+                                    avatar: firstChar
+                                });
+                            }
+                        }
+                        setFriends(updatedFriends);
+                    } else {
+                        console.error('重新获取好友列表失败');
+                    }
                 } else {
                     console.error('同意好友申请失败:', response ? response.message : '无响应信息');
                 }
@@ -915,29 +1054,29 @@ function MessagesPage() {
         }
     };
 
-    const handleTabChange = (event, newValue) => {
-        setSelectedTab(newValue);
-    };
-
     const handleRequestClick = (request) => {
         setSelectedRequest(request);
         setOpenRequestDetail(true);
     };
 
+    const handleAddFriendClick = () => {
+        setOpenAddFriendDialog(true);
+    };
+
     const getStatusText = (status) => {
-        if (status === '2') {
-            return '对方已拒绝';
-        } else if (status === '1') {
-            return '对方已同意';
+        switch (status) {
+            case '0':
+                return '待处理';
+            case '1':
+                return '已同意';
+            case '2':
+                return '已拒绝';
+            default:
+                return '未知状态';
         }
-        return '等待对方回应';
     };
 
-    const handleBack = () => {
-        setSelectedFriend(null);
-    };
-
-    const handleShareCookbookClick = async () => {
+    const handleShareCookbookClick = async() => {
         try {
             const response = await apiRequest('/query-likes-name', 'GET', null, navigate);
             if (response && response.code === '200') {
@@ -951,74 +1090,64 @@ function MessagesPage() {
         }
     };
 
-
     return (
         <Box
             sx={{
-                minHeight: '100vh',
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: '#f5f5f5',
-                fontFamily: 'Inter, sans-serif'
+                minHeight: '100vh',
+                backgroundColor: '#f9f9f9'
             }}
         >
-            <Card
-                sx={{
-                    flexGrow: 1,
-                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-                    borderRadius: '8px',
-                    margin: '16px',
-                    overflow: 'hidden'
-                }}
-            >
-                {selectedFriend ? (
-                    <ChatPage
-                        selectedFriend={selectedFriend}
-                        friendMessages={friendMessages}
-                        newMessage={newMessage}
-                        setNewMessage={setNewMessage}
-                        handleSendMessage={handleSendMessage}
-                        handleKeyPress={handleKeyPress}
-                        showEmojiPicker={showEmojiPicker}
-                        setShowEmojiPicker={setShowEmojiPicker}
-                        handleEmojiClick={handleEmojiClick}
-                        emojiIconRef={emojiIconRef}
-                        emojiPickerRef={emojiPickerRef}
-                        selfAvatar={selfAvatar}
-                        inputRef={inputRef}
-                        onBack={handleBack}
-                        handleShareCookbookClick={handleShareCookbookClick}
-                    />
-                ) : (
-                    <ChatListPage
-                        friends={friends}
-                        onFriendSelect={handleFriendSelect}
-                        selectedTab={selectedTab}
-                        setSelectedTab={setSelectedTab}
-                        friendRequests={friendRequests}
-                        onAddFriendClick={() => setOpenAddFriendDialog(true)}
-                        onRequestClick={handleRequestClick}
-                        handleAgreeRequest={handleAgreeRequest}
-                        handleDisagreeRequest={handleDisagreeRequest}
-                        getStatusText={getStatusText}
-                    />
-                )}
-            </Card>
+            {selectedFriend ? (
+                <ChatPage
+                    selectedFriend={selectedFriend}
+                    friendMessages={friendMessages}
+                    newMessage={newMessage}
+                    setNewMessage={setNewMessage}
+                    handleSendMessage={handleSendMessage}
+                    handleKeyPress={handleKeyPress}
+                    showEmojiPicker={showEmojiPicker}
+                    setShowEmojiPicker={setShowEmojiPicker}
+                    handleEmojiClick={handleEmojiClick}
+                    emojiIconRef={emojiIconRef}
+                    emojiPickerRef={emojiPickerRef}
+                    selfAvatar={selfAvatar}
+                    inputRef={inputRef}
+                    onBack={() => setSelectedFriend(null)}
+                    handleShareCookbookClick={handleShareCookbookClick}
+                />
+            ) : (
+                <ChatListPage
+                    friends={friends}
+                    onFriendSelect={handleFriendSelect}
+                    selectedTab={selectedTab}
+                    setSelectedTab={setSelectedTab}
+                    friendRequests={friendRequests}
+                    onAddFriendClick={handleAddFriendClick}
+                    onRequestClick={handleRequestClick}
+                    handleAgreeRequest={handleAgreeRequest}
+                    handleDisagreeRequest={handleDisagreeRequest}
+                    getStatusText={getStatusText}
+                />
+            )}
             <Dialog
                 open={openAddFriendDialog}
                 onClose={() => setOpenAddFriendDialog(false)}
-                aria-labelledby="form-dialog-title"
+                aria-labelledby="add-friend-dialog-title"
+                aria-describedby="add-friend-dialog-description"
             >
-                <DialogTitle id="form-dialog-title">添加好友</DialogTitle>
+                <DialogTitle id="add-friend-dialog-title">添加好友</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        请输入对方的用户ID和备注信息
+                    <DialogContentText id="add-friend-dialog-description">
+                        请输入要添加的好友ID和备注信息
                     </DialogContentText>
                     <TextField
                         autoFocus
                         margin="dense"
                         id="add-friend-user-id"
-                        label="用户ID"
+                        label="好友ID"
                         type="text"
                         fullWidth
                         value={addFriendUserId}
@@ -1035,83 +1164,63 @@ function MessagesPage() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenAddFriendDialog(false)} color="secondary">
-                        取消
-                    </Button>
-                    <Button onClick={handleAddFriend} color="primary">
-                        发送申请
-                    </Button>
+                    <Button onClick={() => setOpenAddFriendDialog(false)}>取消</Button>
+                    <Button onClick={handleAddFriend}>发送申请</Button>
                 </DialogActions>
             </Dialog>
             <Dialog
                 open={openRequestDetail}
                 onClose={() => setOpenRequestDetail(false)}
-                aria-labelledby="request-detail-title"
+                aria-labelledby="request-detail-dialog-title"
+                aria-describedby="request-detail-dialog-description"
             >
-                <DialogTitle id="request-detail-title">好友申请详情</DialogTitle>
+                <DialogTitle id="request-detail-dialog-title">好友申请详情</DialogTitle>
                 <DialogContent>
-                    {selectedRequest && (
-                        <>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            申请人: {selectedRequest.fromNickname}
-                        </Typography>
-                        <Typography variant="body1">
-                            备注: {selectedRequest.content}
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: selectedRequest.status === '2' ? 'red' : 'green' }}>
-                            状态: {getStatusText(selectedRequest.status)}
-                        </Typography>
-                        {selectedRequest.status === '0' && (
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                                <Button variant="outlined" color="primary" onClick={() => handleAgreeRequest(selectedRequest)}>
-                                    同意
-                                </Button>
-                                <Button variant="outlined" color="secondary" onClick={() => handleDisagreeRequest(selectedRequest)} style={{ marginLeft: '8px' }}>
-                                    拒绝
-                                </Button>
-                            </Box>
+                    <DialogContentText id="request-detail-dialog-description">
+                        {selectedRequest && (
+                            <>
+                                <Typography>申请人: {selectedRequest.fromNickname}</Typography>
+                                <Typography>备注信息: {selectedRequest.content}</Typography>
+                                <Typography>状态: {getStatusText(selectedRequest.status)}</Typography>
+                            </>
                         )}
-                    </>
-                )}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setOpenRequestDetail(false)} color="secondary">
-                    关闭
-                </Button>
-            </DialogActions>
-        </Dialog>
-        <Dialog
-            open={openShareDialog}
-            onClose={() => setOpenShareDialog(false)}
-            aria-labelledby="share-dialog-title"
-        >
-            <DialogTitle id="share-dialog-title">选择分享的菜谱</DialogTitle>
-            <DialogContent>
-                <List>
-                    {shareOptions.map((option, index) => (
-                        <ListItem
-                            key={index}
-                            button
-                            onClick={() => {
-                                // 这里可以添加分享逻辑
-                                handleTakeDish(option.dishId);
-                                setOpenShareDialog(false);
-                            }}
-                        >
-                            <Typography>{option.dishName}</Typography>
-                        </ListItem>
-                    ))}
-                </List>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setOpenShareDialog(false)} color="secondary">
-                    取消
-                </Button>
-            </DialogActions>
-        </Dialog>
-        <BottomNavigationBar />
-    </Box>
-);
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenRequestDetail(false)}>关闭</Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={openShareDialog}
+                onClose={() => setOpenShareDialog(false)}
+                aria-labelledby="share-dialog-title"
+                aria-describedby="share-dialog-description"
+            >
+                <DialogTitle id="share-dialog-title">分享菜谱</DialogTitle>
+                <DialogContent>
+                    <List>
+                        {shareOptions.map((option, index) => (
+                            <ListItem
+                                key={index}
+                                button
+                                onClick={() => {
+                                    // 这里可以添加分享逻辑
+                                    handleTakeDish(option.dishId);
+                                    setOpenShareDialog(false);
+                                }}
+                            >
+                                <Typography>{option.dishName}</Typography>
+                            </ListItem>
+                        ))}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenShareDialog(false)}>取消</Button>
+                </DialogActions>
+            </Dialog>
+            <BottomNavigationBar />
+        </Box>
+    );
 }
 
 export default MessagesPage;
