@@ -1,5 +1,7 @@
 import BottomNavigationBar from './BottomNavigationBar.jsx';
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import GomokuInviteCard from './GomokuInviteCard.jsx';
 import {
     Box,
     Typography,
@@ -23,13 +25,12 @@ import {
     Toolbar
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { FaUserPlus, FaCamera, FaMicrophone, FaImage, FaBookOpen ,FaChessBoard,FaGamepad} from 'react-icons/fa';
+import { IoSend } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
-import { FaUserPlus, FaCamera, FaMicrophone, FaImage, FaBookOpen ,FaChessBoard,FaGamepad} from 'react-icons/fa';
-import { IoSend } from 'react-icons/io5';
 
 // 渲染星星的函数
 const renderStars = (complex) => {
@@ -194,7 +195,7 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
 };
 
 // 聊天页面组件
-const ChatPage = ({ selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack, handleShareCookbookClick, handleReadMessage, handleShowGames }) => {
+const ChatPage = ({ navigate,selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack, handleShareCookbookClick, handleReadMessage, handleShowGames }) => {
     const chatListRef = useRef(null);
     const inputBoxRef = useRef(null);
 
@@ -225,12 +226,14 @@ const ChatPage = ({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                     <ListItem key={index} alignItems="flex-start" sx={{ justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2, flexDirection: 'row' }}>
                         {message.sender === 'user' ? (
                             <>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginRight: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginRight: 2, flexDirection:'row' }}>
                                         {message.isRead ? '已读' : '未读'}
                                     </Typography>
                                     {message.messageType === 'cookBook' ? (
                                         renderCookbookCard(JSON.parse(message.text))
+                                    ) : message.messageType === 'Gomoku' ? (
+                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} navigate={navigate} />
                                     ) : (
                                         <Box sx={{ backgroundColor: '#DCF8C6', borderRadius: 3, padding: '8px', maxWidth: '80%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                                             {message.text}
@@ -242,15 +245,17 @@ const ChatPage = ({ selectedFriend, friendMessages, newMessage, setNewMessage, h
                         ) : (
                             <>
                                 <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
                                     {message.messageType === 'cookBook' ? (
                                         renderCookbookCard(JSON.parse(message.text))
+                                    ) : message.messageType === 'Gomoku' ? (
+                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} navigate={navigate} />
                                     ) : (
                                         <Box sx={{ backgroundColor: '#E5E5EA', borderRadius: 3, padding: '8px', maxWidth: '80%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                                             {message.text}
                                         </Box>
                                     )}
-                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginLeft: 2 }}>
+                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginLeft: 2, flexDirection:'row' }}>
                                         {message.isRead ? '已读' : '未读'}
                                     </Typography>
                                 </Box>
@@ -327,13 +332,11 @@ function MessagesPage() {
     const handleInviteGobang = async () => {
         if (selectedFriend) {
             try {
-                const response = await apiRequest('/send-message', 'POST', {
-                    userIdFrom: currentUserId,
-                    userIdTo: selectedFriend.id,
-                    messageType: 'text',
-                    messageContent: '来局五子棋'
+                const response = await apiRequest('/api/gomoku/invite', 'GET', {
+                    userId: currentUserId,
+                    friendId: selectedFriend.id
                 }, navigate);
-                if (response && response.code === '200') {
+                if (response && response.inviteCode) {
                     setShowGamesDialog(false);
                     await handleFriendSelect(selectedFriend);
                 }
@@ -697,6 +700,7 @@ function MessagesPage() {
         >
             {selectedFriend ? (
                 <ChatPage
+                    navigate={navigate}
                     selectedFriend={selectedFriend}
                     friendMessages={friendMessages}
                     newMessage={newMessage}

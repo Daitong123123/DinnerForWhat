@@ -10,7 +10,7 @@ import MessagesPage from './MessagesPage';
 import UserInfoPage from './UserInfoPage';
 import ModelManagementPage from './ModelManagerPage';
 import AdminHome from './AdminHome';
-import GobangPage from './GobangPage';
+import GomokuPage from './GomokuPage';
 
 
 const AppRoutes = () => {
@@ -26,7 +26,7 @@ const AppRoutes = () => {
             <Route path="/user" element={<UserInfoPage />} />
             <Route path="/admin/model" element={<ModelManagementPage />} />
             <Route path="/admin" element={<AdminHome />} />
-            <Route path="/game" element={<GobangPage />} />
+            <Route path="/gomoku" element={<GomokuPage />} />
             <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
     );

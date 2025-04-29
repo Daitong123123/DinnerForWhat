@@ -43,8 +43,17 @@ function LoginPage() {
             if (result.code === '200') {
                 // 提取响应头中的 userId
                 const userId = response.headers.get('userid');
+                // 获取用户昵称
+                const userInfoResponse = await fetch(`http://${baseUrl}/friend-info?userId=${userId}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const userInfo = await userInfoResponse.json();
                 // 保存用户信息到本地存储
                 localStorage.setItem('userId', userId);
+                if (userInfo && userInfo.userNickName) {
+                    localStorage.setItem('userNickName', userInfo.userNickName);
+                }
                 // 跳转到 DishPage
                 navigate('/dish');
             } else {
