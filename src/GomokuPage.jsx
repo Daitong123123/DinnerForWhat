@@ -1,30 +1,56 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Grid, Paper, Avatar } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from'react';
+import {
+    Box,
+    Typography,
+    Button,
+    TextField,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Grid,
+    Paper,
+    Avatar,
+    Divider
+} from '@mui/material';
+import { useNavigate, useSearchParams } from'react-router-dom';
 import apiRequest from './api.js';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
 
 const BOARD_SIZE = 15;
 const CELL_SIZE = 40;
+// 增加的边界大小
+const BORDER_SIZE = 20;
 
 const GomokuPage = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [roomId, setRoomId] = useState('');
     const [invitationCode, setInvitationCode] = useState('');
     const [gameStatus, setGameStatus] = useState('waiting'); // waiting, playing, ended
     const [currentPlayer, setCurrentPlayer] = useState('');
     const [board, setBoard] = useState(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)));
     const [winner, setWinner] = useState('');
-    
+
     const [opponentInfo, setOpponentInfo] = useState(null);
     const stompClient = useRef(null);
     const currentUserId = localStorage.getItem('userId');
     const currentUserNickname = localStorage.getItem('userNickName') || '玩家';
 
+
+    useEffect(() => {
+        const urlRoomId = searchParams.get('roomId');
+        if (urlRoomId) {
+            setRoomId(urlRoomId);
+            connectWebSocket(urlRoomId);
+            fetchRoomStatus();
+        }
+    }, []);
+
     const fetchOpponentInfo = async (playerIds) => {
         try {
-            const opponentId = playerIds.find(id => id !== currentUserId);
+            const opponentId = playerIds.find(id => id!== currentUserId);
             if (opponentId) {
                 const response = await apiRequest('/friend-info', 'GET', { userId: opponentId }, navigate);
                 if (response && response.userNickName) {
@@ -33,41 +59,11 @@ const GomokuPage = () => {
                         avatar: response.userNickName.charAt(0).toUpperCase()
                     });
                 }
+            } else {
+                setOpponentInfo(null);
             }
         } catch (error) {
             console.error('获取对手信息失败:', error);
-        }
-    };
-
-    // 创建房间
-    const handleCreateRoom = async () => {
-        try {
-            const response = await apiRequest('/api/gomoku/room/create', 'POST', { userId: currentUserId }, navigate);
-            if (response && response.inviteCode) {
-                setRoomId(response.roomId);
-                setInvitationCode(response.inviteCode);
-                connectWebSocket(response.roomId);
-
-            }
-        } catch (error) {
-            console.error('创建房间失败:', error);
-        }
-    };
-
-    // 加入房间
-    const handleJoinRoom = async () => {
-        try {
-            const response = await apiRequest('/api/gomoku/room/join', 'POST', { 
-                userId: currentUserId, 
-                invitationCode: invitationCode 
-            }, navigate);
-            if (response && response.success) {
-                setRoomId(response.roomId);
-                connectWebSocket(response.roomId);
-
-            }
-        } catch (error) {
-            console.error('加入房间失败:', error);
         }
     };
 
@@ -78,14 +74,23 @@ const GomokuPage = () => {
         }
 
         const client = new Client({
-            brokerURL: `ws://${baseUrl}/ws`,
+            brokerURL: `ws://${baseUrl}/chat-websocket`,
             reconnectDelay: 5000,
             onConnect: () => {
                 client.subscribe(`/topic/gomoku/${roomId}`, (message) => {
                     const data = JSON.parse(message.body);
+                    // 收到 WebSocket 消息时调用 status 接口
+                    fetchRoomStatus();
                     handleGameUpdate(data);
+                    if (data.messageType === 'onStart') {
+                        setCurrentPlayer(data.userId);
+                    } else if (data.messageType === 'onMove') {
+                        setCurrentPlayer(data.userId);
+                        if(data.hasWinner){
+                            setWinner(data.winnerId);
+                        }
+                    }
                 });
-                fetchRoomStatus();
             },
             onStompError: (frame) => {
                 console.error('WebSocket连接错误:', frame);
@@ -99,8 +104,12 @@ const GomokuPage = () => {
     // 获取房间状态
     const fetchRoomStatus = async () => {
         try {
-            const response = await apiRequest('/api/gomoku/room/status', 'GET', { roomId }, navigate);
+            const response = await apiRequest('/api/gomoku/room/status', 'GET', { roomId: searchParams.get('roomId') }, navigate);
             if (response && response.room) {
+                // 更新对方头像
+                if (response.room.playerIds) {
+                    fetchOpponentInfo(response.room.playerIds);
+                }
                 handleGameUpdate(response.room);
             }
         } catch (error) {
@@ -109,10 +118,9 @@ const GomokuPage = () => {
     };
 
     // 处理游戏状态更新
-    const handleGameUpdate = (data) => {
+    const handleGameUpdate = async (data) => {
         if (data.gameStatus === 'playing') {
             setGameStatus('playing');
-            setCurrentPlayer(data.currentPlayer);
             if (data.board) {
                 setBoard(data.board);
             }
@@ -120,6 +128,9 @@ const GomokuPage = () => {
                 fetchOpponentInfo(data.playerIds);
             }
         } else if (data.gameStatus === 'ended') {
+            if (data.board) {
+                setBoard(data.board);
+            }
             setGameStatus('ended');
             setWinner(data.winnerId);
         }
@@ -128,7 +139,7 @@ const GomokuPage = () => {
     // 开始游戏
     const handleStartGame = async () => {
         try {
-            const response = await apiRequest('/api/gomoku/game/start', 'POST', { roomId }, navigate);
+            const response = await apiRequest('/api/gomoku/game/start', 'GET', { roomId }, navigate);
             if (response && response.success) {
                 setGameStatus('playing');
                 setCurrentPlayer(response.firstId);
@@ -140,16 +151,16 @@ const GomokuPage = () => {
 
     // 落子
     const handleMakeMove = async (x, y) => {
-        if (gameStatus !== 'playing' || currentPlayer !== currentUserId || board[x][y]) {
+        if (gameStatus!== 'playing' || currentPlayer!== currentUserId || board[x][y]) {
             return;
         }
 
         try {
-            const response = await apiRequest('/api/gomoku/game/move', 'POST', { 
-                roomId, 
-                userId: currentUserId, 
-                x, 
-                y 
+            const response = await apiRequest('/api/gomoku/game/move', 'GET', {
+                roomId,
+                userId: currentUserId,
+                x,
+                y
             }, navigate);
             if (response && response.moveSuccess) {
                 fetchRoomStatus();
@@ -159,187 +170,303 @@ const GomokuPage = () => {
         }
     };
 
-    // 结束游戏
-    const handleEndGame = async () => {
+    // 离开房间
+    const handleExitRoom = async () => {
         try {
-            await apiRequest('/api/gomoku/game/end', 'POST', { roomId, winnerId: winner }, navigate);
-            setGameStatus('waiting');
-            setRoomId('');
-            setInvitationCode('');
-            setBoard(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)));
-            setWinner('');
-            if (stompClient.current) {
-                stompClient.current.deactivate();
-                stompClient.current = null;
+            const response = await apiRequest('/api/gomoku/room/exit', 'GET', { userId: currentUserId, roomId }, navigate);
+            if (response.success) {
+                setRoomId('');
+                setInvitationCode('');
+                setGameStatus('waiting');
+                setBoard(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)));
+                setWinner('');
+                setOpponentInfo(null);
+                if (stompClient.current) {
+                    stompClient.current.deactivate();
+                    stompClient.current = null;
+                }
+                navigate('/messages');
+            } else {
+                console.error('离开房间失败:', response);
             }
         } catch (error) {
-            console.error('结束游戏失败:', error);
+            console.error('离开房间失败:', error);
         }
     };
 
     // 渲染棋盘
     const renderBoard = () => {
+        const centerIndex = Math.floor(BOARD_SIZE / 2);
         return (
-            <Box sx={{
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'600\' height=\'600\' viewBox=\'0 0 600 600\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Crect width=\'600\' height=\'600\' fill=\'%23d4a76a\'/%3E%3C/svg%3E")',
-                padding: '20px',
-                borderRadius: '10px',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-                border: '4px solid #8B4513',
-                position: 'relative',
-                width: `${BOARD_SIZE * CELL_SIZE}px`,
-                height: `${BOARD_SIZE * CELL_SIZE}px`,
-                margin: '0 auto',
-                overflow: 'hidden',
-                aspectRatio: '1/1'
-            }}>
-                <Grid container spacing={0} style={{ 
-                    width: '100%',
-                    maxWidth: BOARD_SIZE * CELL_SIZE,
-                    backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
-                    backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
-                    backgroundPosition: `${CELL_SIZE}px ${CELL_SIZE}px`,
-                    border: '1px solid #000'
-                }}>
+            <Box
+                sx={{
+                    background: '#d4a76a',
+                    borderRadius: '10px',
+                    boxShadow: '0 0 20px rgba(0, 0, 0, 0.3)',
+                    position: 'relative',
+                    width: `${(BOARD_SIZE ) * CELL_SIZE + 2 * BORDER_SIZE}px`,
+                    height: `${(BOARD_SIZE) * CELL_SIZE + 2 * BORDER_SIZE}px`,
+                    margin: '0 auto',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
+            >
+                <Grid
+                    container
+                    spacing={0}
+                    style={{
+                        width: `${(BOARD_SIZE ) * CELL_SIZE}px`,
+                        height: `${(BOARD_SIZE ) * CELL_SIZE}px`,
+                        position: 'relative'
+                    }}
+                >
+                    {/* 天元点 */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: `${centerIndex * CELL_SIZE + BORDER_SIZE - 3}px`,
+                            left: `${centerIndex * CELL_SIZE + BORDER_SIZE - 3}px`,
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            backgroundColor: '#000'
+                        }}
+                    />
                     {board.map((row, rowIndex) => (
                         <Grid container item key={rowIndex} spacing={0}>
                             {row.map((cell, colIndex) => (
                                 <Grid item key={colIndex}>
-                                    <div 
+                                    <div
                                         style={{
                                             width: CELL_SIZE,
                                             height: CELL_SIZE,
                                             display: 'flex',
                                             justifyContent: 'center',
                                             alignItems: 'center',
-                                            cursor: gameStatus === 'playing' && currentPlayer === currentUserId ? 'pointer' : 'default'
+                                            cursor: gameStatus === 'playing' && currentPlayer === currentUserId? 'pointer' : 'default'
                                         }}
                                         onClick={() => handleMakeMove(rowIndex, colIndex)}
                                     >
                                         {cell && (
-                                            <div style={{
-                                                width: CELL_SIZE * 0.8,
-                                                height: CELL_SIZE * 0.8,
-                                                borderRadius: '50%',
-                                                backgroundColor: cell === currentUserId ? '#2196F3' : '#F44336',
-                                                boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
-                                                border: '2px solid rgba(255, 255, 255, 0.5)'
-                                            }} />
+                                            <div
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: `${rowIndex * CELL_SIZE + BORDER_SIZE - CELL_SIZE * 0.4}px`,
+                                                    left: `${colIndex * CELL_SIZE + BORDER_SIZE - CELL_SIZE * 0.4}px`,
+                                                    width: CELL_SIZE * 0.8,
+                                                    height: CELL_SIZE * 0.8,
+                                                    borderRadius: '50%',
+                                                    backgroundColor: cell === 2? '#fff' : '#000',
+                                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
+                                                    border: '2px solid rgba(255, 255, 255, 0.5)'
+                                                }}
+                                            />
                                         )}
                                     </div>
                                 </Grid>
                             ))}
                         </Grid>
                     ))}
+                    {/* 网格线 */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: BORDER_SIZE,
+                            left: BORDER_SIZE,
+                            right: BORDER_SIZE,
+                            bottom: BORDER_SIZE,
+                            backgroundImage: `
+                              linear-gradient(#000 1px, transparent 1px),
+                              linear-gradient(90deg, #000 1px, transparent 1px)
+                            `,
+                            backgroundSize: `${CELL_SIZE}px ${CELL_SIZE}px`,
+                            backgroundPosition: `0 0`,
+                            pointerEvents: 'none'
+                        }}
+                    />
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: BORDER_SIZE,
+                            left: BORDER_SIZE,
+                            right: BORDER_SIZE,
+                            bottom: BORDER_SIZE,
+                            content: '""',
+                            pointerEvents: 'none'
+                        }}
+                    >
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                borderBottom: '1px solid #000'
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                bottom: 0,
+                                borderRight: '1px solid #000'
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                borderTop: '1px solid #000'
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                borderLeft: '1px solid #000'
+                            }}
+                        />
+                    </div>
                 </Grid>
             </Box>
         );
     };
 
     return (
-        <Box sx={{ p: 3, position: 'relative', height: '100vh' }}>
-            {opponentInfo ? (
-                <Box sx={{ 
-                    position: 'absolute', 
-                    top: 20, 
-                    left: `calc(50% - ${BOARD_SIZE * CELL_SIZE / 2}px)`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    padding: '8px 16px',
-                    borderRadius: '24px',
-                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                    zIndex: 1000
-                }}>
-                    <Avatar sx={{ 
-                        bgcolor: '#ff5722', 
-                        width: 48, 
-                        height: 48,
-                        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)'
-                    }}>
-                        {opponentInfo ? opponentInfo.avatar : '?'}
-                    </Avatar>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{opponentInfo ? opponentInfo.nickname : '等待对手'}</Typography>
-                </Box>
-            ) : (
-                <Box sx={{ 
-                    position: 'absolute', 
-                    top: 20, 
-                    left: 20,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                    padding: '8px 16px',
-                    borderRadius: '24px',
-                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                    zIndex: 1000
-                }}>
-                    <Avatar sx={{ 
-                        bgcolor: '#4caf50', 
-                        width: 48, 
-                        height: 48,
-                        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)'
-                    }}>
-                        +
-                    </Avatar>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>等待对手加入</Typography>
-                </Box>
-            )}
-            
-            <Box sx={{ 
-                position: 'absolute', 
-                bottom: 20, 
-                right: 20,
+        <Box
+            sx={{
+                p: 3,
+                position: 'relative',
+                minHeight: '100vh',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                padding: '8px 16px',
-                borderRadius: '24px',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                zIndex: 1000
-            }}>
-                <Avatar sx={{ 
-                    bgcolor: '#2196F3', 
-                    width: 48, 
-                    height: 48,
-                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)'
-                }}>
-                    {currentUserNickname.charAt(0).toUpperCase()}
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>{currentUserNickname}</Typography>
-            </Box>
-
-            
-            {roomId && (
-                <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6">房间ID: {roomId}</Typography>
-                    {invitationCode && <Typography variant="body1">邀请码: {invitationCode}</Typography>}
-                    <Typography variant="body1">游戏状态: {gameStatus === 'waiting' ? '等待开始' : gameStatus === 'playing' ? '游戏中' : '已结束'}</Typography>
-                    {gameStatus === 'playing' && (
-                        <Typography variant="body1">当前回合: {currentPlayer === currentUserId ? '你的回合' : '对方回合'}</Typography>
+                backgroundColor: '#f5f5f5'
+            }}
+        >
+            <Box
+                sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '20px'
+                }}
+            >
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2
+                    }}
+                >
+                    {opponentInfo? (
+                        <Avatar
+                            sx={{
+                                width: 80,
+                                height: 80,
+                                bgcolor: '#ff5722',
+                                fontSize: '32px',
+                                fontWeight: 'bold',
+                                boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)'
+                            }}
+                        >
+                            {opponentInfo.avatar}
+                        </Avatar>
+                    ) : (
+                        <Avatar
+                            sx={{
+                                width: 80,
+                                height: 80,
+                                bgcolor: '#4caf50',
+                                fontSize: '32px',
+                                fontWeight: 'bold',
+                                boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)'
+                            }}
+                        >
+                            +
+                        </Avatar>
                     )}
-                    {gameStatus === 'ended' && (
-                        <Typography variant="body1">获胜者: {winner === currentUserId ? '你赢了!' : '对方赢了'}</Typography>
-                    )}
+                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                        {opponentInfo? opponentInfo.nickname : '等待对手加入'}
+                    </Typography>
                 </Box>
-            )}
-
-            {roomId && gameStatus === 'waiting' && (
-                <Button variant="contained" onClick={handleStartGame} sx={{ mb: 3 }}>开始游戏</Button>
-            )}
-
-            {gameStatus === 'ended' && (
-                <Button variant="contained" onClick={handleEndGame} sx={{ mb: 3 }}>返回大厅</Button>
-            )}
-
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2
+                    }}
+                >
+                    <Avatar
+                        sx={{
+                            width: 80,
+                            height: 80,
+                            bgcolor: '#2196F3',
+                            fontSize: '32px',
+                            fontWeight: 'bold',
+                            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)'
+                        }}
+                    >
+                        {currentUserNickname.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                        {currentUserNickname}
+                    </Typography>
+                </Box>
+            </Box>
+            <Divider sx={{ width: '100%', marginBottom: '20px' }} />
+            <Box
+                sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: '20px'
+                }}
+            >
+                {roomId && (
+                    <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6">房间ID: {roomId}</Typography>
+                        {invitationCode && <Typography variant="body1">邀请码: {invitationCode}</Typography>}
+                        <Typography variant="body1">游戏状态: {gameStatus === 'waiting'? '等待开始' : gameStatus === 'playing'? '游戏中' : '已结束'}</Typography>
+                        {gameStatus === 'playing' && (
+                            <Typography variant="body1">当前回合: {currentPlayer === currentUserId? '你的回合' : '对方回合'}</Typography>
+                        )}
+                        {gameStatus === 'ended' && (
+                            <Typography variant="body1">获胜者: {winner === currentUserId? '你赢了!' : '对方赢了'}</Typography>
+                        )}
+                    </Box>
+                )}
+            </Box>
+            <Box
+                sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: '20px'
+                }}
+            >
+                {roomId && (gameStatus === 'waiting' || gameStatus === 'ended') && (
+                    <Button variant="contained" onClick={handleStartGame} sx={{ mr: 2 }}>
+                        开始游戏
+                    </Button>
+                )}
+                {roomId && (
+                    <Button variant="contained" onClick={handleExitRoom} sx={{ ml: 2 }}>
+                        离开房间
+                    </Button>
+                )}
+            </Box>
             {renderBoard()}
-
-            
         </Box>
     );
 };
 
 export default GomokuPage;
+    

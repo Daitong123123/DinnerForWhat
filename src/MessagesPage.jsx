@@ -226,16 +226,16 @@ const ChatPage = ({ navigate,selectedFriend, friendMessages, newMessage, setNewM
                     <ListItem key={index} alignItems="flex-start" sx={{ justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2, flexDirection: 'row' }}>
                         {message.sender === 'user' ? (
                             <>
-                                <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row', justifyContent:'flex-end' }}>
                                     <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginRight: 2, flexDirection:'row' }}>
                                         {message.isRead ? '已读' : '未读'}
                                     </Typography>
                                     {message.messageType === 'cookBook' ? (
                                         renderCookbookCard(JSON.parse(message.text))
                                     ) : message.messageType === 'Gomoku' ? (
-                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} navigate={navigate} />
+                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
                                     ) : (
-                                        <Box sx={{ backgroundColor: '#DCF8C6', borderRadius: 3, padding: '8px', maxWidth: '80%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                                        <Box sx={{ backgroundColor: '#DCF8C6', borderRadius: 3, padding: '8px', maxWidth: '90%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                                             {message.text}
                                         </Box>
                                     )}
@@ -249,7 +249,7 @@ const ChatPage = ({ navigate,selectedFriend, friendMessages, newMessage, setNewM
                                     {message.messageType === 'cookBook' ? (
                                         renderCookbookCard(JSON.parse(message.text))
                                     ) : message.messageType === 'Gomoku' ? (
-                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} navigate={navigate} />
+                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
                                     ) : (
                                         <Box sx={{ backgroundColor: '#E5E5EA', borderRadius: 3, padding: '8px', maxWidth: '80%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
                                             {message.text}
@@ -420,6 +420,7 @@ function MessagesPage() {
                         ...prevMessages,
                         [friend.id]: messages.records.map(record => ({
                             text: record.message,
+                            userIdTo: record.userIdTo,
                             sender: record.userIdFrom === currentUserId ? 'user' : 'other',
                             messageType: record.messageType,
                             isRead: record.read
@@ -810,7 +811,7 @@ function MessagesPage() {
                     </DialogContentText>
                     <List>
                         {shareOptions.map((option) => (
-                            <ListItem key={option.id} button onClick={() => handleTakeDish(option.id)}>
+                            <ListItem key={option.dishId} button onClick={() => handleTakeDish(option.dishId)}>
                                 <Typography>{option.dishName}</Typography>
                             </ListItem>
                         ))}

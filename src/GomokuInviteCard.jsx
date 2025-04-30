@@ -4,39 +4,28 @@ import { useNavigate } from 'react-router-dom';
 import apiRequest from './api.js';
 import { FaChessBoard } from 'react-icons/fa';
 
-const GomokuInviteCard = ({ message, friend, onJoin }) => {
+const GomokuInviteCard = ({ message, friend, onJoin , userIdTo}) => {
     const navigate = useNavigate();
     const currentUserId = localStorage.getItem('userId');
     const currentUserNickname = localStorage.getItem('userNickName') || '玩家';
 
-    const handleCheckRoomStatus = async () => {
-        try {
-            
-            const roomId = message.roomId;
-            const response = await apiRequest('/api/gomoku/room/status', 'GET', {
-                roomId: roomId
-            }, navigate);
-            
-            if (response && response.room && response.room.playerIds&&response.room.playerIds.includes(currentUserId)) {
-                onJoin(roomId);
-            }
-        } catch (error) {
-            console.error('检查房间状态失败:', error);
-        }
-    };
+    
 
-    const handleJoinGame = async () => {
-        try {
-            const response = await apiRequest('/api/gomoku/room/join', 'POST', {
-                userId: currentUserId,
-                invitationCode: message.invitationCode
-            }, navigate);
-            if (response && response.success) {
-                onJoin(response.roomId);
+    const handleJoinRoom = async () => {
+            try {
+                const response = await apiRequest('/api/gomoku/room/join', 'GET', {
+                    userId: currentUserId,
+                    invitationCode: message.inviteCode
+                }, navigate);
+                if (response && response.success) {
+                    navigate(`/gomoku?roomId=${response.roomId}`);
+                } else {
+                    alert('加入房间失败');
+                }
+            } catch (error) {
+                console.error('加入房间请求出错:', error);
             }
-        } catch (error) {
-            console.error('加入游戏房间失败:', error);
-        }
+     
     };
 
     return (
@@ -55,9 +44,8 @@ const GomokuInviteCard = ({ message, friend, onJoin }) => {
                 },
                 transition: 'all 0.3s ease'
             }}
-            onClick={handleCheckRoomStatus}
         >
-            <CardContent>
+            <CardContent onClick={handleJoinRoom}>
                 <Grid container alignItems="center" spacing={2} sx={{ mb: 2 }}>
                     <Grid item>
                         <Avatar sx={{ 
