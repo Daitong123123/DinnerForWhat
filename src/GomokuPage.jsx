@@ -32,6 +32,7 @@ const GomokuPage = () => {
     const [currentPlayer, setCurrentPlayer] = useState('');
     const [board, setBoard] = useState(Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null)));
     const [winner, setWinner] = useState('');
+    const [winnerDialogOpen, setWinnerDialogOpen] = useState(false);
 
     const [opponentInfo, setOpponentInfo] = useState(null);
     const stompClient = useRef(null);
@@ -86,8 +87,9 @@ const GomokuPage = () => {
                         setCurrentPlayer(data.userId);
                     } else if (data.messageType === 'onMove') {
                         setCurrentPlayer(data.userId);
-                        if(data.hasWinner){
+                        if (data.hasWinner) {
                             setWinner(data.winnerId);
+                            setWinnerDialogOpen(true);
                         }
                     }
                 });
@@ -109,6 +111,9 @@ const GomokuPage = () => {
                 // 更新对方头像
                 if (response.room.playerIds) {
                     fetchOpponentInfo(response.room.playerIds);
+                }
+                if(response.room.currentUser){
+                    setCurrentPlayer(response.room.currentUser);
                 }
                 handleGameUpdate(response.room);
             }
@@ -133,6 +138,7 @@ const GomokuPage = () => {
             }
             setGameStatus('ended');
             setWinner(data.winnerId);
+            setWinnerDialogOpen(true);
         }
     };
 
@@ -204,7 +210,7 @@ const GomokuPage = () => {
                     borderRadius: '10px',
                     boxShadow: '0 0 20px rgba(0, 0, 0, 0.3)',
                     position: 'relative',
-                    width: `${(BOARD_SIZE ) * CELL_SIZE + 2 * BORDER_SIZE}px`,
+                    width: `${(BOARD_SIZE) * CELL_SIZE + 2 * BORDER_SIZE}px`,
                     height: `${(BOARD_SIZE) * CELL_SIZE + 2 * BORDER_SIZE}px`,
                     margin: '0 auto',
                     display: 'flex',
@@ -216,8 +222,8 @@ const GomokuPage = () => {
                     container
                     spacing={0}
                     style={{
-                        width: `${(BOARD_SIZE ) * CELL_SIZE}px`,
-                        height: `${(BOARD_SIZE ) * CELL_SIZE}px`,
+                        width: `${(BOARD_SIZE) * CELL_SIZE}px`,
+                        height: `${(BOARD_SIZE) * CELL_SIZE}px`,
                         position: 'relative'
                     }}
                 >
@@ -248,7 +254,7 @@ const GomokuPage = () => {
                                         }}
                                         onClick={() => handleMakeMove(rowIndex, colIndex)}
                                     >
-                                        {cell && (
+                                        {(gameStatus === 'playing'||gameStatus === 'ended') && cell!== 0 && (
                                             <div
                                                 style={{
                                                     position: 'absolute',
@@ -258,8 +264,13 @@ const GomokuPage = () => {
                                                     height: CELL_SIZE * 0.8,
                                                     borderRadius: '50%',
                                                     backgroundColor: cell === 2? '#fff' : '#000',
-                                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
-                                                    border: '2px solid rgba(255, 255, 255, 0.5)'
+                                                    boxShadow: '0 5px 10px rgba(0, 0, 0, 0.5)',
+                                                    border: '2px solid rgba(255, 255, 255, 0.8)',
+                                                    backgroundImage: cell === 2
+                                                       ? 'radial-gradient(circle at 30% 30%, #fff, #eee)'
+                                                        : 'radial-gradient(circle at 30% 30%, #333, #000)',
+                                                    transform: 'perspective(100px) rotateX(10deg)',
+                                                    zIndex: 1 // 添加这一行
                                                 }}
                                             />
                                         )}
@@ -464,9 +475,26 @@ const GomokuPage = () => {
                 )}
             </Box>
             {renderBoard()}
+            <Dialog
+                open={winnerDialogOpen}
+                onClose={() => setWinnerDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    {winner === currentUserId? '恭喜你，获胜啦！' : '很遗憾，对方获胜了'}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="h6">
+                        {winner === currentUserId? '你在这场激烈的五子棋对战中脱颖而出，展现了卓越的棋艺！' : '继续加油，下一局你一定能赢回来！'}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setWinnerDialogOpen(false)}>确定</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
 
-export default GomokuPage;
-    
+export default GomokuPage;    
