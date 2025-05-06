@@ -38,6 +38,8 @@ const GomokuPage = () => {
     const stompClient = useRef(null);
     const currentUserId = localStorage.getItem('userId');
     const currentUserNickname = localStorage.getItem('userNickName') || '玩家';
+    const [score, setScore] = useState({ currentUser: 0, opponent: 0 });
+    const [blackUserId, setBlackUserId] = useState('');
 
 
     useEffect(() => {
@@ -115,6 +117,15 @@ const GomokuPage = () => {
                 if(response.room.currentUser){
                     setCurrentPlayer(response.room.currentUser);
                 }
+                if(response.room.scores){
+                    let scores = response.room.scores;
+                    let currentUserScore = scores[0].userId === currentUserId ? scores[0].x : scores[1].x;
+                    let otherUserScore = scores[0].userId === currentUserId ? scores[1].x : scores[0].x;
+                    setScore({ currentUser: currentUserScore, opponent: otherUserScore });
+                }
+                if(response.room.blackUserId){
+                    setBlackUserId(response.room.blackUserId);
+                }
                 handleGameUpdate(response.room);
             }
         } catch (error) {
@@ -131,6 +142,9 @@ const GomokuPage = () => {
             }
             if (data.playerIds) {
                 fetchOpponentInfo(data.playerIds);
+            }
+            if(data.blackUserId){
+                setBlackUserId(data.blackUserId);
             }
         } else if (data.gameStatus === 'ended') {
             if (data.board) {
@@ -446,9 +460,26 @@ const GomokuPage = () => {
                         <Typography variant="h6">房间ID: {roomId}</Typography>
                         {invitationCode && <Typography variant="body1">邀请码: {invitationCode}</Typography>}
                         <Typography variant="body1">游戏状态: {gameStatus === 'waiting'? '等待开始' : gameStatus === 'playing'? '游戏中' : '已结束'}</Typography>
+                        <Typography variant="body1">比分: {score.opponent} : {score.currentUser} </Typography>
                         {gameStatus === 'playing' && (
-                            <Typography variant="body1">当前回合: {currentPlayer === currentUserId? '你的回合' : '对方回合'}</Typography>
-                        )}
+                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                <Typography variant="body1">当前回合: {currentPlayer === currentUserId? '你的回合' : '对方回合'}</Typography>
+                                {currentPlayer === currentUserId&&<div
+                                    style={{
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: '50%',
+                                        backgroundColor: blackUserId === currentUserId?  '#fff':'#000',
+                                        marginLeft: 10,
+                                        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
+                                        border: '1px solid rgba(255, 255, 255, 0.8)',
+                                        backgroundImage: blackUserId === currentUserId
+                                           ? 'radial-gradient(circle at 30% 30%, #333, #000)'
+                                            : 'radial-gradient(circle at 30% 30%, #fff, #eee)'
+                                }}
+                            />}
+                        </Box>
+                    )}
                         {gameStatus === 'ended' && (
                             <Typography variant="body1">获胜者: {winner === currentUserId? '你赢了!' : '对方赢了'}</Typography>
                         )}
@@ -486,7 +517,7 @@ const GomokuPage = () => {
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="h6">
-                        {winner === currentUserId? '你在这场激烈的五子棋对战中脱颖而出，展现了卓越的棋艺！' : '继续加油，下一局你一定能赢回来！'}
+                        {winner === currentUserId? '你在这场激烈的五子棋对战中赢得了卓越的棋艺！' : '继续加油，下一局你一定能赢回来！'}
                     </Typography>
                 </DialogContent>
                 <DialogActions>
@@ -497,4 +528,4 @@ const GomokuPage = () => {
     );
 };
 
-export default GomokuPage;    
+export default GomokuPage;
