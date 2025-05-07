@@ -11,6 +11,7 @@ import UserInfoPage from './UserInfoPage';
 import ModelManagementPage from './ModelManagerPage';
 import AdminHome from './AdminHome';
 import GomokuPage from './GomokuPage';
+import OrderingPage from './OrderingPage';
 
 
 const AppRoutes = () => {
@@ -22,6 +23,7 @@ const AppRoutes = () => {
             <Route path="/admin/upload" element={<UploadPage />} />
             <Route path="/unlike" element={<UnlikePage />} />
             <Route path="/dish" element={<DishPage />} />
+            <Route path="/order" element={<OrderingPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/user" element={<UserInfoPage />} />
             <Route path="/admin/model" element={<ModelManagementPage />} />
