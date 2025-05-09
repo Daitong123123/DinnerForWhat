@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from'react';
+import React, { useState, useEffect } from 'react';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
-import { useLocation, useNavigate } from'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MessageIcon from '@mui/icons-material/Message';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -58,13 +58,13 @@ function BottomNavigationBar() {
     const checkLoverStatus = async (userId) => {
         try {
             const data = await apiRequest('/lover-ship', 'POST', { userId }, navigate);
-            
+
             if (data) {
                 const hasLover = data.friends && data.friends.length > 0;
-                
+
                 setHasLover(hasLover);
                 localStorage.setItem('hasLover', hasLover);
-                
+
                 // 如果有情侣，缓存情侣ID
                 if (hasLover && data.friends[0]) {
                     localStorage.setItem('loverId', data.friends[0]);
@@ -99,6 +99,14 @@ function BottomNavigationBar() {
                 icon={<MenuBookIcon />}
                 href="/dish"
             />
+            {/* 只有当用户有情侣时才显示餐厅选项 */}
+            {hasLover && !loading && (
+                <BottomNavigationAction
+                    label="餐厅"
+                    icon={<RestaurantIcon />}
+                    href="/order"
+                />
+            )}
             <BottomNavigationAction
                 label="喜好"
                 icon={<FavoriteIcon />}
@@ -109,14 +117,7 @@ function BottomNavigationBar() {
                 icon={<PersonIcon />}
                 href="/user"
             />
-            {/* 只有当用户有情侣时才显示餐厅选项 */}
-            {hasLover && !loading && (
-                <BottomNavigationAction
-                    label="餐厅"
-                    icon={<RestaurantIcon />}
-                    href="/order"
-                />
-            )}
+
         </BottomNavigation>
     );
 }
