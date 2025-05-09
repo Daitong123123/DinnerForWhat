@@ -16,6 +16,7 @@ import {
 import { Add, Remove } from '@mui/icons-material';
 import apiRequest from './api'; // 假设 apiRequest 函数在 api.js 文件中
 import { useNavigate } from 'react-router-dom'; // 假设使用了 react-router-dom
+import BottomNavigationBar from './BottomNavigationBar';
 
 const OrderingPage = () => {
     const [cart, setCart] = useState([]);
@@ -193,7 +194,9 @@ const OrderingPage = () => {
                     结算
                 </Button>
             </Box>
+            <BottomNavigationBar />
         </Box>
+        
     );
 };
 

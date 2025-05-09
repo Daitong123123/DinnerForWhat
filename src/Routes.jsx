@@ -12,6 +12,7 @@ import ModelManagementPage from './ModelManagerPage';
 import AdminHome from './AdminHome';
 import GomokuPage from './GomokuPage';
 import OrderingPage from './OrderingPage';
+import BindLoverPage from './BindLoverPage';
 
 
 const AppRoutes = () => {
@@ -29,6 +30,7 @@ const AppRoutes = () => {
             <Route path="/admin/model" element={<ModelManagementPage />} />
             <Route path="/admin" element={<AdminHome />} />
             <Route path="/gomoku" element={<GomokuPage />} />
+            <Route path="/bind-lover" element={<BindLoverPage />} />
             <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
     );

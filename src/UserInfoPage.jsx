@@ -6,26 +6,32 @@ import {
     CardContent,
     Button,
     Avatar,
-    TextField
+    TextField,
+    Divider
 } from '@mui/material';
 import { useNavigate } from'react-router-dom';
 import baseUrl from './config.js';
-
+import apiRequest from './api.js';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
 
 function UserInfoPage() {
     const navigate = useNavigate();
     const [userId, setUserId] = useState('');
     const [userName, setUserName] = useState('');
-    const [userAvatar, setUserAvatar] = useState('U'); // 这里可以根据实际情况设置默认头像，比如从后端获取
+    const [userAvatar, setUserAvatar] = useState('U');
     const [editing, setEditing] = useState(false);
     const [editedUserName, setEditedUserName] = useState('');
+    const [hasLover, setHasLover] = useState(false);
+    const [loverInfo, setLoverInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         document.title = '今天吃什么';
         const storedUserId = localStorage.getItem('userId');
         if (storedUserId) {
             setUserId(storedUserId);
             fetchUserInfo(storedUserId);
+            fetchLoverInfo(storedUserId);
         } else {
             navigate('/login');
         }
@@ -41,7 +47,6 @@ function UserInfoPage() {
             if (result.code === '200') {
                 setUserName(result.userNickName);
                 setEditedUserName(result.userNickName);
-                // 这里可以根据后端返回的头像信息设置 userAvatar，暂时用首字母代替
                 const firstChar = result.userNickName.charAt(0).toUpperCase();
                 setUserAvatar(firstChar);
             } else {
@@ -52,13 +57,33 @@ function UserInfoPage() {
         }
     };
 
+    const fetchLoverInfo = async (userId) => {
+        try {
+            const response = await apiRequest('/lover-ship', 'POST', { userId });
+            if (response && response.friends && response.friends.length > 0) {
+                const loverId = response.friends[0];
+                const loverData = await apiRequest('/friend-info', 'GET', { userId: loverId });
+                if (loverData) {
+                    setLoverInfo({
+                        id: loverData.userId,
+                        name: loverData.userNickName,
+                        avatar: loverData.userNickName.charAt(0).toUpperCase()
+                    });
+                    setHasLover(true);
+                }
+            }
+        } catch (error) {
+            console.error('获取情侣信息请求出错:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleEdit = () => {
         setEditing(true);
     };
 
     const handleSave = () => {
-        // 这里可以添加保存逻辑，调用后端接口保存修改后的用户名
-        // 暂时只做简单的状态更新
         setUserName(editedUserName);
         setEditing(false);
     };
@@ -157,9 +182,70 @@ function UserInfoPage() {
                     </Button>
                 )}
             </Card>
+
+            <Card
+                sx={{
+                    p: 4,
+                    width: '100%',
+                    maxWidth: 500,
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                    background: '#fff',
+                    borderRadius: 8,
+                    border: '1px solid #ccc',
+                    mt: 4
+                }}
+            >
+                <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
+                    情侣信息
+                </Typography>
+                <Divider sx={{ my: 2 }} />
+                {loading? (
+                    <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
+                        <Typography>加载中...</Typography>
+                    </Box>
+                ) : hasLover? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3 }}>
+                        <Avatar sx={{ fontSize: '48px', mb: 2 }}>{loverInfo.avatar}</Avatar>
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                            情侣昵称: {loverInfo.name}
+                        </Typography>
+                        <Typography variant="body1">
+                            情侣编号: {loverInfo.id}
+                        </Typography>
+                        <Button variant="outlined" color="secondary" sx={{ mt: 3 }}>
+                            解除情侣关系
+                        </Button>
+                    </Box>
+                ) : (
+                    <Box
+                        sx={{
+                            border: '2px dashed #ccc',
+                            borderRadius: 8,
+                            p: 4,
+                            textAlign: 'center',
+                            minHeight: 150,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
+                            你还没有情侣哦
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 3, color: '#888' }}>
+                            绑定情侣解锁更多功能！
+                        </Typography>
+                        <Button variant="contained" color="primary" onClick={() => navigate('/bind-lover')}>
+                            绑定情侣
+                        </Button>
+                    </Box>
+                )}
+            </Card>
+
             <BottomNavigationBar />
         </Box>
     );
 }
 
-export default UserInfoPage;
+export default UserInfoPage;    
