@@ -2,13 +2,16 @@ import baseUrl from './config.js';
 
 // 统一的 API 请求方法
 const apiRequest = async (path, method = 'GET', body = null, navigate) => {
-    const url = `http://${baseUrl}`; // 替换为你的后端 API 基础 URL
+    const url = `http://${baseUrl}`;
     let fullUrl = `${url}${path}`;
 
     try {
-        const headers = {
-            'Content-Type': 'application/json'
-        };
+        const headers = {}; // 初始化空headers
+
+        // 只对非FormData的请求设置Content-Type为application/json
+        if (body && !(body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         const options = {
             method,
@@ -23,7 +26,7 @@ const apiRequest = async (path, method = 'GET', body = null, navigate) => {
             }
             fullUrl += `?${queryParams.toString()}`;
         } else if (body) {
-            options.body = JSON.stringify(body);
+            options.body = body instanceof FormData ? body : JSON.stringify(body);
         }
 
         const response = await fetch(fullUrl, options);
@@ -31,11 +34,9 @@ const apiRequest = async (path, method = 'GET', body = null, navigate) => {
         console.log("response is " + response);
         if (response.status === 401) {
             console.log("deal 401,and nav is " + navigate);
-            // 处理 401 错误，进行导航
             if (navigate) {
                 navigate('/');
             }
-            // 将错误信息返回给调用者
             throw new Error('请求被拒绝');
         }
 

@@ -435,6 +435,7 @@ function MessagesPage() {
                     handleShareCookbookClick={handleShareCookbookClick}
                     handleReadMessage={handleReadMessage}
                     handleShowGames={handleShowGames}
+                    setFriendMessages={setFriendMessages}
                 />
             ) : (
                 <ChatListPage
