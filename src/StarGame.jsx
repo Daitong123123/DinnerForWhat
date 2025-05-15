@@ -7,7 +7,7 @@ function StarGame() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(localStorage.getItem('starGameHighScore') || 0);
   const [error, setError] = useState(null);
-  
+
   const canvasRef = useRef(null);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
   const [stars, setStars] = useState([]);
@@ -16,7 +16,7 @@ function StarGame() {
   const [gameLoopId, setGameLoopId] = useState(null);
   const [canvasSize, setCanvasSize] = useState({ width: 300, height: 500 });
 
-  // 初始化画布和游戏状态
+  // 初始化画布尺寸
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -38,52 +38,60 @@ function StarGame() {
     };
   }, [gameLoopId]);
 
+  // 开始游戏
   const startGame = () => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const width = canvas.width;
     const height = canvas.height;
-  
+
     setGameState('playing');
     setScore(0);
     setVelocity(0);
     setJumping(false);
-  
-    // 使用 canvas 的实际尺寸设置玩家位置
-    setPlayerPosition({ 
-      x: width / 2, 
-      y: height - 100 
+
+    // 初始化玩家位置
+    setPlayerPosition({
+      x: width / 2,
+      y: height - 100,
     });
-  
-    generateInitialStars(); // 生成初始星星
+
+    // 生成初始星星
+    generateInitialStars();
+
+    // 启动游戏循环
     const loopId = requestAnimationFrame(gameLoop);
     setGameLoopId(loopId);
   };
 
+  // 生成初始星星
   const generateInitialStars = () => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const width = canvas.width;
     const height = canvas.height;
-  
     const newStars = [];
-  
-    // 底部固定星星
+
+    // 底部固定星星（起点）
     newStars.push({
       x: width / 2,
       y: height - 80,
       size: 80,
-      color: '#FFD700'
+      color: '#FFD700',
     });
-  
+
     // 上方随机星星
     for (let i = 0; i < 6; i++) {
       newStars.push({
         x: 40 + Math.random() * (width - 80),
         y: height - 200 - i * 120,
         size: 60 + Math.random() * 40,
-        color: '#FFD700'
+        color: '#FFD700',
       });
     }
-  
+
     setStars(newStars);
   };
 
@@ -97,7 +105,7 @@ function StarGame() {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 绘制背景星星（降低移动速度）
+    // 绘制背景星星（慢速移动）
     drawBackgroundStars(ctx);
 
     // 绘制玩家
@@ -106,7 +114,7 @@ function StarGame() {
     // 绘制星星平台
     drawStars(ctx);
 
-    // 更新玩家状态
+    // 更新玩家位置
     updatePlayerPosition();
 
     // 更新星星位置
@@ -122,16 +130,14 @@ function StarGame() {
 
   // 绘制玩家
   const drawPlayer = (ctx) => {
-    // 绘制飞船形状
     ctx.fillStyle = '#4287F5';
-    
     ctx.beginPath();
     ctx.moveTo(playerPosition.x, playerPosition.y - 20);
     ctx.lineTo(playerPosition.x - 15, playerPosition.y + 15);
     ctx.lineTo(playerPosition.x + 15, playerPosition.y + 15);
     ctx.closePath();
     ctx.fill();
-    
+
     // 飞船窗户
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
@@ -152,42 +158,40 @@ function StarGame() {
     ctx.translate(cx, cy);
     ctx.fillStyle = color;
     ctx.beginPath();
-    
+
     const outerRadius = size / 2;
     const innerRadius = outerRadius * 0.4;
     const angle = Math.PI / 5;
-    
+
     for (let i = 0; i < 10; i++) {
       const radius = i % 2 === 0 ? outerRadius : innerRadius;
       const rad = angle * i - Math.PI / 2;
       ctx.lineTo(radius * Math.cos(rad), radius * Math.sin(rad));
     }
-    
+
     ctx.closePath();
     ctx.fill();
-    
+
     // 星星边缘高光
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 2;
     ctx.stroke();
-    
+
     ctx.restore();
   };
 
+  // 绘制背景星星（慢速移动）
   const drawBackgroundStars = (ctx) => {
     ctx.fillStyle = '#FFFFFF';
     ctx.shadowBlur = 2;
-  
-    // 使用时间偏移量控制移动速度
-    const timeOffsetX = (Date.now() * 0.001) % canvasSize.width; // 降低时间系数
-    const timeOffsetY = (Date.now() * 0.0005) % canvasSize.height;
-  
+
+    const timeOffsetX = (Date.now() * 0.005) % canvasSize.width; // 控制移动速度
+    const timeOffsetY = (Date.now() * 0.0025) % canvasSize.height;
+
     for (let i = 0; i < 100; i++) {
-      // 固定随机种子，确保星星位置稳定
-      const seed = i * 1000;
-      const x = (seed + timeOffsetX) % canvasSize.width;
-      const y = (seed * 0.5 + timeOffsetY) % canvasSize.height;
-  
+      const x = (Math.random() * canvasSize.width + timeOffsetX) % canvasSize.width;
+      const y = (Math.random() * canvasSize.height + timeOffsetY) % canvasSize.height;
+
       ctx.beginPath();
       ctx.arc(x, y, 1 + Math.random(), 0, Math.PI * 2);
       ctx.fill();
@@ -196,14 +200,12 @@ function StarGame() {
 
   // 更新玩家位置
   const updatePlayerPosition = () => {
-    // 应用重力
     setVelocity(prev => prev + 0.6);
     setPlayerPosition(prev => ({
       ...prev,
-      y: prev.y + velocity
+      y: prev.y + velocity,
     }));
 
-    // 游戏结束检测
     if (playerPosition.y > canvasSize.height + 100) {
       endGame();
     }
@@ -211,25 +213,23 @@ function StarGame() {
 
   // 更新星星位置
   const updateStarsPosition = () => {
-    if (velocity < 0) { // 玩家上升时星星下移
+    if (velocity < 0) {
       setStars(prev => prev.map(star => ({
         ...star,
-        y: star.y - Math.abs(velocity) * 0.5
+        y: star.y - Math.abs(velocity) * 0.5,
       })));
-      
-      // 更新分数
+
       setScore(prev => prev + Math.floor(Math.abs(velocity) * 0.2));
     }
 
-    // 移除离开画布的星星并生成新星星
     const visibleStars = stars.filter(star => star.y < canvasSize.height + 100);
-    
+
     while (visibleStars.length < 7) {
       visibleStars.push({
         x: 40 + Math.random() * (canvasSize.width - 80),
         y: -100 - Math.random() * 200,
         size: 60 + Math.random() * 40,
-        color: '#FFD700'
+        color: '#FFD700',
       });
     }
 
@@ -238,23 +238,25 @@ function StarGame() {
 
   // 碰撞检测
   const checkCollision = () => {
-    const playerBottom = playerPosition.y + 15; // 玩家底部位置
+    const playerBottom = playerPosition.y + 15;
     const playerLeft = playerPosition.x - 15;
     const playerRight = playerPosition.x + 15;
 
     stars.forEach(star => {
-      // 简化的碰撞检测（针对五角星的外接矩形）
       const starTop = star.y - star.size / 2;
       const starBottom = star.y + star.size / 2;
       const starLeft = star.x - star.size / 2;
       const starRight = star.x + star.size / 2;
 
-      // 检测玩家是否落在星星上
-      if (playerBottom >= starTop && playerBottom <= starTop + 10 && // 只检测星星顶部附近
-          playerRight >= starLeft && playerLeft <= starRight &&
-          velocity > 0) { // 只在下落时检测
+      if (
+        playerBottom >= starTop &&
+        playerBottom <= starTop + 10 &&
+        playerRight >= starLeft &&
+        playerLeft <= starRight &&
+        velocity > 0
+      ) {
         setJumping(true);
-        setVelocity(-12); // 弹跳力
+        setVelocity(-12);
       }
     });
   };
@@ -263,8 +265,7 @@ function StarGame() {
   const endGame = () => {
     cancelAnimationFrame(gameLoopId);
     setGameState('ended');
-    
-    // 更新最高分
+
     if (score > highScore) {
       localStorage.setItem('starGameHighScore', score);
       setHighScore(score);
@@ -274,17 +275,14 @@ function StarGame() {
   // 处理点击跳跃
   const handleJump = (e) => {
     if (gameState !== 'playing') return;
-    
-    // 获取点击位置并更新玩家水平位置
+
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
-    
-    // 限制玩家移动范围
+
     const newX = Math.max(20, Math.min(canvasSize.width - 20, clickX));
     setPlayerPosition(prev => ({ ...prev, x: newX }));
-    
-    // 如果玩家正在接触星星，可以跳跃
+
     if (jumping) {
       setVelocity(-12);
     }
@@ -298,8 +296,8 @@ function StarGame() {
   return (
     <Box sx={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
       {/* 游戏画布 */}
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         onClick={handleJump}
         style={{ width: '100%', height: '100%', cursor: 'pointer' }}
       />
@@ -323,14 +321,14 @@ function StarGame() {
             跳星星游戏
           </Typography>
           {gameState === 'start' && (
-            <Button 
-              variant="contained" 
-              color="primary" 
+            <Button
+              variant="contained"
+              color="primary"
               onClick={startGame}
-              sx={{ 
-                px: 8, 
-                py: 3, 
-                fontSize: '1.2rem', 
+              sx={{
+                px: 8,
+                py: 3,
+                fontSize: '1.2rem',
                 borderRadius: 10,
                 boxShadow: '0 4px 16px rgba(0, 123, 255, 0.3)',
                 '&:hover': { boxShadow: '0 6px 20px rgba(0, 123, 255, 0.4)' }
@@ -346,14 +344,14 @@ function StarGame() {
                 得分：{score} <br />
                 最高分：{highScore}
               </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
+              <Button
+                variant="contained"
+                color="primary"
                 onClick={startGame}
-                sx={{ 
-                  px: 8, 
-                  py: 3, 
-                  fontSize: '1.2rem', 
+                sx={{
+                  px: 8,
+                  py: 3,
+                  fontSize: '1.2rem',
                   borderRadius: 10,
                   boxShadow: '0 4px 16px rgba(0, 123, 255, 0.3)',
                   '&:hover': { boxShadow: '0 6px 20px rgba(0, 123, 255, 0.4)' }
@@ -368,15 +366,15 @@ function StarGame() {
 
       {/* 分数显示 */}
       {gameState === 'playing' && (
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            position: 'absolute', 
-            top: 20, 
-            right: 20, 
-            color: '#fff', 
-            backgroundColor: 'rgba(0, 0, 0, 0.7)', 
-            padding: '6px 16px', 
+        <Typography
+          variant="h6"
+          sx={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
+            color: '#fff',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: '6px 16px',
             borderRadius: 20,
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
           }}
