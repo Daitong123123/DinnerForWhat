@@ -13,6 +13,9 @@ import AdminHome from './AdminHome';
 import GomokuPage from './GomokuPage';
 import OrderingPage from './OrderingPage';
 import BindLoverPage from './BindLoverPage';
+import ToolPage from './ToolPage';
+import TranslateTool from './TranslateTools';
+import StarGame from './StarGame';
 
 
 const AppRoutes = () => {
@@ -31,6 +34,9 @@ const AppRoutes = () => {
             <Route path="/admin" element={<AdminHome />} />
             <Route path="/gomoku" element={<GomokuPage />} />
             <Route path="/bind-lover" element={<BindLoverPage />} />
+            <Route path="/tool" element={<ToolPage />} />
+            <Route path="/tool/translate" element={<TranslateTool />} />
+            <Route path="/tool/star-game" element={<StarGame />} />
             <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
     );
