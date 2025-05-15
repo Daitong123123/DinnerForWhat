@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -17,7 +16,7 @@ import {
     CircularProgress
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { FaCamera, FaMicrophone, FaImage, FaBookOpen, FaGamepad } from 'react-icons/fa';
+import { FaCamera, FaMicrophone, FaImage, FaBookOpen, FaGamepad, FaCut } from 'react-icons/fa';
 import { IoSend } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
 import ImageMessage from './ImageMessage.jsx';
@@ -28,11 +27,12 @@ import apiRequest from './api.js';
 
 
 // 聊天页面组件
-const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack, handleShareCookbookClick, handleReadMessage, handleShowGames ,setFriendMessages}) => {
+const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack, handleShareCookbookClick, handleReadMessage, handleShowGames, setFriendMessages }) => {
     const chatListRef = useRef(null);
     const inputBoxRef = useRef(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    
     const currentUserId = localStorage.getItem('userId');
     useEffect(() => {
         if (chatListRef.current) {
@@ -58,75 +58,123 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
         reader.readAsDataURL(file);
     };
 
-    // 上传并发送图片消息
     const handleSendImage = async () => {
         if (!selectedImage || !selectedFriend) return;
 
         setIsUploading(true);
 
         try {
-            // 从selectedImage中提取文件
+            // 1. 从File对象中读取二进制数据并计算哈希值
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
+            if (!file) throw new Error('未选择图片');
 
-            if (!file) {
-                throw new Error('未选择图片');
+            // 计算文件哈希值（使用SHA-1算法）
+            const hash = await calculateFileHash(file);
+
+            // 2. 调用后端接口检查文件是否已存在
+            const existResult = await apiRequest('/aliyun/fileExist', 'GET', { hash }, navigate);
+            if (existResult.code !== '200') {
+                throw new Error(existResult.message || '文件存在性检查失败');
             }
 
-            // 上传图片
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const uploadResult = await apiRequest('/aliyun/upload', 'POST', formData, navigate);
-            if (!uploadResult || uploadResult.code !== '200') {
-                throw new Error(uploadResult?.message || '图片上传失败');
-            }
-
-            const fileId = uploadResult.data;
-
-            // 发送图片消息
-            const sendResult = await apiRequest('/send-message', 'POST', {
-                userIdFrom: currentUserId,
-                userIdTo: selectedFriend.id,
-                messageType: 'image',
-                messageContent: fileId
-            }, navigate);
-
-            if (sendResult && sendResult.code === '200') {
-                // 更新消息列表
-                setFriendMessages((prevMessages) => ({
-                   ...prevMessages,
-                    [selectedFriend.id]: [
-                       ...(prevMessages[selectedFriend.id] || []),
-                        {
-                            text: fileId,
-                            sender: 'user',
-                            messageType: 'image',
-                            isRead: true
-                        }
-                    ]
-                }));
-            } else {
-                throw new Error(sendResult?.message || '发送图片消息失败');
+            const cachedFileId = existResult.data;
+            if (cachedFileId) { // 存在缓存文件，直接发送
+                await sendImageMessage(cachedFileId);
+            } else { // 不存在缓存，执行原上传流程
+                const uploadResult = await uploadImage(file);
+                const fileId = uploadResult.data;
+                await sendImageMessage(fileId);
             }
 
             // 重置状态
             setSelectedImage(null);
+            // 重置文件输入
+            fileInput.value = '';
         } catch (error) {
-            console.error('上传或发送图片消息出错:', error);
-            // 显示错误提示
+            console.error('图片发送失败:', error);
+            // 这里可以添加错误提示（如Toast）
         } finally {
             setIsUploading(false);
         }
+    };
+    // 计算文件哈希值的辅助函数
+    const calculateFileHash = async (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+
+            reader.onload = async (e) => {
+                try {
+                    const buffer = e.target.result;
+
+                    // 使用浏览器原生的SubtleCrypto API计算SHA-1哈希
+                    const digest = await crypto.subtle.digest('SHA-1', buffer);
+
+                    // 将ArrayBuffer转换为十六进制字符串
+                    const hashArray = Array.from(new Uint8Array(digest));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                    resolve(hashHex);
+                } catch (err) {
+                    reject(err);
+                }
+            };
+
+            reader.onerror = (err) => {
+                reject(err);
+            };
+        });
+    };
+
+    // 发送图片消息的通用函数
+    const sendImageMessage = async (fileId) => {
+        const sendResult = await apiRequest('/send-message', 'POST', {
+            userIdFrom: currentUserId,
+            userIdTo: selectedFriend.id,
+            messageType: 'image',
+            messageContent: fileId
+        }, navigate);
+
+        if (sendResult.code === '200') {
+            setFriendMessages((prevMessages) => ({
+                ...prevMessages,
+                [selectedFriend.id]: [
+                    ...(prevMessages[selectedFriend.id] || []),
+                    {
+                        text: fileId,
+                        sender: 'user',
+                        messageType: 'image',
+                        isRead: true // 假设发送即视为已读
+                    }
+                ]
+            }));
+        } else {
+            throw new Error(sendResult.message || '发送图片消息失败');
+        }
+    };
+
+    // 上传图片的辅助函数（保持原逻辑）
+    const uploadImage = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadResult = await apiRequest('/aliyun/upload', 'POST', formData, navigate);
+        if (uploadResult.code !== '200') {
+            throw new Error(uploadResult.message || '图片上传失败');
+        }
+        return uploadResult;
     };
 
     // 取消图片选择
     const handleCancelImage = () => {
         setSelectedImage(null);
+        // 重置文件输入
         document.getElementById('fileInput').value = '';
     };
 
     return (
+
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f9f9f9', position: 'relative', height: '100vh' }}>
             {/* 原有AppBar部分 */}
             <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
@@ -194,7 +242,6 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
                     <TextField ref={inputRef} fullWidth multiline rows={1} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={handleKeyPress} placeholder="输入消息..." sx={{ '& fieldset': { borderWidth: '2px', borderRadius: '10px' }, height: 60, padding: '2px', backgroundColor: '#f5f5f5' }} inputProps={{ style: { paddingTop: '0px', paddingBottom: '0px', fontSize: '18px' } }} />
                     <Button variant="contained" onClick={handleSendMessage} sx={{ background: '#0084ff', '&:hover': { background: '#0066cc' }, marginLeft: 1, height: 40, width: 40, borderRadius: 50 }}><IoSend /></Button>
                 </Box>
-
                 {/* 功能按钮区 */}
                 <Box sx={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #f0f0f0' }}>
                     <IconButton ref={emojiIconRef} onClick={() => setShowEmojiPicker(!showEmojiPicker)} sx={{ width: 40, height: 40, color: 'inherit' }}><span style={{ fontSize: '20px' }}>😊</span></IconButton>
@@ -224,39 +271,57 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
 
                 {/* 图片预览与上传区域 */}
                 {selectedImage && (
-                    <Box sx={{ position: 'absolute', bottom: 120, left: 16, right: 16, zIndex: 3, backgroundColor: 'white', borderRadius: '8px', padding: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                        <Box sx={{ position: 'relative', maxHeight: '200px', overflow: 'hidden', borderRadius: '4px' }}>
+                    <Box sx={{
+                        position: 'fixed',
+                        // 调整底部间距：功能按钮区高度（约56px）+ 输入框高度（约60px）+ 边距16px
+                        bottom: '128px', // 原16px改为128px
+                        left: 16,
+                        backgroundColor: '#fff',
+                        borderRadius: 4,
+                        padding: 1,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        maxWidth: 'calc(100% - 32px)',
+                        zIndex: 999
+                    }}>
+                        <Box sx={{
+                            width: 150, // 固定预览宽度
+                            height: 100, // 固定预览高度
+                            overflow: 'hidden',
+                            borderRadius: 3
+                        }}>
                             <img
                                 src={selectedImage}
                                 alt="预览"
-                                style={{ width: '100%', height: 'auto', maxHeight: '200px', objectFit: 'contain' }}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain', // 保持比例，空白填充
+                                    cursor: 'pointer'
+                                }}
                             />
-
-                            {/* 上传加载动画 */}
-                            {isUploading && (
-                                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                    <CircularProgress color="primary" />
-                                </Box>
-                            )}
                         </Box>
-
-                        {/* 操作按钮 */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            gap: 0.5,
+                            padding: '4px 8px'
+                        }}>
                             <Button
                                 variant="outlined"
-                                color="primary"
+                                size="small"
                                 onClick={handleCancelImage}
-                                sx={{ marginRight: '8px' }}
+                                sx={{ minWidth: '48px' }}
                             >
                                 取消
                             </Button>
                             <Button
                                 variant="contained"
-                                color="primary"
+                                size="small"
                                 onClick={handleSendImage}
                                 disabled={isUploading}
+                                sx={{ minWidth: '48px' }}
                             >
-                                {isUploading ? '上传中...' : '发送'}
+                                {isUploading ? '上传中' : '发送'}
                             </Button>
                         </Box>
                     </Box>
