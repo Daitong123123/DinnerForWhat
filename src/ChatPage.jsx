@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import sha1 from 'js-sha1';
 import {
     Box,
     Typography,
@@ -98,34 +99,30 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
             setIsUploading(false);
         }
     };
-    // 计算文件哈希值的辅助函数
-    const calculateFileHash = async (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(file);
+// 计算文件哈希值的辅助函数（不依赖 crypto.subtle）
+const calculateFileHash = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+  
+      reader.onload = (e) => {
+        try {
+          const buffer = e.target.result;
+          const uint8Array = new Uint8Array(buffer);
+          const hashHex = sha1(uint8Array);
+          resolve(hashHex);
+        } catch (err) {
+          reject(new Error(`哈希计算失败: ${err.message}`));
+        }
+      };
+  
+      reader.onerror = () => {
+        reject(new Error('文件读取失败'));
+      };
+    });
+  };
 
-            reader.onload = async (e) => {
-                try {
-                    const buffer = e.target.result;
-
-                    // 使用浏览器原生的SubtleCrypto API计算SHA-1哈希
-                    const digest = await crypto.subtle.digest('SHA-1', buffer);
-
-                    // 将ArrayBuffer转换为十六进制字符串
-                    const hashArray = Array.from(new Uint8Array(digest));
-                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-                    resolve(hashHex);
-                } catch (err) {
-                    reject(err);
-                }
-            };
-
-            reader.onerror = (err) => {
-                reject(err);
-            };
-        });
-    };
+    
 
     // 发送图片消息的通用函数
     const sendImageMessage = async (fileId) => {
