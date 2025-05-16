@@ -20,19 +20,27 @@ import baseUrl from './config.js';
 import apiRequest from './api.js';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
 
+// 恋爱记风格配色
+const COLORS = {
+    primary: '#FF5E87',
+    secondary: '#FFB6C1',
+    accent: '#FF85A2',
+    light: '#FFF0F3',
+    dark: '#333333'
+};
+
 function BindLoverPage() {
     const navigate = useNavigate();
     const [userId, setUserId] = useState('');
     const [loverId, setLoverId] = useState('');
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState('我想和你成为情侣');
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [userNicknames, setUserNicknames] = useState({});
 
     useEffect(() => {
-        document.title = '绑定情侣';
+        document.title = '情侣绑定';
         const storedUserId = localStorage.getItem('userId');
         if (storedUserId) {
             setUserId(storedUserId);
@@ -42,27 +50,8 @@ function BindLoverPage() {
         }
     }, [navigate]);
 
-    // 获取用户昵称
-    const fetchUserNickname = async (userId) => {
-        try {
-            const response = await apiRequest('/friend-info', 'GET', { userId });
-            if (response && response.userNickName) {
-                setUserNicknames(prev => ({
-                    ...prev,
-                    [userId]: response.userNickName
-                }));
-                return response.userNickName;
-            }
-            return userId; // 如果获取失败则显示ID
-        } catch (error) {
-            console.error('获取用户昵称出错:', error);
-            return userId; // 出错时显示ID
-        }
-    };
-
     const fetchRequests = async (userId) => {
         try {
-            setLoading(true);
             const response = await apiRequest('/lover-request-query', 'POST', { userId });
             if (response && response.friendToBeRequestList) {
                 // 处理接收到的请求（对方申请我）
@@ -83,16 +72,7 @@ function BindLoverPage() {
                         type: 'sent'
                     }));
                 
-                const allRequests = [...receivedRequests, ...sentRequests];
-                setRequests(allRequests);
-                
-                // 批量获取用户昵称
-                const uniqueIds = [...new Set(allRequests.map(req => req.id))];
-                uniqueIds.forEach(id => {
-                    if (!userNicknames[id]) {
-                        fetchUserNickname(id);
-                    }
-                });
+                setRequests([...receivedRequests, ...sentRequests]);
             }
         } catch (error) {
             console.error('获取情侣申请请求出错:', error);
@@ -126,7 +106,7 @@ function BindLoverPage() {
             
             setSuccess('情侣申请已发送，等待对方确认');
             setLoverId('');
-            setMessage('');
+            setMessage('我想和你成为情侣');
             // 刷新请求列表
             fetchRequests(userId);
         } catch (error) {
@@ -181,9 +161,6 @@ function BindLoverPage() {
         }
     };
 
-    // 获取用户昵称，没有则显示ID
-    const getNickname = (id) => userNicknames[id] || id;
-
     return (
         <Box
             sx={{
@@ -191,24 +168,23 @@ function BindLoverPage() {
                 p: 4,
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 alignItems: 'center',
-                background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
-                color: '#333'
+                backgroundColor: COLORS.light
             }}
         >
-            <Typography variant="h4" gutterBottom sx={{ mt: 2, mb: 4, fontWeight: 'bold' }}>
+            <Typography variant="h4" gutterBottom sx={{ mt: 4, mb: 4, fontWeight: 'bold', color: COLORS.dark }}>
                 情侣绑定
             </Typography>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 4, width: '100%', maxWidth: 500 }}>
+                <Alert severity="error" sx={{ mb: 4, width: '100%', maxWidth: 500, borderRadius: 8 }}>
                     {error}
                 </Alert>
             )}
             
             {success && (
-                <Alert severity="success" sx={{ mb: 4, width: '100%', maxWidth: 500 }}>
+                <Alert severity="success" sx={{ mb: 4, width: '100%', maxWidth: 500, borderRadius: 8 }}>
                     {success}
                 </Alert>
             )}
@@ -218,17 +194,23 @@ function BindLoverPage() {
                     p: 4,
                     width: '100%',
                     maxWidth: 500,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                    background: '#fff',
-                    borderRadius: 8,
-                    border: '1px solid #ccc',
-                    mb: 4
+                    boxShadow: '0 4px 20px rgba(255, 94, 135, 0.1)',
+                    backgroundColor: 'white',
+                    borderRadius: 16,
+                    mb: 4,
+                    border: 'none',
+                    transform: 'translateY(0)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 30px rgba(255, 94, 135, 0.2)'
+                    }
                 }}
             >
-                <Typography variant="h5" gutterBottom>
+                <Typography variant="h5" gutterBottom sx={{ color: COLORS.dark, fontWeight: 'bold' }}>
                     发送情侣申请
                 </Typography>
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: 2, borderColor: COLORS.secondary }} />
                 <CardContent>
                     <TextField
                         label="对方ID"
@@ -236,7 +218,20 @@ function BindLoverPage() {
                         value={loverId}
                         onChange={(e) => setLoverId(e.target.value)}
                         fullWidth
-                        sx={{ mb: 3 }}
+                        sx={{ 
+                            mb: 3,
+                            '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                    borderColor: COLORS.primary
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: COLORS.primary
+                                }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: COLORS.primary
+                            }
+                        }}
                     />
                     <TextField
                         label="附言（选填）"
@@ -244,7 +239,20 @@ function BindLoverPage() {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         fullWidth
-                        sx={{ mb: 3 }}
+                        sx={{ 
+                            mb: 3,
+                            '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                    borderColor: COLORS.primary
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: COLORS.primary
+                                }
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: COLORS.primary
+                            }
+                        }}
                     />
                     <Button
                         variant="contained"
@@ -252,9 +260,21 @@ function BindLoverPage() {
                         onClick={handleSubmitRequest}
                         fullWidth
                         disabled={loading}
-                        sx={{ mt: 2 }}
+                        sx={{ 
+                            mt: 2,
+                            backgroundColor: COLORS.primary,
+                            color: 'white',
+                            borderRadius: 100,
+                            padding: '10px',
+                            textTransform: 'none',
+                            boxShadow: '0 4px 12px rgba(255, 94, 135, 0.2)',
+                            '&:hover': {
+                                backgroundColor: '#FF4778',
+                                boxShadow: '0 6px 16px rgba(255, 94, 135, 0.3)'
+                            }
+                        }}
                     >
-                        {loading ? <CircularProgress size={24} /> : '发送申请'}
+                        {loading ? <CircularProgress size={24} color="inherit" /> : '发送申请'}
                     </Button>
                 </CardContent>
             </Card>
@@ -264,55 +284,73 @@ function BindLoverPage() {
                     p: 4,
                     width: '100%',
                     maxWidth: 500,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                    background: '#fff',
-                    borderRadius: 8,
-                    border: '1px solid #ccc'
+                    boxShadow: '0 4px 20px rgba(255, 94, 135, 0.1)',
+                    backgroundColor: 'white',
+                    borderRadius: 16,
+                    border: 'none',
+                    transform: 'translateY(0)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: '0 8px 30px rgba(255, 94, 135, 0.2)'
+                    }
                 }}
             >
-                <Typography variant="h5" gutterBottom>
+                <Typography variant="h5" gutterBottom sx={{ color: COLORS.dark, fontWeight: 'bold' }}>
                     申请管理
                 </Typography>
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: 2, borderColor: COLORS.secondary }} />
                 <CardContent>
                     {loading && (
                         <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
-                            <CircularProgress />
+                            <CircularProgress color="primary" />
                         </Box>
                     )}
                     {!loading && requests.length === 0 && (
                         <Box sx={{ py: 6, textAlign: 'center' }}>
-                            <Typography color="text.secondary">暂无待处理的情侣申请</Typography>
+                            <Typography color={COLORS.dark}>暂无待处理的情侣申请</Typography>
                         </Box>
                     )}
                     {requests.length > 0 && (
                         <List>
                             {requests.map((request, index) => (
                                 <React.Fragment key={request.id}>
-                                    <ListItem alignItems="flex-start">
+                                    <ListItem alignItems="flex-start" sx={{
+                                        borderRadius: 12,
+                                        marginBottom: '8px',
+                                        '&:hover': {
+                                            backgroundColor: COLORS.light
+                                        }
+                                    }}>
                                         <ListItemAvatar>
-                                            <Avatar>{getNickname(request.id).charAt(0).toUpperCase()}</Avatar>
+                                            <Avatar sx={{ 
+                                                width: 48, 
+                                                height: 48,
+                                                backgroundColor: request.type === 'received' ? COLORS.primary : COLORS.secondary
+                                            }}>
+                                                {request.id.charAt(0).toUpperCase()}
+                                            </Avatar>
                                         </ListItemAvatar>
                                         <ListItemText
-                                            primary={getNickname(request.id)}
+                                            primary={request.id}
                                             secondary={
                                                 <React.Fragment>
                                                     <Typography
                                                         sx={{ display: 'inline' }}
                                                         component="span"
                                                         variant="body2"
-                                                        color="text.primary"
+                                                        color={COLORS.dark}
                                                     >
                                                         {request.type === 'received' 
-                                                            ? `${getNickname(request.id)}请求和你成为情侣` 
-                                                            : `你已向${getNickname(request.id)}发送情侣申请`}
+                                                            ? `${request.id}请求和你成为情侣` 
+                                                            : `你已向${request.id}发送情侣申请`}
                                                     </Typography>
                                                     {request.content && (
                                                         <Typography
                                                             sx={{ display: 'block', mt: 1 }}
                                                             component="span"
                                                             variant="body2"
-                                                            color="text.secondary"
+                                                            color={COLORS.dark}
                                                         >
                                                             附言: {request.content}
                                                         </Typography>
@@ -324,10 +362,19 @@ function BindLoverPage() {
                                             <Box sx={{ display: 'flex', flexDirection: 'column', ml: 2 }}>
                                                 <Button
                                                     variant="contained"
-                                                    color="success"
+                                                    color="primary"
                                                     size="small"
                                                     onClick={() => handleAgreeRequest(request.id)}
-                                                    sx={{ mb: 1 }}
+                                                    sx={{ 
+                                                        mb: 1,
+                                                        backgroundColor: COLORS.primary,
+                                                        color: 'white',
+                                                        borderRadius: 100,
+                                                        textTransform: 'none',
+                                                        '&:hover': {
+                                                            backgroundColor: '#FF4778'
+                                                        }
+                                                    }}
                                                 >
                                                     同意
                                                 </Button>
@@ -336,13 +383,23 @@ function BindLoverPage() {
                                                     color="error"
                                                     size="small"
                                                     onClick={() => handleDisagreeRequest(request.id)}
+                                                    sx={{ 
+                                                        color: COLORS.primary,
+                                                        borderColor: COLORS.primary,
+                                                        borderRadius: 100,
+                                                        textTransform: 'none',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(255, 94, 135, 0.1)',
+                                                            borderColor: '#FF4778'
+                                                        }
+                                                    }}
                                                 >
                                                     拒绝
                                                 </Button>
                                             </Box>
                                         )}
                                     </ListItem>
-                                    {index < requests.length - 1 && <Divider />}
+                                    {index < requests.length - 1 && <Divider sx={{ borderColor: COLORS.secondary }} />}
                                 </React.Fragment>
                             ))}
                         </List>

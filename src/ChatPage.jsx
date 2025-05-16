@@ -26,6 +26,14 @@ import { renderStars, renderCookbookCard } from './utils.js';
 import baseUrl from './config.js';
 import apiRequest from './api.js';
 
+// 恋爱记风格配色
+const COLORS = {
+    primary: '#FF5E87',
+    secondary: '#FFB6C1',
+    accent: '#FF85A2',
+    light: '#FFF0F3',
+    dark: '#333333'
+};
 
 // 聊天页面组件
 const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNewMessage, handleSendMessage, handleKeyPress, showEmojiPicker, setShowEmojiPicker, handleEmojiClick, emojiIconRef, emojiPickerRef, selfAvatar, inputRef, onBack, handleShareCookbookClick, handleReadMessage, handleShowGames, setFriendMessages }) => {
@@ -172,7 +180,7 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
     };
 
     // 新增：处理图片点击，进入全屏模式
-    const handleImageClick = (event,imageUrl) => {
+    const handleImageClick = (event, imageUrl) => {
         setFullscreenImage(imageUrl);
         // 阻止事件冒泡，避免触发聊天区域点击
         event.stopPropagation();
@@ -201,25 +209,50 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
     };
 
     return (
-        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f9f9f9', position: 'relative', height: '100vh' }}>
-            {/* 原有AppBar部分 */}
-            <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: COLORS.light, position: 'relative', height: '100vh' }}>
+            {/* 顶部导航栏 */}
+            <AppBar position="sticky" sx={{ 
+                backgroundColor: COLORS.primary, 
+                boxShadow: '0 2px 4px rgba(255, 94, 135, 0.2)',
+                height: '56px'
+            }}>
                 <Toolbar>
-                    <IconButton onClick={onBack}><ArrowBack /></IconButton>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', flexGrow: 1, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '60%', color: '#333', textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                    <IconButton onClick={onBack} color="inherit"><ArrowBack /></IconButton>
+                    <Typography variant="h6" sx={{ 
+                        fontWeight: 'bold', 
+                        flexGrow: 1, 
+                        textAlign: 'center', 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        maxWidth: '60%', 
+                        color: 'white',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+                    }}>
                         {selectedFriend ? `正在和 ${selectedFriend.name} 聊天` : '请选择好友开始聊天'}
                     </Typography>
                 </Toolbar>
             </AppBar>
 
-            {/* 原有聊天列表部分 - 修改图片消息添加点击事件 */}
-            <List ref={chatListRef} sx={{ flexGrow: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', paddingBottom: '120px', marginBottom: '0' }}>
+            {/* 聊天列表部分 */}
+            <List ref={chatListRef} sx={{ 
+                flexGrow: 1, 
+                overflowY: 'auto', 
+                padding: '16px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                height: 'calc(100vh - 120px)', 
+                paddingBottom: '120px', 
+                marginBottom: '0',
+                backgroundColor: COLORS.light,
+                backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23FF5E87\" fill-opacity=\"0.05\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
+            }}>
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
                     <ListItem key={index} alignItems="flex-start" sx={{ justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2, flexDirection: 'row' }}>
                         {message.sender === 'user' ? (
                             <>
                                 <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-end' }}>
-                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginRight: 2, flexDirection: 'row' }}>
+                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? '#666' : COLORS.primary, marginRight: 2, flexDirection: 'row' }}>
                                         {message.isRead ? '已读' : '未读'}
                                     </Typography>
                                     {message.messageType === 'image' ? (
@@ -232,16 +265,25 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
                                     ) : message.messageType === 'Gomoku' ? (
                                         <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
                                     ) : (
-                                        <Box sx={{ backgroundColor: '#DCF8C6', borderRadius: 3, padding: '8px', maxWidth: '90%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                                        <Box sx={{ 
+                                            backgroundColor: COLORS.primary, 
+                                            borderRadius: '20px 20px 4px 20px', 
+                                            padding: '8px 16px', 
+                                            maxWidth: '85%', 
+                                            wordBreak: 'break-word', 
+                                            whiteSpace: 'pre-wrap', 
+                                            boxShadow: '0 2px 4px rgba(255, 94, 135, 0.2)',
+                                            color: 'white'
+                                        }}>
                                             {message.text}
                                         </Box>
                                     )}
                                 </Box>
-                                <Avatar>{selfAvatar}</Avatar>
+                                <Avatar sx={{ marginLeft: 4, width: 40, height: 40, boxShadow: '0 2px 4px rgba(255, 94, 135, 0.15)', backgroundColor: COLORS.primary, color: 'white' }}>{selfAvatar}</Avatar>
                             </>
                         ) : (
                             <>
-                                <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
+                                <Avatar sx={{ marginRight: 4, width: 40, height: 40, boxShadow: '0 2px 4px rgba(255, 94, 135, 0.15)', backgroundColor: COLORS.primary, color: 'white' }}>{selectedFriend.avatar}</Avatar>
                                 <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
                                     {message.messageType === 'image' ? (
                                             <ImageMessage 
@@ -253,11 +295,20 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
                                     ) : message.messageType === 'Gomoku' ? (
                                         <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
                                     ) : (
-                                        <Box sx={{ backgroundColor: '#E5E5EA', borderRadius: 3, padding: '8px', maxWidth: '80%', wordBreak: 'break-word', whiteSpace: 'pre-wrap', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+                                        <Box sx={{ 
+                                            backgroundColor: 'white', 
+                                            borderRadius: '20px 20px 20px 4px', 
+                                            padding: '8px 16px', 
+                                            maxWidth: '85%', 
+                                            wordBreak: 'break-word', 
+                                            whiteSpace: 'pre-wrap', 
+                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                            color: COLORS.dark
+                                        }}>
                                             {message.text}
                                         </Box>
                                     )}
-                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? 'gray' : 'blue', marginLeft: 2, flexDirection: 'row' }}>
+                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? '#666' : COLORS.primary, marginLeft: 2, flexDirection: 'row' }}>
                                         {message.isRead ? '已读' : '未读'}
                                     </Typography>
                                 </Box>
@@ -268,16 +319,50 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
             </List>
 
             {/* 底部输入区域 */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1, backgroundColor: '#fff', borderTop: '1px solid #e0e0e0' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1, backgroundColor: 'white', borderTop: `1px solid ${COLORS.secondary}` }}>
                 {/* 输入框和发送按钮 */}
                 <Box sx={{ padding: '8px 16px', display: 'flex', alignItems: 'center' }}>
-                    <TextField ref={inputRef} fullWidth multiline rows={1} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={handleKeyPress} placeholder="输入消息..." sx={{ '& fieldset': { borderWidth: '2px', borderRadius: '10px' }, height: 60, padding: '2px', backgroundColor: '#f5f5f5' }} inputProps={{ style: { paddingTop: '0px', paddingBottom: '0px', fontSize: '18px' } }} />
-                    <Button variant="contained" onClick={handleSendMessage} sx={{ background: '#0084ff', '&:hover': { background: '#0066cc' }, marginLeft: 1, height: 40, width: 40, borderRadius: 50 }}><IoSend /></Button>
+                    <IconButton ref={emojiIconRef} onClick={() => setShowEmojiPicker(!showEmojiPicker)} sx={{ color: COLORS.primary }}><span style={{ fontSize: '22px' }}>😊</span></IconButton>
+                    <TextField ref={inputRef} fullWidth multiline rows={1} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={handleKeyPress} placeholder="输入消息..." 
+                        sx={{ 
+                            '& fieldset': { 
+                                borderWidth: '0px',
+                                borderRadius: '24px',
+                                backgroundColor: COLORS.light
+                            }, 
+                            height: 48, 
+                            padding: '0px 8px',
+                            '& .MuiInputBase-input': {
+                                padding: '8px 12px',
+                                fontSize: '16px',
+                            },
+                            '& .Mui-focused fieldset': {
+                                borderColor: COLORS.primary,
+                                borderWidth: '1px'
+                            }
+                        }} 
+                    />
+                    {newMessage.trim() ? (
+                        <Button variant="contained" onClick={handleSendMessage} 
+                            sx={{ 
+                                backgroundColor: COLORS.primary, 
+                                '&:hover': { backgroundColor: '#FF4778' }, 
+                                marginLeft: 2, 
+                                height: 40, 
+                                width: 40, 
+                                borderRadius: 20,
+                                boxShadow: '0 2px 4px rgba(255, 94, 135, 0.3)'
+                            }}
+                        >
+                            <IoSend />
+                        </Button>
+                    ) : (
+                        <IconButton onClick={() => document.getElementById('fileInput').click()} sx={{ color: COLORS.primary, marginLeft: 2 }}><FaImage /></IconButton>
+                    )}
                 </Box>
                 {/* 功能按钮区 */}
-                <Box sx={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #f0f0f0' }}>
-                    <IconButton ref={emojiIconRef} onClick={() => setShowEmojiPicker(!showEmojiPicker)} sx={{ width: 40, height: 40, color: 'inherit' }}><span style={{ fontSize: '20px' }}>😊</span></IconButton>
-                    <IconButton sx={{ width: 40, height: 40 }} onClick={() => document.getElementById('fileInput').click()}><FaImage /></IconButton>
+                <Box sx={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-around', borderTop: `1px solid ${COLORS.secondary}` }}>
+                    <IconButton sx={{ width: 40, height: 40, color: COLORS.primary }} onClick={handleTakePhoto}><FaCamera /></IconButton>
                     <input
                         id="fileInput"
                         type="file"
@@ -285,18 +370,16 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
                         style={{ display: 'none' }}
                         onChange={handleImageSelect}
                     />
-                    <IconButton sx={{ width: 40, height: 40 }} onClick={handleTakePhoto}><FaCamera /></IconButton>
-                    <input id="cameraInput" type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleCameraImage} />
-                    <IconButton sx={{ width: 40, height: 40 }} onClick={handleShareCookbookClick}><FaBookOpen /></IconButton>
-                    <IconButton sx={{ width: 40, height: 40 }} onClick={handleShowGames}><FaGamepad /></IconButton>
-                    <IconButton sx={{ width: 40, height: 40 }}><FaMicrophone /></IconButton>
+                    <IconButton sx={{ width: 40, height: 40, color: COLORS.primary }} onClick={handleShareCookbookClick}><FaBookOpen /></IconButton>
+                    <IconButton sx={{ width: 40, height: 40, color: COLORS.primary }} onClick={handleShowGames}><FaGamepad /></IconButton>
+                    <IconButton sx={{ width: 40, height: 40, color: COLORS.primary }}><FaMicrophone /></IconButton>
                 </Box>
 
                 {/* 表情选择器 */}
                 {showEmojiPicker && (
-                    <Slide direction="up" in={showEmojiPicker} mountOnEnter unmountOnExit style={{ position: 'absolute', bottom: 120, left: 16, zIndex: 2 }}>
-                        <Box ref={emojiPickerRef} sx={{ backgroundColor: '#fff', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', borderRadius: 8, padding: '8px' }}>
-                            <EmojiPicker onEmojiClick={handleEmojiClick} />
+                    <Slide direction="up" in={showEmojiPicker} mountOnEnter unmountOnExit style={{ position: 'absolute', bottom: 120, left: 0, right: 0, zIndex: 2 }}>
+                        <Box ref={emojiPickerRef} sx={{ backgroundColor: 'white', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', padding: '8px' }}>
+                            <EmojiPicker onEmojiClick={handleEmojiClick} disableAutoFocus={true} />
                         </Box>
                     </Slide>
                 )}
@@ -305,89 +388,115 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
                 {selectedImage && (
                     <Box sx={{
                         position: 'fixed',
-                        // 调整底部间距：功能按钮区高度（约56px）+ 输入框高度（约60px）+ 边距16px
-                        bottom: '128px', // 原16px改为128px
+                        bottom: '128px',
                         left: 16,
-                        backgroundColor: '#fff',
-                        borderRadius: 4,
+                        backgroundColor: 'white',
+                        borderRadius: 12,
                         padding: 1,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        maxWidth: 'calc(100% - 32px)',
-                        zIndex: 999
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        maxWidth: '90%'
                     }}>
-                        <Box sx={{
-                            width: 150, // 固定预览宽度
-                            height: 100, // 固定预览高度
-                            overflow: 'hidden',
-                            borderRadius: 3
-                        }}>
-                            <img
-                                src={selectedImage}
-                                alt="预览"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain', // 保持比例，空白填充
-                                    cursor: 'pointer'
-                                }}
-                            />
-                        </Box>
-                        <Box sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            gap: 0.5,
-                            padding: '4px 8px'
-                        }}>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={handleCancelImage}
-                                sx={{ minWidth: '48px' }}
-                            >
-                                取消
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                onClick={handleSendImage}
-                                disabled={isUploading}
-                                sx={{ minWidth: '48px' }}
-                            >
-                                {isUploading ? '上传中' : '发送'}
-                            </Button>
+                        <img 
+                            src={selectedImage} 
+                            alt="预览" 
+                            style={{ 
+                                maxWidth: '120px', 
+                                maxHeight: '120px', 
+                                borderRadius: 8, 
+                                objectFit: 'cover' 
+                            }} 
+                        />
+                        <Box sx={{ marginLeft: 1, display: 'flex', flexDirection: 'column' }}>
+                            {isUploading ? (
+                                <CircularProgress size={24} sx={{ color: COLORS.primary }} />
+                            ) : (
+                                <>
+                                    <Button 
+                                        variant="contained" 
+                                        onClick={handleSendImage} 
+                                        size="small" 
+                                        sx={{ 
+                                            backgroundColor: COLORS.primary, 
+                                            '&:hover': { backgroundColor: '#FF4778' }, 
+                                            marginBottom: 1,
+                                            fontSize: '12px',
+                                            textTransform: 'none'
+                                        }}
+                                    >
+                                        发送图片
+                                    </Button>
+                                    <Button 
+                                        variant="outlined" 
+                                        onClick={handleCancelImage} 
+                                        size="small" 
+                                        sx={{ 
+                                            color: COLORS.primary, 
+                                            borderColor: COLORS.primary, 
+                                            '&:hover': { borderColor: '#FF4778' },
+                                            fontSize: '12px',
+                                            textTransform: 'none'
+                                        }}
+                                    >
+                                        取消
+                                    </Button>
+                                </>
+                            )}
                         </Box>
                     </Box>
                 )}
-            </Box>
 
-            {/* 新增：全屏图片预览层 */}
-            {fullscreenImage && (
-                <Box
-                    sx={{
+                {/* 全屏图片查看器 */}
+                {fullscreenImage && (
+                    <Box sx={{
                         position: 'fixed',
                         top: 0,
                         left: 0,
-                        width: '100%',
-                        height: '100%',
+                        right: 0,
+                        bottom: 0,
                         backgroundColor: 'rgba(0, 0, 0, 0.9)',
                         zIndex: 1000,
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center'
-                    }}
-                    onClick={exitFullscreen}
-                >
-                    <img
-                        src={fullscreenImage}
-                        alt="全屏图片"
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            objectFit: 'contain'
-                        }}
-                    />
-                </Box>
-            )}
+                    }} onClick={exitFullscreen}>
+                        <IconButton 
+                            sx={{
+                                position: 'absolute',
+                                top: 20,
+                                right: 20,
+                                color: 'white',
+                                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                                borderRadius: '50%',
+                                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
+                            }}
+                            onClick={exitFullscreen}
+                        >
+                            <FaCut />
+                        </IconButton>
+                        <img 
+                            src={fullscreenImage} 
+                            alt="Fullscreen" 
+                            style={{ 
+                                maxWidth: '90%', 
+                                maxHeight: '90%', 
+                                objectFit: 'contain' 
+                            }} 
+                        />
+                    </Box>
+                )}
+
+                {/* 相机输入 */}
+                <input
+                    id="cameraInput"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={handleCameraImage}
+                />
+            </Box>
         </Box>
     );
 };

@@ -1,9 +1,8 @@
-// BottomNavigationBar.jsx
 import React, { useState, useEffect } from 'react';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MessageIcon from '@mui/icons-material/Message';
-import FastfoodIcon from '@mui/icons-material/Fastfood'; // 新图标，代表"干饭"
+import FastfoodIcon from '@mui/icons-material/Fastfood';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PersonIcon from '@mui/icons-material/Person';
 import BuildIcon from '@mui/icons-material/Build';
@@ -78,33 +77,50 @@ function BottomNavigationBar() {
                 width: '100%',
                 position: 'fixed',
                 bottom: 0,
-                background: '#fff',
-                borderTop: '1px solid #ccc',
-                zIndex: 100 // 确保导航栏在最上层
+                background: 'linear-gradient(to top, #ffffff, #fff0f5)',
+                borderTop: '1px solid #ffccd5',
+                zIndex: 100,
+                '& .Mui-selected': {
+                    color: '#FF5E87',
+                },
+                '& .MuiBottomNavigationAction-label.Mui-selected': {
+                    fontSize: '0.75rem',
+                    fontWeight: 'bold',
+                },
+                '& .MuiBottomNavigationAction-label': {
+                    transition: 'font-size 0.3s',
+                    fontSize: '0.65rem',
+                },
+                '& .MuiBottomNavigationAction-root': {
+                    padding: '6px 0 8px',
+                    minWidth: 'auto',
+                    maxWidth: 'none',
+                    flex: '1',
+                }
             }}
         >
             <BottomNavigationAction
                 label="消息"
-                icon={<MessageIcon />}
+                icon={<MessageIcon sx={{ fontSize: 22 }} />}
                 onClick={() => navigate('/messages')}
             />
             <BottomNavigationAction
                 label="干饭"
-                icon={<FastfoodIcon />}
-                onClick={() => navigate('/dish')} // 默认导航到/dish页面
+                icon={<FastfoodIcon sx={{ fontSize: 22 }} />}
+                onClick={() => navigate('/dish')}
             />
             <BottomNavigationAction
                 label="工具箱"
-                icon={<BuildIcon />}
+                icon={<BuildIcon sx={{ fontSize: 22 }} />}
                 onClick={() => navigate('/tool')}
             />
             <BottomNavigationAction
                 label="用户"
-                icon={<PersonIcon />}
+                icon={<PersonIcon sx={{ fontSize: 22 }} />}
                 onClick={() => navigate('/user')}
             />
         </BottomNavigation>
     );
 }
 
-export default BottomNavigationBar;
+export default BottomNavigationBar;    

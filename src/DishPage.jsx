@@ -12,14 +12,30 @@ import {
     Avatar,
     Menu,
     Stack,
-    Divider
+    Divider,
+    CardHeader,
+    CardActionArea,
+    CardMedia,
+    CardActions,
+    CardContent,
+    Chip,
+    IconButton
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import apiRequest from './api.js';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
-import { FaRobot } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaRobot } from 'react-icons/fa';
 
-const DishPage = () => {
+// 恋爱记风格配色
+const COLORS = {
+    primary: '#FF5E87',
+    secondary: '#FFB6C1',
+    accent: '#FF85A2',
+    light: '#FFF0F3',
+    dark: '#333333'
+};
+
+function DishPage() {
     const [dishType, setDishType] = useState('晚餐');
     const [dishNumber, setDishNumber] = useState('3');
     const [dishTaste, setDishTaste] = useState('四川菜');
@@ -158,7 +174,7 @@ const DishPage = () => {
             const response = await apiRequest('/add-like', 'POST', formData, navigate);
             if (response) {
                 setDishes(dishes.map(item =>
-                    item.dishName === dish.dishName? {...item, isLiked: true } : item
+                    item.id === dish.id? {...item, isLiked: true } : item
                 ));
                 console.log('收藏成功');
             } else {
@@ -187,7 +203,7 @@ const DishPage = () => {
 
     const renderStars = (complex) => {
         const stars = [];
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 5; i++) {
             if (i < parseInt(complex, 10)) {
                 stars.push(<span key={i} style={{ color: '#FFD700' }}>★</span>);
             } else {
@@ -210,7 +226,7 @@ const DishPage = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#f4f4f4',
+                backgroundColor: '#FFF0F3',
                 color: '#333',
                 pb: 6
             }}
@@ -222,18 +238,30 @@ const DishPage = () => {
                     justifyContent="flex-start"
                     width="100%"
                     mb={2}
+                    sx={{
+                        backgroundColor: '#fff',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                    }}
                 >
-                    <Avatar onClick={handleClick} src={user.avatarUrl || ''} />
-                    <Typography sx={{ ml: 1, color: 'black', fontSize: '12px' }}>
-                        {userNickName}，你好
+                    <Avatar onClick={handleClick} src={user.avatarUrl || ''} sx={{
+                        backgroundColor: COLORS.primary,
+                        color: '#fff',
+                        width: '40px',
+                        height: '40px'
+                    }} />
+                    <Typography sx={{ ml: 1, color: COLORS.dark, fontSize: '16px', fontWeight: '500' }}>
+                        {userNickName}，今天想吃什么？
                     </Typography>
                     <Menu
                         id="simple-menu"
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
                         onClose={handleClose}
+                        sx={{ mt: '30px' }}
                     >
-                        <MenuItem onClick={handleLogout}>退出</MenuItem>
+                        <MenuItem onClick={handleLogout} sx={{ color: COLORS.dark }}>退出</MenuItem>
                     </Menu>
                 </Stack>
             )}
@@ -242,9 +270,9 @@ const DishPage = () => {
                     p: 3,
                     width: '100%',
                     maxWidth: 600,
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                    boxShadow: '0 4px 12px rgba(255, 94, 135, 0.1)',
                     backgroundColor: '#fff',
-                    borderRadius: 10,
+                    borderRadius: 16,
                     overflow: 'hidden',
                     '@media (max-width: 600px)': {
                         p: 2,
@@ -256,25 +284,25 @@ const DishPage = () => {
                     variant="h4"
                     gutterBottom
                     sx={{
-                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        textFillColor: 'transparent',
+                        color: COLORS.primary,
                         textAlign: 'center',
-                        mb: 3
+                        mb: 3,
+                        fontWeight: 'bold',
+                        fontFamily: 'Arial, sans-serif'
                     }}
                 >
-                    菜品推荐
+                    美食推荐
                 </Typography>
                 <Stack spacing={2}>
                     <FormControl fullWidth>
-                        <InputLabel sx={{ color: '#666' }}>用餐类型</InputLabel>
+                        <InputLabel sx={{ color: COLORS.dark }}>用餐类型</InputLabel>
                         <Select
                             value={dishType}
                             onChange={(e) => setDishType(e.target.value)}
                             label="用餐类型"
-                            sx={{ color: '#333' }}
+                            sx={{ color: COLORS.dark, '& .MuiSelect-icon': { color: COLORS.primary } }}
+                            variant="outlined"
+                            size="small"
                         >
                             <MenuItem value="晚餐">晚餐</MenuItem>
                             <MenuItem value="午餐">午餐</MenuItem>
@@ -287,19 +315,23 @@ const DishPage = () => {
                         onChange={(e) => setDishNumber(e.target.value)}
                         fullWidth
                         InputProps={{
-                            sx: { color: '#333' }
+                            sx: { color: COLORS.dark }
                         }}
                         InputLabelProps={{
-                            sx: { color: '#666' }
+                            sx: { color: COLORS.dark }
                         }}
+                        variant="outlined"
+                        size="small"
                     />
                     <FormControl fullWidth>
-                        <InputLabel sx={{ color: '#666' }}>菜系</InputLabel>
+                        <InputLabel sx={{ color: COLORS.dark }}>菜系</InputLabel>
                         <Select
                             value={dishTaste}
                             onChange={(e) => setDishTaste(e.target.value)}
                             label="菜系"
-                            sx={{ color: '#333' }}
+                            sx={{ color: COLORS.dark, '& .MuiSelect-icon': { color: COLORS.primary } }}
+                            variant="outlined"
+                            size="small"
                         >
                             <MenuItem value="四川菜">四川菜</MenuItem>
                             <MenuItem value="广东菜">广东菜</MenuItem>
@@ -347,12 +379,14 @@ const DishPage = () => {
                         </Select>
                     </FormControl>
                     <FormControl fullWidth>
-                        <InputLabel sx={{ color: '#666' }}>口味偏好</InputLabel>
+                        <InputLabel sx={{ color: COLORS.dark }}>口味偏好</InputLabel>
                         <Select
                             value={preference}
                             onChange={(e) => setPreference(e.target.value)}
                             label="口味偏好"
-                            sx={{ color: '#333' }}
+                            sx={{ color: COLORS.dark, '& .MuiSelect-icon': { color: COLORS.primary } }}
+                            variant="outlined"
+                            size="small"
                         >
                             <MenuItem value="微辣">微辣</MenuItem>
                             <MenuItem value="特辣">特辣</MenuItem>
@@ -374,13 +408,15 @@ const DishPage = () => {
                             onChange={(e) => setComplexStart(e.target.value)}
                             fullWidth
                             InputProps={{
-                                sx: { color: '#333' }
+                                sx: { color: COLORS.dark }
                             }}
                             InputLabelProps={{
-                                sx: { color: '#666' }
+                                sx: { color: COLORS.dark }
                             }}
+                            variant="outlined"
+                            size="small"
                         />
-                        <Typography sx={{ color: '#666' }}>-</Typography>
+                        <Typography sx={{ color: COLORS.dark }}>-</Typography>
                         <TextField
                             label="菜品制作难度（终止）"
                             placeholder="菜品制作难度"
@@ -389,11 +425,13 @@ const DishPage = () => {
                             onChange={(e) => setComplexEnd(e.target.value)}
                             fullWidth
                             InputProps={{
-                                sx: { color: '#333' }
+                                sx: { color: COLORS.dark }
                             }}
                             InputLabelProps={{
-                                sx: { color: '#666' }
+                                sx: { color: COLORS.dark }
                             }}
+                            variant="outlined"
+                            size="small"
                         />
                     </Stack>
                 </Stack>
@@ -403,105 +441,101 @@ const DishPage = () => {
                     disabled={loading || dishNumber === ''}
                     fullWidth
                     sx={{
-                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.accent})`,
                         '&:hover': {
-                            background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
+                            background: `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.primary})`,
+                            boxShadow: '0 4px 12px rgba(255, 94, 135, 0.3)'
                         },
                         '&:disabled': {
                             background: '#a0a0a0',
                             color: '#fff'
                         },
-                        mt: 3
+                        mt: 3,
+                        py: 2,
+                        borderRadius: '24px',
+                        fontSize: '16px',
+                        fontWeight: '500'
                     }}
                 >
                     <span style={{ minWidth: '200px', display: 'inline-block' }}>
                         {loading? (
                             <span>
                                 <FaRobot style={{ marginRight: 8 }} />
-                                 小菜正在努力翻阅菜谱<span className="loading-spinner"></span>
+                                 正在为你推荐美食<span className="loading-spinner"></span>
                             </span>
                         ) : (
-                            '获取菜品'
+                            '获取推荐'
                         )}
                     </span>
                 </Button>
                 <Button
                     variant="outlined"
                     onClick={() => navigate('/unlike')}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, color: COLORS.primary, borderColor: COLORS.primary, '&:hover': { backgroundColor: COLORS.light } }}
                 >
-                    管理我的菜品
+                    管理我的喜好
                 </Button>
                 {error && (
-                    <Typography color="error" align="center" sx={{ mt: 2 }}>
+                    <Typography color="error" align="center" sx={{ mt: 2, color: COLORS.primary }}>
                         {error}
                     </Typography>
                 )}
-                <Divider sx={{ my: 3 }} />
+                <Divider sx={{ my: 3, borderColor: '#f0f0f0' }} />
                 {dishes.length > 0 && (
                     <Stack spacing={2}>
                         {dishes.map((dish, index) => (
                             <Card
                                 key={index}
                                 sx={{
-                                    p: 2,
-                                    background: '#f9f9f9',
-                                    borderRadius: 8,
-                                    border: '1px solid #ccc',
-                                    transition: 'box-shadow 0.3s',
+                                    background: '#fff',
+                                    borderRadius: 12,
+                                    border: '1px solid #f0f0f0',
+                                    transition: 'all 0.3s ease',
                                     '&:hover': {
-                                        boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                                        boxShadow: '0 8px 24px rgba(255, 94, 135, 0.1)',
+                                        transform: 'translateY(-2px)'
                                     },
                                     '@media (max-width: 600px)': {
                                         width: '100%'
                                     }
                                 }}
                             >
-                                <Typography variant="h6" sx={{ mb: 1 }}>
-                                    {dish.dishName}
-                                </Typography>
-                                <Typography variant="caption" sx={{ mb: 1, color: '#666' }}>
-                                    复杂度: {renderStars(parseInt(dish.complex, 10))}
-                                </Typography>
-                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                                    {dish.dishStep}
-                                </Typography>
-                                <hr style={{ border: '0.5px solid #ccc', margin: '10px 0' }} />
-                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
-                                    <span style={{ color: 'green' }}>功效:</span> {dish.dishEffect}
-                                </Typography>
-                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
-                                    <span style={{ color: 'brown' }}>食材:</span> {dish.dishIngredients}
-                                </Typography>
-                                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1 }}>
-                                    <span style={{ color: 'orange' }}>花费:</span> {dish.dishCost}
-                                </Typography>
-                                <Stack direction="row" spacing={1}>
-                                    <Button
-                                        variant="outlined"
-                                        color="error"
-                                        onClick={() => handleUnlike(dish.id)}
-                                    >
+                                <CardHeader
+                                    title={dish.dishName}
+                                    titleTypographyProps={{ variant: 'h6', color: COLORS.dark, fontWeight: 'bold' }}
+                                    action={
+                                        <IconButton aria-label="like" onClick={() => dish.isLiked ? handleUnLikeDelete(dish.id) : handleLike(dish)}>
+                                            {dish.isLiked ? (
+                                                <FaHeart style={{ color: COLORS.primary }} />
+                                            ) : (
+                                                <FaRegHeart style={{ color: '#ccc' }} />
+                                            )}
+                                        </IconButton>
+                                    }
+                                />
+                
+                                <CardContent>
+                                    <Box sx={{ mb: 1 }}>
+                                        <Typography variant="caption" sx={{ color: '#666' }}>
+                                            难度: {renderStars(parseInt(dish.complex, 10))}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ mb: 1 }}>
+                                        <Typography variant="body2" sx={{ color: COLORS.dark, whiteSpace: 'pre-wrap' }}>
+                                            {dish.dishStep.substring(0, 100)}...
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                                        <Chip label={`食材: ${dish.dishIngredients}`} size="small" sx={{ backgroundColor: COLORS.light, color: COLORS.dark }} />
+                                        <Chip label={`功效: ${dish.dishEffect}`} size="small" sx={{ backgroundColor: COLORS.light, color: COLORS.dark }} />
+                                        <Chip label={`花费: ${dish.dishCost}`} size="small" sx={{ backgroundColor: COLORS.light, color: COLORS.dark }} />
+                                    </Box>
+                                </CardContent>
+                                <CardActions disableSpacing>
+                                    <Button size="small" color="primary" onClick={() => handleUnlike(dish.id)} sx={{ color: COLORS.primary }}>
                                         不喜欢
                                     </Button>
-                                    {dish.isLiked? (
-                                        <Button
-                                            variant="outlined"
-                                            color="secondary"
-                                            onClick={() => handleUnLikeDelete(dish.id)}
-                                        >
-                                            取消收藏
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            variant="outlined"
-                                            color="primary"
-                                            onClick={() => handleLike(dish)}
-                                        >
-                                            收藏
-                                        </Button>
-                                    )}
-                                </Stack>
+                                </CardActions>
                             </Card>
                         ))}
                     </Stack>
@@ -510,29 +544,6 @@ const DishPage = () => {
             <BottomNavigationBar />
         </Box>
     );
-};
-
-const styles = `
-.loading-spinner {
-    display: inline-block;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid #fff;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    animation: spin 1s linear infinite;
-    margin-right: 8px;
 }
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-`;
-
-// 创建一个 style 元素并插入到文档头部
-const styleElement = document.createElement('style');
-styleElement.textContent = styles;
-document.head.appendChild(styleElement);
 
 export default DishPage;    

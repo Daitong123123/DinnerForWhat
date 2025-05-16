@@ -1,4 +1,3 @@
-// FoodPage.jsx
 import React, { useState, useEffect } from 'react';
 import {
     Box,
@@ -10,11 +9,19 @@ import {
     CircularProgress
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import DishPage from './DishPage'; // 假设这是您的菜谱页面组件
-import OrderingPage from './OrderingPage'; // 假设这是您的餐厅点菜页面组件
-import UnlikePage from './UnlikePage'; // 假设这是您的喜好管理页面组件
-import BottomNavigationBar from './BottomNavigationBar';
+import DishPage from './DishPage';
+import OrderingPage from './OrderingPage';
+import UnlikePage from './UnlikePage';
 import Layout from './Layout';
+
+// 恋爱记风格配色
+const COLORS = {
+    primary: '#FF5E87',
+    secondary: '#FFB6C1',
+    accent: '#FF85A2',
+    light: '#FFF0F3',
+    dark: '#333333'
+};
 
 function FoodPage() {
     const navigate = useNavigate();
@@ -28,7 +35,7 @@ function FoodPage() {
             case '/dish':
                 setValue(0);
                 break;
-            case '/ordering':
+            case '/order':
                 setValue(1);
                 break;
             case '/unlike':
@@ -62,7 +69,7 @@ function FoodPage() {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-                <CircularProgress />
+                <CircularProgress color="primary" />
             </Box>
         );
     }
@@ -71,9 +78,9 @@ function FoodPage() {
         <Layout>
             <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
                 {/* 顶部导航栏 */}
-                <AppBar position="static" color="primary">
-                    <Toolbar>
-                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                <AppBar position="static" color="transparent" sx={{ boxShadow: 'none' }}>
+                    <Toolbar sx={{ backgroundColor: '#fff', borderRadius: '0 0 16px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                        <Typography variant="h5" component="div" sx={{ flexGrow: 1, color: COLORS.primary, fontWeight: 'bold' }}>
                             干饭中心
                         </Typography>
                     </Toolbar>
@@ -81,17 +88,18 @@ function FoodPage() {
                         value={value}
                         onChange={handleChange}
                         variant="fullWidth"
-                        textColor="inherit"
-                        indicatorColor="secondary"
+                        textColor={COLORS.primary}
+                        indicatorColor={COLORS.primary}
+                        sx={{ backgroundColor: '#fff', '& .MuiTabs-indicator': { height: '3px' } }}
                     >
-                        <Tab label="菜谱" />
-                        <Tab label="餐厅" />
-                        <Tab label="喜好" />
+                        <Tab label="菜谱" sx={{ textTransform: 'none', fontWeight: value === 0 ? 'bold' : 'normal' }} />
+                        <Tab label="餐厅" sx={{ textTransform: 'none', fontWeight: value === 1 ? 'bold' : 'normal' }} />
+                        <Tab label="喜好" sx={{ textTransform: 'none', fontWeight: value === 2 ? 'bold' : 'normal' }} />
                     </Tabs>
                 </AppBar>
 
                 {/* 根据选中的标签显示对应的内容 */}
-                <Box sx={{ flexGrow: 1, p: 2, pb: 10 }}> {/* 底部留出空间给底部导航栏 */}
+                <Box sx={{ flexGrow: 1, p: 2, pb: 10, backgroundColor: COLORS.light }}>
                     {value === 0 && <DishPage />}
                     {value === 1 && <OrderingPage />}
                     {value === 2 && <UnlikePage />}
@@ -101,4 +109,4 @@ function FoodPage() {
     );
 }
 
-export default FoodPage;
+export default FoodPage;    
