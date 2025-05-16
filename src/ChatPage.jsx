@@ -33,8 +33,10 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
     const inputBoxRef = useRef(null);
     const [selectedImage, setSelectedImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    
+    const [fullscreenImage, setFullscreenImage] = useState(null); // 新增：全屏显示的图片URL
+
     const currentUserId = localStorage.getItem('userId');
+
     useEffect(() => {
         if (chatListRef.current) {
             chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
@@ -57,6 +59,29 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
             setSelectedImage(reader.result);
         };
         reader.readAsDataURL(file);
+    };
+
+    // 计算文件哈希值的辅助函数（不依赖 crypto.subtle）
+    const calculateFileHash = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+
+            reader.onload = (e) => {
+                try {
+                    const buffer = e.target.result;
+                    const uint8Array = new Uint8Array(buffer);
+                    const hashHex = sha1(uint8Array);
+                    resolve(hashHex);
+                } catch (err) {
+                    reject(new Error(`哈希计算失败: ${err.message}`));
+                }
+            };
+
+            reader.onerror = () => {
+                reject(new Error('文件读取失败'));
+            };
+        });
     };
 
     const handleSendImage = async () => {
@@ -99,30 +124,6 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
             setIsUploading(false);
         }
     };
-// 计算文件哈希值的辅助函数（不依赖 crypto.subtle）
-const calculateFileHash = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(file);
-  
-      reader.onload = (e) => {
-        try {
-          const buffer = e.target.result;
-          const uint8Array = new Uint8Array(buffer);
-          const hashHex = sha1(uint8Array);
-          resolve(hashHex);
-        } catch (err) {
-          reject(new Error(`哈希计算失败: ${err.message}`));
-        }
-      };
-  
-      reader.onerror = () => {
-        reject(new Error('文件读取失败'));
-      };
-    });
-  };
-
-    
 
     // 发送图片消息的通用函数
     const sendImageMessage = async (fileId) => {
@@ -170,8 +171,36 @@ const calculateFileHash = (file) => {
         document.getElementById('fileInput').value = '';
     };
 
-    return (
+    // 新增：处理图片点击，进入全屏模式
+    const handleImageClick = (event,imageUrl) => {
+        setFullscreenImage(imageUrl);
+        // 阻止事件冒泡，避免触发聊天区域点击
+        event.stopPropagation();
+    };
 
+    // 新增：退出全屏模式
+    const exitFullscreen = () => {
+        setFullscreenImage(null);
+    };
+
+    // 处理拍照
+    const handleTakePhoto = () => {
+        document.getElementById('cameraInput').click();
+    };
+
+    // 处理相机拍摄的照片
+    const handleCameraImage = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setSelectedImage(reader.result);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    return (
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f9f9f9', position: 'relative', height: '100vh' }}>
             {/* 原有AppBar部分 */}
             <AppBar position="sticky" sx={{ backgroundColor: '#fff' }}>
@@ -183,7 +212,7 @@ const calculateFileHash = (file) => {
                 </Toolbar>
             </AppBar>
 
-            {/* 原有聊天列表部分 */}
+            {/* 原有聊天列表部分 - 修改图片消息添加点击事件 */}
             <List ref={chatListRef} sx={{ flexGrow: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', paddingBottom: '120px', marginBottom: '0' }}>
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
                     <ListItem key={index} alignItems="flex-start" sx={{ justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2, flexDirection: 'row' }}>
@@ -194,7 +223,10 @@ const calculateFileHash = (file) => {
                                         {message.isRead ? '已读' : '未读'}
                                     </Typography>
                                     {message.messageType === 'image' ? (
-                                        <ImageMessage fileId={message.text} />
+                                            <ImageMessage 
+                                            fileId={message.text} 
+                                            onImageClick={(e, url) => handleImageClick(e, url)} 
+                                        />
                                     ) : message.messageType === 'cookBook' ? (
                                         renderCookbookCard(JSON.parse(message.text))
                                     ) : message.messageType === 'Gomoku' ? (
@@ -212,7 +244,10 @@ const calculateFileHash = (file) => {
                                 <Avatar sx={{ marginRight: 2 }}>{selectedFriend.avatar}</Avatar>
                                 <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
                                     {message.messageType === 'image' ? (
-                                        <ImageMessage fileId={message.text} />
+                                            <ImageMessage 
+                                            fileId={message.text} 
+                                            onImageClick={(e, url) => handleImageClick(e, url)} 
+                                        />
                                     ) : message.messageType === 'cookBook' ? (
                                         renderCookbookCard(JSON.parse(message.text))
                                     ) : message.messageType === 'Gomoku' ? (
@@ -250,8 +285,8 @@ const calculateFileHash = (file) => {
                         style={{ display: 'none' }}
                         onChange={handleImageSelect}
                     />
-                    <IconButton sx={{ width: 40, height: 40 }} onClick={() => document.getElementById('cameraInput').click()}><FaCamera /></IconButton>
-                    <input id="cameraInput" type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => { const file = e.target.files[0]; if (file) { console.log('拍照文件:', file); } }} />
+                    <IconButton sx={{ width: 40, height: 40 }} onClick={handleTakePhoto}><FaCamera /></IconButton>
+                    <input id="cameraInput" type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleCameraImage} />
                     <IconButton sx={{ width: 40, height: 40 }} onClick={handleShareCookbookClick}><FaBookOpen /></IconButton>
                     <IconButton sx={{ width: 40, height: 40 }} onClick={handleShowGames}><FaGamepad /></IconButton>
                     <IconButton sx={{ width: 40, height: 40 }}><FaMicrophone /></IconButton>
@@ -324,8 +359,37 @@ const calculateFileHash = (file) => {
                     </Box>
                 )}
             </Box>
+
+            {/* 新增：全屏图片预览层 */}
+            {fullscreenImage && (
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        zIndex: 1000,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}
+                    onClick={exitFullscreen}
+                >
+                    <img
+                        src={fullscreenImage}
+                        alt="全屏图片"
+                        style={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            objectFit: 'contain'
+                        }}
+                    />
+                </Box>
+            )}
         </Box>
     );
 };
 
-export default ChatPage;
+export default ChatPage;    

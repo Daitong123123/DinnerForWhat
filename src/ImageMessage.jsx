@@ -5,7 +5,7 @@ import {
     Box
 } from '@mui/material';
 
-const ImageMessage = ({ fileId }) => {
+const ImageMessage = ({ fileId, onImageClick }) => {
     const [imageUrl, setImageUrl] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -33,7 +33,16 @@ const ImageMessage = ({ fileId }) => {
     }, [fileId]);
 
     return (
-        <Box sx={{ maxWidth: '80%', borderRadius: 3, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)' }}>
+        <Box 
+            sx={{ 
+                maxWidth: '80%', 
+                borderRadius: 3, 
+                overflow: 'hidden', 
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                cursor: 'pointer' 
+            }}
+            onClick={(e) => onImageClick(e, imageUrl)}
+        >
             {loading && <div>加载中...</div>}
             {error && <div>图片加载失败</div>}
             {imageUrl && (
@@ -47,4 +56,4 @@ const ImageMessage = ({ fileId }) => {
     );
 };
 
-export default ImageMessage;
+export default ImageMessage;    
