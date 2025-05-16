@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -9,10 +9,11 @@ import {
     TextField,
     Divider
 } from '@mui/material';
-import { useNavigate } from'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import baseUrl from './config.js';
 import apiRequest from './api.js';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
+import Layout from './Layout.jsx';
 
 function UserInfoPage() {
     const navigate = useNavigate();
@@ -94,157 +95,157 @@ function UserInfoPage() {
     };
 
     return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                p: 4,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
-                color: '#333'
-            }}
-        >
-            <Card
+        <Layout>
+            <Box
                 sx={{
+                    minHeight: '100vh',
                     p: 4,
-                    width: '100%',
-                    maxWidth: 500,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                    background: '#fff',
-                    borderRadius: 8,
-                    border: '1px solid #ccc'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    background: 'linear-gradient(135deg, #FFE4B5, #FFECD1)',
+                    color: '#333'
                 }}
             >
-                <Box
+                <Card
                     sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        mb: 4
+                        p: 4,
+                        width: '100%',
+                        maxWidth: 500,
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                        background: '#fff',
+                        borderRadius: 8,
+                        border: '1px solid #ccc'
                     }}
                 >
-                    <Avatar sx={{ fontSize: '48px', mb: 2 }}>{userAvatar}</Avatar>
-                    <Typography variant="h4" gutterBottom>
-                        用户信息
-                    </Typography>
-                </Box>
-                <CardContent>
-                    <Typography variant="body1" sx={{ mb: 2 }}>
-                        编号: {userId}
-                    </Typography>
-                    {editing? (
-                        <TextField
-                            label="用户名"
-                            type="text"
-                            value={editedUserName}
-                            onChange={(e) => setEditedUserName(e.target.value)}
-                            fullWidth
-                            sx={{ mb: 3 }}
-                        />
-                    ) : (
-                        <Typography variant="body1" sx={{ mb: 3 }}>
-                            用户名: {userName}
-                        </Typography>
-                    )}
-                </CardContent>
-                {editing? (
                     <Box
                         sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            mt: 2
-                        }}
-                    >
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleSave}
-                            sx={{ mr: 2 }}
-                        >
-                            保存
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            onClick={handleCancel}
-                        >
-                            取消
-                        </Button>
-                    </Box>
-                ) : (
-                    <Button
-                        variant="outlined"
-                        onClick={handleEdit}
-                        sx={{ mt: 2 }}
-                    >
-                        编辑
-                    </Button>
-                )}
-            </Card>
-
-            <Card
-                sx={{
-                    p: 4,
-                    width: '100%',
-                    maxWidth: 500,
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-                    background: '#fff',
-                    borderRadius: 8,
-                    border: '1px solid #ccc',
-                    mt: 4
-                }}
-            >
-                <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
-                    情侣信息
-                </Typography>
-                <Divider sx={{ my: 2 }} />
-                {loading? (
-                    <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
-                        <Typography>加载中...</Typography>
-                    </Box>
-                ) : hasLover? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3 }}>
-                        <Avatar sx={{ fontSize: '48px', mb: 2 }}>{loverInfo.avatar}</Avatar>
-                        <Typography variant="body1" sx={{ mb: 1 }}>
-                            情侣昵称: {loverInfo.name}
-                        </Typography>
-                        <Typography variant="body1">
-                            情侣编号: {loverInfo.id}
-                        </Typography>
-                        <Button variant="outlined" color="secondary" sx={{ mt: 3 }}>
-                            解除情侣关系
-                        </Button>
-                    </Box>
-                ) : (
-                    <Box
-                        sx={{
-                            border: '2px dashed #ccc',
-                            borderRadius: 8,
-                            p: 4,
-                            textAlign: 'center',
-                            minHeight: 150,
                             display: 'flex',
                             flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            mb: 4
                         }}
                     >
-                        <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
-                            你还没有情侣哦
+                        <Avatar sx={{ fontSize: '48px', mb: 2 }}>{userAvatar}</Avatar>
+                        <Typography variant="h4" gutterBottom>
+                            用户信息
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 3, color: '#888' }}>
-                            绑定情侣解锁更多功能！
-                        </Typography>
-                        <Button variant="contained" color="primary" onClick={() => navigate('/bind-lover')}>
-                            绑定情侣
-                        </Button>
                     </Box>
-                )}
-            </Card>
+                    <CardContent>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                            编号: {userId}
+                        </Typography>
+                        {editing ? (
+                            <TextField
+                                label="用户名"
+                                type="text"
+                                value={editedUserName}
+                                onChange={(e) => setEditedUserName(e.target.value)}
+                                fullWidth
+                                sx={{ mb: 3 }}
+                            />
+                        ) : (
+                            <Typography variant="body1" sx={{ mb: 3 }}>
+                                用户名: {userName}
+                            </Typography>
+                        )}
+                    </CardContent>
+                    {editing ? (
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                mt: 2
+                            }}
+                        >
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleSave}
+                                sx={{ mr: 2 }}
+                            >
+                                保存
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                onClick={handleCancel}
+                            >
+                                取消
+                            </Button>
+                        </Box>
+                    ) : (
+                        <Button
+                            variant="outlined"
+                            onClick={handleEdit}
+                            sx={{ mt: 2 }}
+                        >
+                            编辑
+                        </Button>
+                    )}
+                </Card>
 
-            <BottomNavigationBar />
-        </Box>
+                <Card
+                    sx={{
+                        p: 4,
+                        width: '100%',
+                        maxWidth: 500,
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                        background: '#fff',
+                        borderRadius: 8,
+                        border: '1px solid #ccc',
+                        mt: 4
+                    }}
+                >
+                    <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
+                        情侣信息
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    {loading ? (
+                        <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
+                            <Typography>加载中...</Typography>
+                        </Box>
+                    ) : hasLover ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 3 }}>
+                            <Avatar sx={{ fontSize: '48px', mb: 2 }}>{loverInfo.avatar}</Avatar>
+                            <Typography variant="body1" sx={{ mb: 1 }}>
+                                情侣昵称: {loverInfo.name}
+                            </Typography>
+                            <Typography variant="body1">
+                                情侣编号: {loverInfo.id}
+                            </Typography>
+                            <Button variant="outlined" color="secondary" sx={{ mt: 3 }}>
+                                解除情侣关系
+                            </Button>
+                        </Box>
+                    ) : (
+                        <Box
+                            sx={{
+                                border: '2px dashed #ccc',
+                                borderRadius: 8,
+                                p: 4,
+                                textAlign: 'center',
+                                minHeight: 150,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
+                                你还没有情侣哦
+                            </Typography>
+                            <Typography variant="body2" sx={{ mb: 3, color: '#888' }}>
+                                绑定情侣解锁更多功能！
+                            </Typography>
+                            <Button variant="contained" color="primary" onClick={() => navigate('/bind-lover')}>
+                                绑定情侣
+                            </Button>
+                        </Box>
+                    )}
+                </Card>
+            </Box>
+        </Layout>
     );
 }
 

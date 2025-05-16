@@ -16,7 +16,7 @@ import BindLoverPage from './BindLoverPage';
 import ToolPage from './ToolPage';
 import TranslateTool from './TranslateTools';
 import StarGame from './StarGame';
-
+import FoodPage from './FoodPage';
 
 const AppRoutes = () => {
     return (
@@ -25,9 +25,9 @@ const AppRoutes = () => {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/phone-binding" element={<PhoneBindingPage />} />
             <Route path="/admin/upload" element={<UploadPage />} />
-            <Route path="/unlike" element={<UnlikePage />} />
-            <Route path="/dish" element={<DishPage />} />
-            <Route path="/order" element={<OrderingPage />} />
+            <Route path="/unlike" element={<FoodPage />} />
+            <Route path="/dish" element={<FoodPage />} />
+            <Route path="/order" element={<FoodPage />} />
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/user" element={<UserInfoPage />} />
             <Route path="/admin/model" element={<ModelManagementPage />} />

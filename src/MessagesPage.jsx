@@ -1,13 +1,14 @@
-import BottomNavigationBar from './BottomNavigationBar.jsx';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatListPage from './ChatListPage.jsx';
 import ChatPage from './ChatPage.jsx';
-import {Avatar,TextField, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, List, ListItem } from '@mui/material';
+import { Avatar, TextField, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Typography, List, ListItem } from '@mui/material';
 import apiRequest from './api.js';
-import { FaChessBoard} from 'react-icons/fa';
+import { FaChessBoard } from 'react-icons/fa';
 import { Client } from '@stomp/stompjs';
 import baseUrl from './config.js';
+import Layout from './Layout.jsx';
 
 function MessagesPage() {
     const [selectedFriend, setSelectedFriend] = useState(null);
@@ -406,164 +407,166 @@ function MessagesPage() {
     }, [currentUserId, selectedFriend]);
 
     return (
-        <div
-            style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: '100vh',
-                backgroundColor: '#f9f9f9'
-            }}
-        >
-            {selectedFriend ? (
-                <ChatPage
-                    navigate={navigate}
-                    selectedFriend={selectedFriend}
-                    friendMessages={friendMessages}
-                    newMessage={newMessage}
-                    setNewMessage={setNewMessage}
-                    handleSendMessage={handleSendMessage}
-                    handleKeyPress={handleKeyPress}
-                    showEmojiPicker={showEmojiPicker}
-                    setShowEmojiPicker={setShowEmojiPicker}
-                    handleEmojiClick={handleEmojiClick}
-                    emojiIconRef={emojiIconRef}
-                    emojiPickerRef={emojiPickerRef}
-                    selfAvatar={selfAvatar}
-                    inputRef={inputRef}
-                    onBack={() => setSelectedFriend(null)}
-                    handleShareCookbookClick={handleShareCookbookClick}
-                    handleReadMessage={handleReadMessage}
-                    handleShowGames={handleShowGames}
-                    setFriendMessages={setFriendMessages}
-                />
-            ) : (
-                <ChatListPage
-                    friends={friends}
-                    onFriendSelect={handleFriendSelect}
-                    selectedTab={selectedTab}
-                    setSelectedTab={setSelectedTab}
-                    friendRequests={friendRequests}
-                    onAddFriendClick={handleAddFriendClick}
-                    onRequestClick={handleRequestClick}
-                    handleAgreeRequest={handleAgreeRequest}
-                    handleDisagreeRequest={handleDisagreeRequest}
-                    getStatusText={getStatusText}
-                />
-            )}
-            <Dialog
-                open={openAddFriendDialog}
-                onClose={() => setOpenAddFriendDialog(false)}
-                aria-labelledby="add-friend-dialog-title"
-                aria-describedby="add-friend-dialog-description"
+
+        <Layout>
+            <div
+                style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '100vh',
+                    backgroundColor: '#f9f9f9'
+                }}
             >
-                <DialogTitle id="add-friend-dialog-title">添加好友</DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="add-friend-dialog-description">
-                        请输入要添加的好友ID和备注信息
-                    </DialogContentText>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="add-friend-user-id"
-                        label="好友ID"
-                        type="text"
-                        fullWidth
-                        value={addFriendUserId}
-                        onChange={(e) => setAddFriendUserId(e.target.value)}
+                {selectedFriend ? (
+                    <ChatPage
+                        navigate={navigate}
+                        selectedFriend={selectedFriend}
+                        friendMessages={friendMessages}
+                        newMessage={newMessage}
+                        setNewMessage={setNewMessage}
+                        handleSendMessage={handleSendMessage}
+                        handleKeyPress={handleKeyPress}
+                        showEmojiPicker={showEmojiPicker}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        handleEmojiClick={handleEmojiClick}
+                        emojiIconRef={emojiIconRef}
+                        emojiPickerRef={emojiPickerRef}
+                        selfAvatar={selfAvatar}
+                        inputRef={inputRef}
+                        onBack={() => setSelectedFriend(null)}
+                        handleShareCookbookClick={handleShareCookbookClick}
+                        handleReadMessage={handleReadMessage}
+                        handleShowGames={handleShowGames}
+                        setFriendMessages={setFriendMessages}
                     />
-                    <TextField
-                        margin="dense"
-                        id="add-friend-content"
-                        label="备注信息"
-                        type="text"
-                        fullWidth
-                        value={addFriendContent}
-                        onChange={(e) => setAddFriendContent(e.target.value)}
+                ) : (
+                    <ChatListPage
+                        friends={friends}
+                        onFriendSelect={handleFriendSelect}
+                        selectedTab={selectedTab}
+                        setSelectedTab={setSelectedTab}
+                        friendRequests={friendRequests}
+                        onAddFriendClick={handleAddFriendClick}
+                        onRequestClick={handleRequestClick}
+                        handleAgreeRequest={handleAgreeRequest}
+                        handleDisagreeRequest={handleDisagreeRequest}
+                        getStatusText={getStatusText}
                     />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenAddFriendDialog(false)}>取消</Button>
-                    <Button onClick={handleAddFriend}>发送申请</Button>
-                </DialogActions>
-            </Dialog>
-            <Dialog
-                open={openRequestDetail}
-                onClose={() => setOpenRequestDetail(false)}
-                aria-labelledby="request-detail-dialog-title"
-                aria-describedby="request-detail-dialog-description"
-            >
-                <DialogTitle id="request-detail-dialog-title">好友申请详情</DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="request-detail-dialog-description">
-                        {selectedRequest && (
+                )}
+                <Dialog
+                    open={openAddFriendDialog}
+                    onClose={() => setOpenAddFriendDialog(false)}
+                    aria-labelledby="add-friend-dialog-title"
+                    aria-describedby="add-friend-dialog-description"
+                >
+                    <DialogTitle id="add-friend-dialog-title">添加好友</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="add-friend-dialog-description">
+                            请输入要添加的好友ID和备注信息
+                        </DialogContentText>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            id="add-friend-user-id"
+                            label="好友ID"
+                            type="text"
+                            fullWidth
+                            value={addFriendUserId}
+                            onChange={(e) => setAddFriendUserId(e.target.value)}
+                        />
+                        <TextField
+                            margin="dense"
+                            id="add-friend-content"
+                            label="备注信息"
+                            type="text"
+                            fullWidth
+                            value={addFriendContent}
+                            onChange={(e) => setAddFriendContent(e.target.value)}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenAddFriendDialog(false)}>取消</Button>
+                        <Button onClick={handleAddFriend}>发送申请</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={openRequestDetail}
+                    onClose={() => setOpenRequestDetail(false)}
+                    aria-labelledby="request-detail-dialog-title"
+                    aria-describedby="request-detail-dialog-description"
+                >
+                    <DialogTitle id="request-detail-dialog-title">好友申请详情</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="request-detail-dialog-description">
+                            {selectedRequest && (
+                                <>
+                                    <Typography>申请人: {selectedRequest.fromNickname}</Typography>
+                                    <Typography>备注信息: {selectedRequest.content}</Typography>
+                                    <Typography>状态: {getStatusText(selectedRequest.status)}</Typography>
+                                </>
+                            )}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        {selectedRequest && selectedRequest.status === '0' && (
                             <>
-                                <Typography>申请人: {selectedRequest.fromNickname}</Typography>
-                                <Typography>备注信息: {selectedRequest.content}</Typography>
-                                <Typography>状态: {getStatusText(selectedRequest.status)}</Typography>
+                                <Button onClick={() => handleAgreeRequest(selectedRequest)}>同意</Button>
+                                <Button onClick={() => handleDisagreeRequest(selectedRequest)}>拒绝</Button>
                             </>
                         )}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    {selectedRequest && selectedRequest.status === '0' && (
-                        <>
-                            <Button onClick={() => handleAgreeRequest(selectedRequest)}>同意</Button>
-                            <Button onClick={() => handleDisagreeRequest(selectedRequest)}>拒绝</Button>
-                        </>
-                    )}
-                    <Button onClick={() => setOpenRequestDetail(false)}>关闭</Button>
-                </DialogActions>
-            </Dialog>
-            <Dialog
-                open={openShareDialog}
-                onClose={() => setOpenShareDialog(false)}
-                aria-labelledby="share-cookbook-dialog-title"
-                aria-describedby="share-cookbook-dialog-description"
-            >
-                <DialogTitle id="share-cookbook-dialog-title">分享菜谱</DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="share-cookbook-dialog-description">
-                        请选择要分享的菜谱
-                    </DialogContentText>
-                    <List>
-                        {shareOptions.map((option) => (
-                            <ListItem key={option.dishId} button onClick={() => handleTakeDish(option.dishId)}>
-                                <Typography>{option.dishName}</Typography>
-                            </ListItem>
-                        ))}
-                    </List>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenShareDialog(false)}>取消</Button>
-                </DialogActions>
-            </Dialog>
+                        <Button onClick={() => setOpenRequestDetail(false)}>关闭</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={openShareDialog}
+                    onClose={() => setOpenShareDialog(false)}
+                    aria-labelledby="share-cookbook-dialog-title"
+                    aria-describedby="share-cookbook-dialog-description"
+                >
+                    <DialogTitle id="share-cookbook-dialog-title">分享菜谱</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="share-cookbook-dialog-description">
+                            请选择要分享的菜谱
+                        </DialogContentText>
+                        <List>
+                            {shareOptions.map((option) => (
+                                <ListItem key={option.dishId} button onClick={() => handleTakeDish(option.dishId)}>
+                                    <Typography>{option.dishName}</Typography>
+                                </ListItem>
+                            ))}
+                        </List>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenShareDialog(false)}>取消</Button>
+                    </DialogActions>
+                </Dialog>
 
-            <Dialog
-                open={showGamesDialog}
-                onClose={() => setShowGamesDialog(false)}
-                aria-labelledby="games-dialog-title"
-                aria-describedby="games-dialog-description"
-            >
-                <DialogTitle id="games-dialog-title">选择游戏</DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="games-dialog-description">
-                        请选择要邀请的游戏
-                    </DialogContentText>
-                    <List>
-                        {/* 五子棋游戏图标 */}
-                        <ListItem key="gobang" button onClick={handleInviteGobang}>
-                            <Avatar sx={{ mr: 2 }}><FaChessBoard /></Avatar>
-                            <Typography>五子棋</Typography>
-                        </ListItem>
-                    </List>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowGamesDialog(false)}>取消</Button>
-                </DialogActions>
-            </Dialog>
-            <BottomNavigationBar />
-        </div>
+                <Dialog
+                    open={showGamesDialog}
+                    onClose={() => setShowGamesDialog(false)}
+                    aria-labelledby="games-dialog-title"
+                    aria-describedby="games-dialog-description"
+                >
+                    <DialogTitle id="games-dialog-title">选择游戏</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="games-dialog-description">
+                            请选择要邀请的游戏
+                        </DialogContentText>
+                        <List>
+                            {/* 五子棋游戏图标 */}
+                            <ListItem key="gobang" button onClick={handleInviteGobang}>
+                                <Avatar sx={{ mr: 2 }}><FaChessBoard /></Avatar>
+                                <Typography>五子棋</Typography>
+                            </ListItem>
+                        </List>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setShowGamesDialog(false)}>取消</Button>
+                    </DialogActions>
+                </Dialog>
+            </div>
+        </Layout>
     );
 }
 

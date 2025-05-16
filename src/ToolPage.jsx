@@ -2,6 +2,7 @@ import React from 'react';
 import { Grid, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import BottomNavigationBar from './BottomNavigationBar';
+import Layout from './Layout';
 
 function ToolPage() {
   const navigate = useNavigate();
@@ -24,7 +25,8 @@ function ToolPage() {
   ];
 
   return (
-    <Box sx={{ p: 4, minHeight: 'calc(100vh - 56px)' }}>
+    <Layout>
+<Box sx={{ p: 4, minHeight: 'calc(100vh - 56px)' }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ textAlign: 'center', fontWeight: '500' }}>
         工具箱
       </Typography>
@@ -81,8 +83,9 @@ function ToolPage() {
           </Grid>
         ))}
       </Grid>
-      <BottomNavigationBar></BottomNavigationBar>
     </Box>
+    </Layout>
+    
   );
 }
 

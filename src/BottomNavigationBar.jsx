@@ -1,40 +1,35 @@
+// BottomNavigationBar.jsx
 import React, { useState, useEffect } from 'react';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MessageIcon from '@mui/icons-material/Message';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+import FastfoodIcon from '@mui/icons-material/Fastfood'; // 新图标，代表"干饭"
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PersonIcon from '@mui/icons-material/Person';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import BuildIcon from '@mui/icons-material/Build'; // 替换为可用的图标
+import BuildIcon from '@mui/icons-material/Build';
 import apiRequest from './api.js';
 
 function BottomNavigationBar() {
     const location = useLocation();
     const navigate = useNavigate();
-    const [value, setValue] = useState(0);
+    const [value, setValue] = useState(1);
     const [hasLover, setHasLover] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        switch (location.pathname) {
-            case '/messages':
+        // 简化路径判断逻辑，将/dish、/ordering、/unlike都映射到干饭选项
+        switch (true) {
+            case location.pathname === '/messages':
                 setValue(0);
                 break;
-            case '/dish':
+            case ['/dish', '/ordering', '/unlike'].includes(location.pathname):
                 setValue(1);
                 break;
-            case '/order':
+            case location.pathname === '/tool':
                 setValue(2);
                 break;
-            case '/unlike':
+            case location.pathname === '/user':
                 setValue(3);
-                break;
-            case '/tool': // 新增路径
-                setValue(4);
-                break;
-            case '/user':
-                setValue(5);
                 break;
             default:
                 setValue(0);
@@ -84,7 +79,8 @@ function BottomNavigationBar() {
                 position: 'fixed',
                 bottom: 0,
                 background: '#fff',
-                borderTop: '1px solid #ccc'
+                borderTop: '1px solid #ccc',
+                zIndex: 100 // 确保导航栏在最上层
             }}
         >
             <BottomNavigationAction
@@ -93,23 +89,10 @@ function BottomNavigationBar() {
                 onClick={() => navigate('/messages')}
             />
             <BottomNavigationAction
-                label="菜谱"
-                icon={<MenuBookIcon />}
-                onClick={() => navigate('/dish')}
+                label="干饭"
+                icon={<FastfoodIcon />}
+                onClick={() => navigate('/dish')} // 默认导航到/dish页面
             />
-            {hasLover && !loading && (
-                <BottomNavigationAction
-                    label="餐厅"
-                    icon={<RestaurantIcon />}
-                    onClick={() => navigate('/order')}
-                />
-            )}
-            <BottomNavigationAction
-                label="喜好"
-                icon={<FavoriteIcon />}
-                onClick={() => navigate('/unlike')}
-            />
-            {/* 新增：使用 BuildIcon 作为工具箱图标 */}
             <BottomNavigationAction
                 label="工具箱"
                 icon={<BuildIcon />}
