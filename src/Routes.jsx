@@ -13,10 +13,15 @@ import AdminHome from './AdminHome';
 import GomokuPage from './GomokuPage';
 import OrderingPage from './OrderingPage';
 import BindLoverPage from './BindLoverPage';
-import ToolPage from './ToolPage';
-import TranslateTool from './TranslateTools';
-import StarGame from './StarGame';
+import ToolPage from './toolspage/ToolPage';
+import TranslateTool from './toolspage/TranslateTools';
+import StarGame from './toolspage/StarGame';
 import FoodPage from './FoodPage';
+import AccountPage from './toolspage/AccountPage';
+import LoveNotesPage from './toolspage/LoveNotesPage';
+import TarotPage from './toolspage/TarotPage';
+import FatePage from './toolspage/FatePage';
+import HoroscopePage from './toolspage/HoroscopePage';
 
 const AppRoutes = () => {
     return (
@@ -37,6 +42,11 @@ const AppRoutes = () => {
             <Route path="/tool" element={<ToolPage />} />
             <Route path="/tool/translate" element={<TranslateTool />} />
             <Route path="/tool/star-game" element={<StarGame />} />
+            <Route path="/tool/account" element={<AccountPage />} />
+            <Route path="/tool/love-note" element={<LoveNotesPage />} />
+            <Route path="/tool/tarot" element={<TarotPage />} />
+            <Route path="/tool/horoscope" element={<HoroscopePage />} />
+            <Route path="/tool/fate" element={<FatePage />} />
             <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
     );

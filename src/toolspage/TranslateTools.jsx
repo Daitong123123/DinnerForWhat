@@ -20,17 +20,10 @@ import {
 } from '@mui/material';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import SearchIcon from '@mui/icons-material/Search';
-import apiRequest from './api.js';
-import LANGUAGES_DATA from './language-data.js';
-
-// 恋爱记风格配色
-const COLORS = {
-    primary: '#FF5E87',
-    secondary: '#FFB6C1',
-    accent: '#FF85A2',
-    light: '#FFF0F3',
-    dark: '#333333'
-};
+import apiRequest from '../api.js';
+import LANGUAGES_DATA from '../language-data.js';
+import COLORS from '../constants/color.js';
+import Layout from '../Layout.jsx';
 
 function TranslateTool() {
   const [sourceText, setSourceText] = useState('');
@@ -161,7 +154,8 @@ function TranslateTool() {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: 800, margin: '0 auto', minHeight: '100vh', backgroundColor: COLORS.light }}>
+    <Layout>
+      <Box sx={{ p: 4, maxWidth: 800, margin: '0 auto', minHeight: '100vh', backgroundColor: COLORS.light }}>
       {error && (
         <Alert severity="error" sx={{ mb: 4, borderRadius: 8 }}>
           {error}
@@ -529,6 +523,7 @@ function TranslateTool() {
         </Button>
       </Box>
     </Box>
+    </Layout>
   );
 
   // 辅助函数：获取语言名称

@@ -1,20 +1,12 @@
 import React from 'react';
 import { Grid, Typography, Box, Card, CardContent, CardMedia, AppBar, Toolbar, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import BottomNavigationBar from './BottomNavigationBar.jsx';
-import Layout from './Layout.jsx';
+import BottomNavigationBar from '../BottomNavigationBar.jsx';
+import Layout from '../Layout.jsx';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { styled } from '@mui/system';
 
-// 恋爱记风格配色
-const COLORS = {
-    primary: '#FF5E87',
-    secondary: '#FFB6C1',
-    accent: '#FF85A2',
-    light: '#FFF0F3',
-    dark: '#333333',
-    lightPink: '#FFF9FA',
-};
+import COLORS from '../constants/color.js';
 
 // 自定义卡片样式
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -72,33 +64,61 @@ function ToolPage() {
             color: '#FFB6C1'
         },
         {
-            id: 3,
-            name: '纪念日',
-            iconUrl: 'https://picsum.photos/seed/anniversary/200/200',
-            onClick: () => navigate('/tool/anniversary'),
-            color: '#FF5E87'
-        },
-        {
-            id: 4,
-            name: '相册',
-            iconUrl: 'https://picsum.photos/seed/album/200/200',
-            onClick: () => navigate('/tool/album'),
-            color: '#FFA07A'
-        },
-        {
-            id: 5,
-            name: '日历',
-            iconUrl: 'https://picsum.photos/seed/calendar/200/200',
-            onClick: () => navigate('/tool/calendar'),
-            color: '#FFC0CB'
-        },
-        {
-            id: 6,
-            name: '更多',
-            iconUrl: 'https://picsum.photos/seed/more/200/200',
-            onClick: () => navigate('/tool/more'),
-            color: '#FF69B4'
-        }
+          id: 3,
+          name: '记账本',
+          iconUrl: 'https://picsum.photos/seed/account/200/200',
+          onClick: () => navigate('/tool/account'),
+          color: '#FF5E87'
+      },
+      {
+          id: 4,
+          name: '情侣挑战',
+          iconUrl: 'https://picsum.photos/seed/challenge/200/200',
+          onClick: () => navigate('/tool/challenge'),
+          color: '#FFA07A'
+      },
+      {
+          id: 5,
+          name: '八字合婚',
+          iconUrl: 'https://picsum.photos/seed/fate/200/200',
+          onClick: () => navigate('/tool/fate'),
+          color: '#FFC0CB'
+      },
+      {
+          id: 6,
+          name: '塔罗牌',
+          iconUrl: 'https://picsum.photos/seed/tarot/200/200',
+          onClick: () => navigate('/tool/tarot'),
+          color: '#FF69B4'
+      },
+      {
+          id: 7,
+          name: '星座解析',
+          iconUrl: 'https://picsum.photos/seed/horoscope/200/200',
+          onClick: () => navigate('/tool/horoscope'),
+          color: '#FF7F50'
+      },
+      {
+          id: 8,
+          name: '爱情笔记',
+          iconUrl: 'https://picsum.photos/seed/love-note/200/200',
+          onClick: () => navigate('/tool/love-note'),
+          color: '#FF4500'
+      },
+      {
+          id: 9,
+          name: '共享日程',
+          iconUrl: 'https://picsum.photos/seed/schedule/200/200',
+          onClick: () => navigate('/tool/schedule'),
+          color: '#FF6347'
+      },
+      {
+          id: 10,
+          name: '恋爱进度',
+          iconUrl: 'https://picsum.photos/seed/progress/200/200',
+          onClick: () => navigate('/tool/progress'),
+          color: '#FFA500'
+      }
     ];
 
     return (
@@ -157,7 +177,7 @@ function ToolPage() {
                 </Box>
                 
                 {/* 工具网格布局 */}
-                <Grid container spacing={3} justifyContent="center">
+                <Grid container spacing={3} justifyContent="left">
                     {tools.map(tool => (
                         <Grid item
                             key={tool.id}
