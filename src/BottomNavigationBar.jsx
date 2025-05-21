@@ -24,7 +24,7 @@ function BottomNavigationBar() {
             case ['/dish', '/ordering', '/unlike'].includes(location.pathname):
                 setValue(1);
                 break;
-            case location.pathname === '/tool':
+            case location.pathname .startsWith( '/tool'):
                 setValue(2);
                 break;
             case location.pathname === '/user':
