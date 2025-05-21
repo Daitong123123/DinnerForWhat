@@ -496,7 +496,7 @@ function AccountPage() {
                 </Toolbar>
             </AppBar>
 
-            <Box sx={{ p: 3, minHeight: 'calc(100vh - 112px)', backgroundColor: COLORS.lightPink }}>
+            <Box sx={{ p: 3, minHeight: 'calc(100vh - 160px)', pb: '40px', backgroundColor: COLORS.lightPink }}>
                 {/* 收支统计卡片 */}
                 <StyledCard>
                     <StyledHeader
@@ -759,7 +759,7 @@ function AccountPage() {
                                                     <AmountText type={record.type}>{parseFloat(record.amount || 0).toFixed(2)}</AmountText>
                                                 </TableCell>
                                                 <TableCell>{formatDate(record.date)}</TableCell>
-                                                <TableCell>{record.note || '无'}</TableCell>
+                                                <TableCell>{record.note || ''}</TableCell>
                                                 <TableCell>
                                                     <IconButton color="primary" onClick={() => startEditing(record)}>
                                                         <EditIcon />
