@@ -1,4 +1,4 @@
-import React, { useState } from'react';
+import React, { useState } from 'react';
 import baseUrl from '../config.js';
 import {
     Box,
@@ -11,7 +11,8 @@ import {
     InputAdornment
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useNavigate } from'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import COLORS from '../constants/color.js';
 
 function RegisterPage() {
     const [username, setUsername] = useState('');
@@ -22,35 +23,46 @@ function RegisterPage() {
     const navigate = useNavigate();
 
     const handleRegistration = async () => {
-        if (password === confirmPassword) {
-            try {
-                const response = await fetch(`http://${baseUrl}/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username,
-                        password
-                    })
-                });
-                const result = await response.json();
-                if (result.code === '200') {
-                    // 注册成功，显示成功提示
-                    setError('');
-                    setSuccess('注册成功！即将跳转...');
-                    setTimeout(() => {
-                        navigate('/dish');
-                    }, 1500);
-                } else {
-                    setError(result.message);
-                }
-            } catch (error) {
-                console.error('注册请求出错:', error);
-                alert('注册请求出错，请稍后再试');
-            }
-        } else {
+        if (!username) {
+            setError('请输入用户名');
+            return;
+        }
+        
+        if (!password) {
+            setError('请输入密码');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
             setError('两次输入的密码不一致');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`http://${baseUrl}/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username,
+                    password
+                })
+            });
+            const result = await response.json();
+            if (result.code === '200') {
+                // 注册成功，显示成功提示
+                setError('');
+                setSuccess('注册成功！即将跳转...');
+                setTimeout(() => {
+                    navigate('/dish');
+                }, 1500);
+            } else {
+                setError(result.message);
+            }
+        } catch (error) {
+            console.error('注册请求出错:', error);
+            setError('注册请求出错，请稍后再试');
         }
     };
 
@@ -63,8 +75,8 @@ function RegisterPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#f4f4f4',
-                color: '#333',
+                backgroundColor: COLORS.light,
+                color: COLORS.dark,
                 pb: 6
             }}
         >
@@ -73,9 +85,9 @@ function RegisterPage() {
                     p: 3,
                     width: '100%',
                     maxWidth: 600,
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                    backgroundColor: '#fff',
-                    borderRadius: 10,
+                    boxShadow: '0 4px 20px rgba(255, 94, 135, 0.15)',
+                    backgroundColor: 'white',
+                    borderRadius: 16,
                     overflow: 'hidden'
                 }}
             >
@@ -83,105 +95,150 @@ function RegisterPage() {
                     variant="h4"
                     gutterBottom
                     sx={{
-                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        background: `linear-gradient(45deg, ${COLORS.primary}, ${COLORS.secondary})`,
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text',
                         textFillColor: 'transparent',
                         textAlign: 'center',
-                        mb: 3
+                        mb: 6,
+                        fontSize: { xs: '2rem', md: '2.5rem' },
+                        fontWeight: 'bold'
                     }}
                 >
-                    菜谱项目注册
+                    饭菜小记 - 注册
                 </Typography>
+                
+                {error && (
+                    <Alert severity="error" sx={{ mb: 4, borderRadius: 8 }}>
+                        {error}
+                    </Alert>
+                )}
+                
+                {success && (
+                    <Alert severity="success" sx={{ mb: 4, borderRadius: 8 }}>
+                        {success}
+                    </Alert>
+                )}
+                
                 <TextField
                     label="用户名"
                     type="text"
                     value={username}
                     onChange={(e) => {
                         setUsername(e.target.value);
-                        setError('');
+                        if (error) setError('');
                     }}
                     fullWidth
-                    sx={{ mb: 3 }}
-                    InputProps={{
-                        sx: { color: '#333' },
-                        endAdornment: error && (
-                            <InputAdornment position="end">
-                                <IconButton
-                                    edge="end"
-                                    onClick={() => setError('')}
-                                >
-                                    <CloseIcon color="error" />
-                                </IconButton>
-                            </InputAdornment>
-                        )
-                    }}
-                    InputLabelProps={{
-                        sx: { color: '#666' }
+                    sx={{ 
+                        mb: 4,
+                        borderRadius: 16,
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 16,
+                            '&:hover fieldset': {
+                                borderColor: COLORS.primary
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: COLORS.primary
+                            }
+                        }
                     }}
                     error={!!error}
                     helperText={error}
                 />
-                {error && (
-                    <Alert severity="error" sx={{ mb: 3 }}>
-                        {error}
-                    </Alert>
-                )}
-                {success && (
-                    <Alert severity="success" sx={{ mb: 3 }}>
-                        {success}
-                    </Alert>
-                )}
+                
                 <TextField
                     label="密码"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 3 }}
-                    InputProps={{
-                        sx: { color: '#333' }
+                    onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (error) setError('');
                     }}
-                    InputLabelProps={{
-                        sx: { color: '#666' }
+                    fullWidth
+                    sx={{ 
+                        mb: 4,
+                        borderRadius: 16,
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 16,
+                            '&:hover fieldset': {
+                                borderColor: COLORS.primary
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: COLORS.primary
+                            }
+                        }
                     }}
                 />
+                
                 <TextField
                     label="确认密码"
                     type="password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    fullWidth
-                    sx={{ mb: 3 }}
-                    InputProps={{
-                        sx: { color: '#333' }
+                    onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (error) setError('');
                     }}
-                    InputLabelProps={{
-                        sx: { color: '#666' }
+                    fullWidth
+                    sx={{ 
+                        mb: 6,
+                        borderRadius: 16,
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 16,
+                            '&:hover fieldset': {
+                                borderColor: COLORS.primary
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: COLORS.primary
+                            }
+                        }
                     }}
                 />
+                
                 <Button
                     variant="contained"
                     onClick={handleRegistration}
                     fullWidth
+                    disabled={!username || !password || !confirmPassword}
                     sx={{
-                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        borderRadius: 100,
+                        py: 3,
+                        textTransform: 'none',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        background: `linear-gradient(45deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                        boxShadow: `0 4px 20px rgba(255, 94, 135, 0.3)`,
                         '&:hover': {
-                            background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
+                            background: `linear-gradient(45deg, ${COLORS.secondary}, ${COLORS.primary})`,
+                            boxShadow: `0 6px 25px rgba(255, 94, 135, 0.4)`
                         }
                     }}
                 >
                     注册
                 </Button>
+                
+                <Button
+                    variant="text"
+                    onClick={() => navigate('/')}
+                    sx={{ 
+                        mt: 4,
+                        color: COLORS.primary,
+                        '&:hover': {
+                            color: `${COLORS.primary}DD`
+                        }
+                    }}
+                >
+                    已有账号？立即登录
+                </Button>
             </Card>
-            <Box sx={{ width: '100%', maxWidth: 600 }}>
-                <Box sx={{ borderTop: '1px solid #ccc', mb: 2 }} />
+            
+            <Box sx={{ width: '100%', maxWidth: 600, mt: 8 }}>
+                <Box sx={{ borderTop: `1px solid ${COLORS.gray}`, mb: 2 }} />
                 <Typography
                     variant="body2"
                     sx={{
-                        color: '#999',
-                        textAlign: 'left'
+                        color: COLORS.gray,
+                        textAlign: 'center'
                     }}
                 >
                     鄂ICP备2025107386号
@@ -191,4 +248,4 @@ function RegisterPage() {
     );
 }
 
-export default RegisterPage;
+export default RegisterPage;    

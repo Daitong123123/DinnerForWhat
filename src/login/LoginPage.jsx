@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -11,8 +11,9 @@ import {
     DialogTitle,
     DialogContentText
 } from '@mui/material';
-import { useNavigate } from'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import baseUrl from '../config.js';
+import COLORS from '../constants/color.js';
 
 function LoginPage() {
     const [isLoginWithPhone, setIsLoginWithPhone] = useState(false);
@@ -75,7 +76,7 @@ function LoginPage() {
     };
 
     useEffect(() => {
-        document.title = '今天吃什么';
+        document.title = '饭菜小记 - 登录';
     }, []);
 
     return (
@@ -87,8 +88,8 @@ function LoginPage() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#f4f4f4',
-                color: '#333',
+                backgroundColor: COLORS.light,
+                color: COLORS.dark,
                 pb: 6
             }}
         >
@@ -97,48 +98,74 @@ function LoginPage() {
                     p: 3,
                     width: '100%',
                     maxWidth: 600,
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                    backgroundColor: '#fff',
-                    borderRadius: 10,
+                    boxShadow: '0 4px 20px rgba(255, 94, 135, 0.15)',
+                    backgroundColor: 'white',
+                    borderRadius: 16,
                     overflow: 'hidden'
                 }}
             >
                 {errorMessage && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
+                    <Alert severity="error" sx={{ mb: 4, borderRadius: 8 }}>
                         {errorMessage}
                     </Alert>
                 )}
+                
                 <Typography
                     variant="h4"
                     gutterBottom
                     sx={{
-                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        background: `linear-gradient(45deg, ${COLORS.primary}, ${COLORS.secondary})`,
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
                         backgroundClip: 'text',
                         textFillColor: 'transparent',
                         textAlign: 'center',
-                        mb: 3
+                        mb: 6,
+                        fontSize: { xs: '2rem', md: '2.5rem' },
+                        fontWeight: 'bold'
                     }}
                 >
                     饭菜小记
                 </Typography>
-                <div style={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+                
+                <Box display="flex" justifyContent="center" mb={6}>
                     <Button
-                        variant="contained"
-                        sx={{ mr: 2, backgroundColor:!isLoginWithPhone? '#FF6F61' : '#ccc', color: 'white' }}
+                        variant={!isLoginWithPhone ? "contained" : "outlined"}
+                        sx={{ 
+                            mr: 2, 
+                            borderRadius: 100, 
+                            px: 6, 
+                            py: 2,
+                            color: !isLoginWithPhone ? 'white' : COLORS.primary,
+                            backgroundColor: !isLoginWithPhone ? COLORS.primary : 'white',
+                            borderColor: COLORS.primary,
+                            '&:hover': {
+                                backgroundColor: !isLoginWithPhone ? `${COLORS.primary}DD` : 'rgba(255, 94, 135, 0.05)'
+                            }
+                        }}
                         onClick={() => setIsLoginWithPhone(false)}
                     >
                         用户名登录
                     </Button>
                     <Button
-                        variant="contained"
-                        sx={{ backgroundColor: isLoginWithPhone? '#FF6F61' : '#ccc', color: 'white' }}
+                        variant={isLoginWithPhone ? "contained" : "outlined"}
+                        sx={{ 
+                            borderRadius: 100, 
+                            px: 6, 
+                            py: 2,
+                            color: isLoginWithPhone ? 'white' : COLORS.primary,
+                            backgroundColor: isLoginWithPhone ? COLORS.primary : 'white',
+                            borderColor: COLORS.primary,
+                            '&:hover': {
+                                backgroundColor: isLoginWithPhone ? `${COLORS.primary}DD` : 'rgba(255, 94, 135, 0.05)'
+                            }
+                        }}
                         onClick={handlePhoneLoginClick}
                     >
                         手机号登录
                     </Button>
-                </div>
+                </Box>
+                
                 {!isLoginWithPhone && (
                     <TextField
                         label="用户名"
@@ -146,77 +173,117 @@ function LoginPage() {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         fullWidth
-                        sx={{ mb: 3 }}
-                        InputProps={{
-                            sx: { color: '#333' }
-                        }}
-                        InputLabelProps={{
-                            sx: { color: '#666' }
+                        sx={{ 
+                            mb: 4,
+                            borderRadius: 16,
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 16,
+                                '&:hover fieldset': {
+                                    borderColor: COLORS.primary
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: COLORS.primary
+                                }
+                            }
                         }}
                     />
                 )}
+                
                 <TextField
                     label="密码"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     fullWidth
-                    sx={{ mb: 3 }}
-                    InputProps={{
-                        sx: { color: '#333' }
-                    }}
-                    InputLabelProps={{
-                        sx: { color: '#666' }
+                    sx={{ 
+                        mb: 6,
+                        borderRadius: 16,
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 16,
+                            '&:hover fieldset': {
+                                borderColor: COLORS.primary
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: COLORS.primary
+                            }
+                        }
                     }}
                 />
+                
                 <Button
                     variant="contained"
                     onClick={handleLogin}
                     fullWidth
+                    disabled={!username || !password}
                     sx={{
-                        background: 'linear-gradient(45deg, #FF6F61, #FFB142)',
+                        borderRadius: 100,
+                        py: 3,
+                        textTransform: 'none',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        background: `linear-gradient(45deg, ${COLORS.primary}, ${COLORS.secondary})`,
+                        boxShadow: `0 4px 20px rgba(255, 94, 135, 0.3)`,
                         '&:hover': {
-                            background: 'linear-gradient(45deg, #FFB142, #FF6F61)'
+                            background: `linear-gradient(45deg, ${COLORS.secondary}, ${COLORS.primary})`,
+                            boxShadow: `0 6px 25px rgba(255, 94, 135, 0.4)`
                         }
                     }}
                 >
                     登录
                 </Button>
+                
                 <Button
-                    variant="outlined"
+                    variant="text"
                     onClick={() => navigate('/register')}
-                    sx={{ mt: 2 }}
+                    sx={{ 
+                        mt: 4,
+                        color: COLORS.primary,
+                        '&:hover': {
+                            color: `${COLORS.primary}DD`
+                        }
+                    }}
                 >
-                    立即注册
+                    还没有账号？立即注册
                 </Button>
             </Card>
+            
             <Dialog
                 open={openDialog}
                 onClose={handleCloseDialog}
                 aria-labelledby="phone-login-dialog-title"
                 sx={{
                     '&.MuiPaper-root': {
-                        backgroundImage: 'url("https://example.com/book-background.jpg")', // 替换为真实的书本背景图片地址
+                        backgroundImage: 'url("https://picsum.photos/800/600")',
                         backgroundSize: 'cover',
-                        borderRadius: 10,
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.3)'
+                        borderRadius: 16,
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
                     }
                 }}
             >
-                <DialogTitle id="phone-login-dialog-title" sx={{ fontFamily: '楷体' }}>手机号登录</DialogTitle>
+                <DialogTitle 
+                    id="phone-login-dialog-title" 
+                    sx={{ 
+                        fontFamily: '楷体',
+                        color: COLORS.primary,
+                        fontWeight: 'bold'
+                    }}
+                >
+                    手机号登录
+                </DialogTitle>
                 <DialogContent sx={{ fontFamily: '楷体' }}>
                     <DialogContentText>
                         暂不支持手机号登录，请使用用户名登录。
                     </DialogContentText>
                 </DialogContent>
             </Dialog>
-            <Box sx={{ width: '100%', maxWidth: 600 }}>
-                <Box sx={{ borderTop: '1px solid #ccc', mb: 2 }} />
+            
+            <Box sx={{ width: '100%', maxWidth: 600, mt: 8 }}>
+                <Box sx={{ borderTop: `1px solid ${COLORS.gray}`, mb: 2 }} />
                 <Typography
                     variant="body2"
                     sx={{
-                        color: '#999',
-                        textAlign: 'left'
+                        color: COLORS.gray,
+                        textAlign: 'center'
                     }}
                 >
                     鄂ICP备2025107386号
@@ -226,4 +293,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;
+export default LoginPage;    
