@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../login/AuthContext.js';
 import {
     Grid,
     Typography,
@@ -19,10 +20,28 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
-    DatePicker,
     FormHelperText,
     AppBar,
-    Toolbar
+    Toolbar,
+    Snackbar,
+    Alert,
+    CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    DatePicker,
+    FormGroup,
+    FormControlLabel,
+    Checkbox,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Pagination
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BottomNavigationBar from '../BottomNavigationBar.jsx';
@@ -32,11 +51,12 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import CalendarIcon from '@mui/icons-material/CalendarToday';
 import MoneyIcon from '@mui/icons-material/AttachMoney';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/system';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, getMonth, getYear } from 'date-fns';
 import COLORS from '../constants/color.js';
-
-
+import apiRequest from '../api.js';
 
 // 自定义样式
 const StyledHeader = styled(CardHeader)(({ theme }) => ({
@@ -48,7 +68,7 @@ const StyledHeader = styled(CardHeader)(({ theme }) => ({
         fontWeight: 'bold',
     },
 }));
-  
+
 const StyledCard = styled(Card)(({ theme }) => ({
     borderRadius: '1rem',
     boxShadow: '0 4px 15px rgba(255, 94, 135, 0.08)',
@@ -122,6 +142,45 @@ const AmountText = styled(Typography)(({ theme, type }) => ({
     color: type === 'income' ? COLORS.primary : COLORS.secondary,
 }));
 
+// 月份选择组件
+const MonthSelector = ({ year, month, onChange }) => {
+    const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    
+    return (
+        <Grid container spacing={2} alignItems="center">
+            <Grid item>
+                <FormControl variant="outlined" size="small">
+                    <InputLabel>年份</InputLabel>
+                    <Select
+                        value={year}
+                        label="年份"
+                        onChange={(e) => onChange(e.target.value, month)}
+                    >
+                        {years.map(y => (
+                            <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Grid>
+            <Grid item>
+                <FormControl variant="outlined" size="small">
+                    <InputLabel>月份</InputLabel>
+                    <Select
+                        value={month}
+                        label="月份"
+                        onChange={(e) => onChange(year, e.target.value)}
+                    >
+                        {months.map(m => (
+                            <MenuItem key={m} value={m}>{m}月</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Grid>
+        </Grid>
+    );
+};
+
 function AccountPage() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -131,13 +190,72 @@ function AccountPage() {
     const [note, setNote] = useState('');
     const [date, setDate] = useState(new Date());
     const [records, setRecords] = useState([]);
-    const [selectedUser, setSelectedUser] = useState('user1'); // user1 或 user2
+    const [selectedUser, setSelectedUser] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const { user, spouse, loading: authLoading } = useAuth();
+    
+    // 年月选择
+    const [selectedYear, setSelectedYear] = useState(getYear(new Date()));
+    const [selectedMonth, setSelectedMonth] = useState(getMonth(new Date()) + 1);
+    
+    // 编辑/删除相关状态
+    const [editingRecord, setEditingRecord] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [recordsPerPage] = useState(10);
+    
+    // 计算当月第一天和最后一天
+    const getMonthRange = (year, month) => {
+        const startDate = startOfMonth(new Date(year, month - 1));
+        const endDate = endOfMonth(new Date(year, month - 1));
+        return { startDate, endDate };
+    };
+    
+    // 从后端获取记录
+    const fetchRecords = async () => {
+        setLoading(true);
+        try {
+            const { startDate, endDate } = getMonthRange(selectedYear, selectedMonth);
+            const params = {
+                startDate: format(startDate, 'yyyy-MM-dd'),
+                endDate: format(endDate, 'yyyy-MM-dd')
+            };
+            
+            const response = await apiRequest('/api/account/records/couple', 'GET', params, navigate);
+            if (response && response.code === '200') {
+                setRecords(response.data || []);
+            } else {
+                setError(response ? response.message : '获取记录失败');
+            }
+        } catch (error) {
+            setError(error.message || '网络错误');
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // 在用户数据加载完成后初始化 selectedUser
+    useEffect(() => {
+        if (user) {
+            setSelectedUser(user.userId);
+        }
+        fetchRecords();
+    }, [user, selectedYear, selectedMonth]);
 
-    // 模拟用户数据
-    const users = [
-        { id: 'user1', name: '小明', avatar: 'https://picsum.photos/seed/user1/100/100' },
-        { id: 'user2', name: '小红', avatar: 'https://picsum.photos/seed/user2/100/100' }
-    ];
+    // 如果认证信息正在加载或者用户未登录，显示加载状态
+    if (authLoading || !user) {
+        return (
+            <Layout>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+                    <CircularProgress color="primary" />
+                </Box>
+            </Layout>
+        );
+    }
 
     // 支出分类
     const expenseCategories = [
@@ -163,20 +281,6 @@ function AccountPage() {
         { id: 'other', name: '其他', icon: <i class="fa fa-ellipsis-h"></i> }
     ];
 
-    // 加载历史记录
-    useEffect(() => {
-        // 模拟从API加载历史记录
-        const mockRecords = [
-            { id: 1, type: 'expense', amount: 128.5, category: 'food', note: '晚餐', date: new Date('2023-05-19'), user: 'user1' },
-            { id: 2, type: 'expense', amount: 85.0, category: 'shopping', note: '买水果', date: new Date('2023-05-19'), user: 'user2' },
-            { id: 3, type: 'income', amount: 5000, category: 'salary', note: '5月工资', date: new Date('2023-05-15'), user: 'user1' },
-            { id: 4, type: 'expense', amount: 1200, category: 'housing', note: '房租', date: new Date('2023-05-10'), user: 'user2' },
-            { id: 5, type: 'expense', amount: 320, category: 'entertainment', note: '看电影', date: new Date('2023-05-08'), user: 'user1' },
-        ];
-
-        setRecords(mockRecords);
-    }, []);
-
     // 处理金额输入
     const handleAmountChange = (e) => {
         // 只允许输入数字和小数点
@@ -186,6 +290,124 @@ function AccountPage() {
         if (decimalCount <= 1) {
             setAmount(value);
         }
+    };
+
+    // 提交记录
+    const submitRecord = async () => {
+        if (!amount) {
+            setError('请输入金额');
+            setOpenSnackbar(true);
+            return;
+        }
+
+        const newRecord = {
+            type: recordType,
+            amount: amount,
+            category: category,
+            note: note,
+            date: date,
+            userId: selectedUser // 使用当前选择的用户ID
+        };
+
+        // 如果是编辑模式，添加ID
+        if (isEditing && editingRecord) {
+            newRecord.id = editingRecord.id;
+        }
+
+        // 重置错误状态
+        setError('');
+        
+        try {
+            const endpoint = isEditing ? '/api/account/update' : '/api/account/add';
+            const response = await apiRequest(endpoint, 'POST', newRecord, navigate);
+            
+            if (response && response.code === '200') {
+                setSuccessMessage(isEditing ? '更新成功！' : '记账成功！');
+                setOpenSnackbar(true);
+                
+                // 刷新记录
+                fetchRecords();
+                
+                // 重置表单
+                resetForm();
+            } else {
+                setError(response ? response.message : (isEditing ? '更新失败' : '记账失败'));
+                setOpenSnackbar(true);
+            }
+        } catch (error) {
+            setError(error.message || (isEditing ? '更新出错' : '记账出错'));
+            setOpenSnackbar(true);
+        }
+    };
+    
+    // 重置表单
+    const resetForm = () => {
+        setAmount('');
+        setNote('');
+        setDate(new Date());
+        setRecordType('expense');
+        setCategory('food');
+        setIsEditing(false);
+        setEditingRecord(null);
+    };
+    
+    // 开始编辑记录
+    const startEditing = (record) => {
+        setEditingRecord(record);
+        setIsEditing(true);
+        setRecordType(record.type);
+        setAmount(record.amount.toString());
+        setCategory(record.category);
+        setNote(record.note || '');
+        setDate(parseISO(record.date));
+        setSelectedUser(record.userId);
+    };
+    
+    // 确认删除记录
+    const confirmDelete = (record) => {
+        setEditingRecord(record);
+        setIsDeleting(true);
+    };
+    
+    // 执行删除
+    const executeDelete = async () => {
+        if (!editingRecord) return;
+        
+        try {
+            const response = await apiRequest('/api/account/delete', 'POST', { id: editingRecord.id }, navigate);
+            
+            if (response && response.code === '200') {
+                setSuccessMessage('删除成功！');
+                setOpenSnackbar(true);
+                
+                // 刷新记录
+                fetchRecords();
+                
+                // 关闭删除确认
+                setIsDeleting(false);
+                setEditingRecord(null);
+            } else {
+                setError(response ? response.message : '删除失败');
+                setOpenSnackbar(true);
+            }
+        } catch (error) {
+            setError(error.message || '删除出错');
+            setOpenSnackbar(true);
+        }
+    };
+
+    // 计算总收入
+    const calculateTotalIncome = () => {
+        return records
+            .filter(r => r.type === 'income')
+            .reduce((total, record) => total + parseFloat(record.amount || 0), 0);
+    };
+
+    // 计算总支出
+    const calculateTotalExpense = () => {
+        return records
+            .filter(r => r.type === 'expense')
+            .reduce((total, record) => total + parseFloat(record.amount || 0), 0);
     };
 
     // 切换记录类型
@@ -202,37 +424,9 @@ function AccountPage() {
         setCategory(catId);
     };
 
-    // 提交记录
-    const submitRecord = () => {
-        if (!amount) {
-            return;
-        }
-
-        const newRecord = {
-            id: Date.now(),
-            type: recordType,
-            amount: parseFloat(amount),
-            category: category,
-            note: note,
-            date: date,
-            user: selectedUser
-        };
-
-        // 添加新记录
-        setRecords([newRecord, ...records]);
-
-        // 重置表单
-        setAmount('');
-        setNote('');
-        setDate(new Date());
-
-        // 显示成功提示
-        alert('记账成功！');
-    };
-
     // 格式化日期
-    const formatDate = (date) => {
-        return format(date, 'yyyy-MM-dd');
+    const formatDate = (dateStr) => {
+        return format(parseISO(dateStr), 'yyyy-MM-dd');
     };
 
     // 获取分类名称
@@ -244,26 +438,42 @@ function AccountPage() {
 
     // 获取用户信息
     const getUser = (userId) => {
-        return users.find(u => u.id === userId) || { name: userId };
-    };
-
-    // 计算总收入
-    const calculateTotalIncome = () => {
-        return records
-            .filter(r => r.type === 'income')
-            .reduce((total, record) => total + record.amount, 0);
-    };
-
-    // 计算总支出
-    const calculateTotalExpense = () => {
-        return records
-            .filter(r => r.type === 'expense')
-            .reduce((total, record) => total + record.amount, 0);
+        if (userId === user.userId) {
+            return {
+                id: user.userId,
+                name: user.userName || '我',
+                avatar: 'https://picsum.photos/seed/user1/100/100'
+            };
+        } else if (spouse && userId === spouse.userId) {
+            return {
+                id: spouse.userId,
+                name: spouse.userName || '伴侣',
+                avatar: 'https://picsum.photos/seed/user2/100/100'
+            };
+        }
+        return { id: userId, name: userId };
     };
 
     // 计算结余
     const calculateBalance = () => {
         return calculateTotalIncome() - calculateTotalExpense();
+    };
+
+    // 关闭提示框
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpenSnackbar(false);
+    };
+    
+    // 分页相关
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
+    
+    const paginate = (event, value) => {
+        setCurrentPage(value);
     };
 
     return (
@@ -290,10 +500,18 @@ function AccountPage() {
                 {/* 收支统计卡片 */}
                 <StyledCard>
                     <StyledHeader
-                        title="本月收支"
+                        title="收支统计"
                     />
                     <CardContent sx={{ padding: '1.5rem' }}>
-                        <Grid container spacing={3} alignItems="center">
+                        <MonthSelector 
+                            year={selectedYear} 
+                            month={selectedMonth} 
+                            onChange={(year, month) => {
+                                setSelectedYear(year);
+                                setSelectedMonth(month);
+                            }} 
+                        />
+                        <Grid container spacing={3} alignItems="center" mt={3}>
                             <Grid item xs={4} sx={{ textAlign: 'center' }}>
                                 <Typography variant="subtitle2" color="text.secondary">总收入</Typography>
                                 <Typography variant="h5" fontWeight="bold" color={COLORS.primary}>
@@ -319,6 +537,10 @@ function AccountPage() {
                 {/* 快速记账区域 */}
                 <StyledCard>
                     <Box sx={{ p: '1rem 1.5rem' }}>
+                        <Typography variant="h6" fontWeight="bold" mb={2}>
+                            {isEditing ? '编辑记录' : '快速记账'}
+                        </Typography>
+                        
                         {/* 记录类型选择 */}
                         <Grid container spacing={2} alignItems="center" mb={3}>
                             <Grid item>
@@ -354,12 +576,17 @@ function AccountPage() {
                                         onChange={(e) => setSelectedUser(e.target.value)}
                                         sx={{ borderRadius: '0.75rem' }}
                                     >
-                                        {users.map(user => (
-                                            <MenuItem key={user.id} value={user.id}>
-                                                <Avatar src={user.avatar} sx={{ mr: 2 }} />
-                                                {user.name}
+                                        {/* 直接使用 user 和 spouse 对象 */}
+                                        <MenuItem value={user.userId}>
+                                            <Avatar src={'https://picsum.photos/seed/user1/100/100'} sx={{ mr: 2 }} />
+                                            {user.userName || '我'}
+                                        </MenuItem>
+                                        {spouse && (
+                                            <MenuItem value={spouse.userId}>
+                                                <Avatar src={'https://picsum.photos/seed/user2/100/100'} sx={{ mr: 2 }} />
+                                                {spouse.userName || '伴侣'}
                                             </MenuItem>
-                                        ))}
+                                        )}
                                     </Select>
                                 </FormControl>
                             </Grid>
@@ -456,41 +683,151 @@ function AccountPage() {
                                 }
                             }}
                         >
-                            确认记账
+                            {isEditing ? '保存修改' : '确认记账'}
                         </Button>
+                        
+                        {/* 取消编辑按钮 */}
+                        {isEditing && (
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                fullWidth
+                                onClick={resetForm}
+                                sx={{
+                                    mt: 2,
+                                    py: '0.75rem',
+                                    borderRadius: '1rem',
+                                    textTransform: 'none',
+                                    fontSize: '1rem',
+                                }}
+                            >
+                                取消
+                            </Button>
+                        )}
                     </Box>
                 </StyledCard>
 
                 {/* 历史记录列表 */}
                 <StyledCard>
                     <CardHeader
-                        title="最近记录"
-                        action={
-                            <Button size="small" color="primary" onClick={() => navigate('/tool/account/history')}>
-                                查看全部
-                            </Button>
-                        }
+                        title={`${selectedYear}年${selectedMonth}月记录`}
                     />
                     <Divider />
-                    <List>
-                        {records.slice(0, 5).map(record => (
-                            <RecordItem key={record.id} type={record.type}>
-                                <ListItemAvatar>
-                                    <Avatar>
-                                        {getCategoryName(record.category).charAt(0)}
-                                    </Avatar>
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary={getCategoryName(record.category)}
-                                    secondary={`${getUser(record.user).name} · ${formatDate(record.date)} · ${record.note || '无备注'}`}
+                    {loading ? (
+                        <Box sx={{ p: 3, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">
+                                加载中...
+                            </Typography>
+                        </Box>
+                    ) : records.length === 0 ? (
+                        <Box sx={{ p: 3, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary">
+                                暂无记录
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Box>
+                            <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+                                <Table stickyHeader aria-label="sticky table">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>分类</TableCell>
+                                            <TableCell>记录人</TableCell>
+                                            <TableCell>金额</TableCell>
+                                            <TableCell>日期</TableCell>
+                                            <TableCell>备注</TableCell>
+                                            <TableCell>操作</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {currentRecords.map(record => (
+                                            <TableRow
+                                                key={record.id}
+                                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                            >
+                                                <TableCell component="th" scope="row">
+                                                    <Avatar sx={{ mr: 2, backgroundColor: record.type === 'income' ? COLORS.primary + '20' : COLORS.secondary + '20' }}>
+                                                        {getCategoryName(record.category).charAt(0)}
+                                                    </Avatar>
+                                                    {getCategoryName(record.category)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Avatar src={getUser(record.userId).avatar} sx={{ mr: 2 }} />
+                                                    {getUser(record.userId).name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <AmountText type={record.type}>{parseFloat(record.amount || 0).toFixed(2)}</AmountText>
+                                                </TableCell>
+                                                <TableCell>{formatDate(record.date)}</TableCell>
+                                                <TableCell>{record.note || '无'}</TableCell>
+                                                <TableCell>
+                                                    <IconButton color="primary" onClick={() => startEditing(record)}>
+                                                        <EditIcon />
+                                                    </IconButton>
+                                                    <IconButton color="error" onClick={() => confirmDelete(record)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                                <Pagination
+                                    count={Math.ceil(records.length / recordsPerPage)}
+                                    page={currentPage}
+                                    onChange={paginate}
+                                    color="primary"
                                 />
-                                <AmountText type={record.type}>{record.amount.toFixed(2)}</AmountText>
-                            </RecordItem>
-                        ))}
-                    </List>
+                            </Box>
+                        </Box>
+                    )}
                 </StyledCard>
             </Box>
             <BottomNavigationBar />
+
+            {/* 删除确认对话框 */}
+            <Dialog
+                open={isDeleting}
+                onClose={() => setIsDeleting(false)}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"确认删除"}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        你确定要删除这条记录吗？此操作无法撤销。
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mt={2}>
+                        {editingRecord && `${getCategoryName(editingRecord.category)} · ${formatDate(editingRecord.date)} · ${parseFloat(editingRecord.amount || 0).toFixed(2)}元`}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsDeleting(false)}>取消</Button>
+                    <Button onClick={executeDelete} color="error" autoFocus>
+                        删除
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* 提示框 */}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={error ? 'error' : 'success'}
+                    sx={{ width: '100%' }}
+                >
+                    {error || successMessage}
+                </Alert>
+            </Snackbar>
         </Layout>
     );
 }

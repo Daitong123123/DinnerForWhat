@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Typography,
@@ -11,8 +11,8 @@ import {
     DialogTitle,
     DialogContentText
 } from '@mui/material';
+import { useAuth } from './AuthContext.js';
 import { useNavigate } from 'react-router-dom';
-import baseUrl from '../config.js';
 import COLORS from '../constants/color.js';
 
 function LoginPage() {
@@ -21,48 +21,19 @@ function LoginPage() {
     const [password, setPassword] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleLogin = async () => {
-        let loginData;
         if (isLoginWithPhone) {
             setErrorMessage('暂不支持手机号登录哦！');
             return;
-        } else {
-            loginData = { username, password };
         }
+        
         try {
-            const response = await fetch(`http://${baseUrl}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(loginData),
-                credentials: 'include'
-            });
-            const result = await response.json();
-            if (result.code === '200') {
-                // 提取响应头中的 userId
-                const userId = response.headers.get('userid');
-                // 获取用户昵称
-                const userInfoResponse = await fetch(`http://${baseUrl}/friend-info?userId=${userId}`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const userInfo = await userInfoResponse.json();
-                // 保存用户信息到本地存储
-                localStorage.setItem('userId', userId);
-                if (userInfo && userInfo.userNickName) {
-                    localStorage.setItem('userNickName', userInfo.userNickName);
-                }
-                // 跳转到 DishPage
-                navigate('/dish');
-            } else {
-                setErrorMessage(result.message);
-            }
+            await login({ username, password });
         } catch (error) {
-            console.error('登录请求出错:', error);
-            setErrorMessage('登录请求出错，请稍后再试');
+            setErrorMessage(error.message || '登录失败，请重试');
         }
     };
 
@@ -74,10 +45,6 @@ function LoginPage() {
         setOpenDialog(false);
         setIsLoginWithPhone(false);
     };
-
-    useEffect(() => {
-        document.title = '饭菜小记 - 登录';
-    }, []);
 
     return (
         <Box
@@ -293,4 +260,4 @@ function LoginPage() {
     );
 }
 
-export default LoginPage;    
+export default LoginPage;
