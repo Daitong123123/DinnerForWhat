@@ -7,8 +7,8 @@ const AuthContext = createContext({
     user: null,
     spouse: null,
     loading: true,
-    login: () => {},
-    logout: () => {}
+    login: () => { },
+    logout: () => { }
 });
 
 export const AuthProvider = ({ children }) => {
@@ -24,13 +24,13 @@ export const AuthProvider = ({ children }) => {
                 // 获取并解析localStorage中的用户信息
                 const userInfoStr = localStorage.getItem('userInfo');
                 const spouseInfoStr = localStorage.getItem('spouseInfo');
-                
+
                 // 分别检查并设置user和spouse
                 if (userInfoStr) {
                     const userData = JSON.parse(userInfoStr);
                     setUser(userData);
                 }
-                
+
                 if (spouseInfoStr) {
                     const spouseData = JSON.parse(spouseInfoStr);
                     setSpouse(spouseData);
@@ -59,31 +59,35 @@ export const AuthProvider = ({ children }) => {
                 credentials: 'include'
             });
             const result = await response.json();
-            
+
             if (result.code === '200' && result.data) {
                 const userData = result.data;
-                
+
                 // 使用JSON.stringify存储对象
                 localStorage.setItem('userId', userData.userId);
                 localStorage.setItem('userInfo', JSON.stringify(userData));
                 localStorage.setItem('userNickName', userData.userName || userData.userId);
                 setUser(userData);
-                
+
                 // 如果用户有配偶ID，获取并保存配偶信息
                 if (userData.coupleId) {
                     const spouseResponse = await fetch(`http://${baseUrl}/getCouple?coupleId=${userData.coupleId}`, {
                         credentials: 'include'
                     });
                     const spouseResult = await spouseResponse.json();
-                    
+
                     if (spouseResult.code === '200' && spouseResult.data) {
                         const spouseData = spouseResult.data;
                         localStorage.setItem('spouseId', spouseData.userId);
                         localStorage.setItem('spouseInfo', JSON.stringify(spouseData));
                         setSpouse(spouseData);
                     }
+                } else {
+                    localStorage.setItem('spouseId', null);
+                    localStorage.setItem('spouseInfo', null);
+                    setSpouse(null);
                 }
-                
+
                 navigate('/dish');
                 return true;
             } else {

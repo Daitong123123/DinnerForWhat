@@ -224,8 +224,12 @@ function AccountPage() {
                 startDate: format(startDate, 'yyyy-MM-dd'),
                 endDate: format(endDate, 'yyyy-MM-dd')
             };
-            
-            const response = await apiRequest('/api/account/records/couple', 'GET', params, navigate);
+            let response = undefined;
+            if(spouse){
+                 response = await apiRequest('/api/account/records/couple', 'GET', params, navigate);
+            }else{
+                 response = await apiRequest('/api/account/records/user', 'GET', params, navigate);
+            }
             if (response && response.code === '200') {
                 setRecords(response.data || []);
             } else {
