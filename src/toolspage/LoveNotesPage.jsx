@@ -27,7 +27,11 @@ import {
     AppBar,
     Toolbar,
     Backdrop,
-    CircularProgress
+    CircularProgress,
+    Snackbar,
+    Alert,
+    Paper,
+    CardMedia
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BottomNavigationBar from '../BottomNavigationBar.jsx';
@@ -41,11 +45,12 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import PersonIcon from '@mui/icons-material/Person';
-import Person2Icon from '@mui/icons-material/Person2';
 import { styled } from '@mui/system';
 import { format, parseISO } from 'date-fns';
 import COLORS from '../constants/color.js';
-import { v4 as uuidv4 } from 'uuid';
+import apiRequest from '../api.js';
+import { useAuth } from '../login/AuthContext.js';
+import heartPattern from '../assets/heart-pattern.svg'; // 爱心背景图案
 
 // 自定义样式
 const StyledHeader = styled(CardHeader)(({ theme }) => ({
@@ -104,6 +109,78 @@ const EditTextField = styled(TextField)(({ theme }) => ({
     },
 }));
 
+// 空状态样式
+const EmptyStateContainer = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '50vh',
+    padding: '2rem',
+    backgroundColor: 'white',
+    borderRadius: '1.5rem',
+    boxShadow: '0 4px 20px rgba(255, 94, 135, 0.05)',
+    position: 'relative',
+    overflow: 'hidden',
+    
+    // 背景爱心图案
+    '&:before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundImage: `url(${heartPattern})`,
+        backgroundSize: '200px',
+        backgroundRepeat: 'repeat',
+        opacity: '0.05',
+        zIndex: 0,
+    }
+}));
+
+const EmptyStateTitle = styled(Typography)(({ theme }) => ({
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: '1rem',
+    zIndex: 1,
+    textAlign: 'center',
+}));
+
+const EmptyStateMessage = styled(Typography)(({ theme }) => ({
+    fontSize: '1rem',
+    color: COLORS.dark,
+    marginBottom: '2rem',
+    maxWidth: '300px',
+    textAlign: 'center',
+    zIndex: 1,
+}));
+
+const FloatingHeart = styled(Box)(({ theme, position, size, opacity }) => ({
+    position: 'absolute',
+    width: `${size}px`,
+    height: `${size}px`,
+    background: `radial-gradient(circle, ${COLORS.primary} 0%, ${COLORS.primary + '80'} 100%)`,
+    borderRadius: '50%',
+    opacity: opacity,
+    zIndex: 0,
+    animation: `float${Math.floor(Math.random() * 3) + 1} 8s ease-in-out infinite`,
+    '@keyframes float1': {
+        '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+        '50%': { transform: 'translateY(-20px) rotate(10deg)' },
+    },
+    '@keyframes float2': {
+        '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+        '50%': { transform: 'translateY(-15px) rotate(-10deg)' },
+    },
+    '@keyframes float3': {
+        '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+        '50%': { transform: 'translateY(-25px) rotate(5deg)' },
+    },
+    ...position,
+}));
+
 function LoveNotesPage() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -115,61 +192,62 @@ function LoveNotesPage() {
     const [anchorEl, setAnchorEl] = useState(null);
     const noteTitleRef = useRef(null);
     const noteContentRef = useRef(null);
+    const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    
+    const { user, spouse, loading: authLoading } = useAuth();
+    const coupleId = user?.coupleId || ''; // 从用户信息中获取coupleId，字符串类型
     
     // 模拟用户数据
     const users = [
-        { id: 'user1', name: '小明', avatar: 'https://picsum.photos/seed/user1/100/100' },
-        { id: 'user2', name: '小红', avatar: 'https://picsum.photos/seed/user2/100/100' }
+        { id: user?.userId || 'user1', name: user?.userName || '我', avatar: 'https://picsum.photos/seed/user1/100/100' },
+        spouse ? { id: spouse.userId, name: spouse.userName || '伴侣', avatar: 'https://picsum.photos/seed/user2/100/100' } : null
+    ].filter(Boolean);
+    
+    // 空状态提示语数组
+    const emptyStateMessages = [
+        "记录下你们的点点滴滴，创造专属回忆",
+        "每一段爱情都值得被珍藏，从这里开始",
+        "用文字留住心动瞬间，让爱有迹可循",
+        "写下你们的故事，让时光见证爱情成长",
+        "爱情需要仪式感，记录是最好的告白"
     ];
+    
+    // 随机选择一条提示语
+    const randomMessage = emptyStateMessages[Math.floor(Math.random() * emptyStateMessages.length)];
     
     // 加载笔记数据
     useEffect(() => {
-        // 模拟从API加载笔记数据
-        const mockNotes = [
-            { 
-                id: uuidv4(), 
-                title: '第一次约会', 
-                content: '今天是我们第一次约会的日子，去了那家我们一直想去的咖啡厅，聊了很多很多，感觉时间过得好快。我永远不会忘记这一天，希望以后还有更多美好的回忆。', 
-                date: new Date('2023-05-10'), 
-                author: 'user1',
-                tags: ['约会', '纪念日']
-            },
-            { 
-                id: uuidv4(), 
-                title: '我们的恋爱一周年', 
-                content: '不知不觉已经一年了，时间过得真快。谢谢你这一年来的陪伴和爱，希望我们能一直走下去，创造更多美好的回忆。', 
-                date: new Date('2023-06-15'), 
-                author: 'user2',
-                tags: ['周年纪念日', '爱情']
-            },
-            { 
-                id: uuidv4(), 
-                title: '周末的短途旅行', 
-                content: '这个周末我们一起去了周边的小镇，风景很美，我们拍了很多照片。最喜欢和你一起旅行的时光，无论去哪里，只要有你在身边就好。', 
-                date: new Date('2023-07-05'), 
-                author: 'user1',
-                tags: ['旅行', '周末']
-            },
-            { 
-                id: uuidv4(), 
-                title: '今天向你表白了', 
-                content: '犹豫了很久，今天终于鼓起勇气向你表白了。当你说愿意做我女朋友的时候，我真的好开心。我会好好爱你，珍惜你，给你幸福的。', 
-                date: new Date('2023-04-01'), 
-                author: 'user1',
-                tags: ['表白', '爱情']
-            },
-            { 
-                id: uuidv4(), 
-                title: '谢谢你的生日惊喜', 
-                content: '我的生日，你为我准备了一个惊喜派对，邀请了我的好朋友们。我真的很感动，也很开心。这是我过得最难忘的一个生日，谢谢你为我做的一切。', 
-                date: new Date('2023-03-15'), 
-                author: 'user2',
-                tags: ['生日', '惊喜']
-            },
-        ];
-        
-        setNotes(mockNotes);
-    }, []);
+        if (coupleId) {
+            fetchNotes();
+        }
+    }, [coupleId]);
+    
+    // 获取笔记数据
+    const fetchNotes = async () => {
+        setLoading(true);
+        try {
+            const response = await apiRequest('/api/love-note/list', 'GET', { coupleId }, navigate);
+            if (response && response.code === '200') {
+                // 转换日期格式
+                const formattedNotes = response.data.map(note => ({
+                    ...note,
+                    date: new Date(note.createTime),
+                    tags: note.tags ? note.tags.split(',') : []
+                }));
+                setNotes(formattedNotes);
+            } else {
+                setError(response?.message || '获取笔记失败');
+                setOpenSnackbar(true);
+            }
+        } catch (error) {
+            setError('网络错误，请稍后重试');
+            setOpenSnackbar(true);
+        } finally {
+            setLoading(false);
+        }
+    };
     
     // 格式化日期
     const formatDate = (date) => {
@@ -183,7 +261,19 @@ function LoveNotesPage() {
     
     // 打开笔记对话框
     const openNoteDialog = (note = null, isNew = false) => {
-        setSelectedNote(note ? { ...note } : { id: uuidv4(), title: '', content: '', date: new Date(), author: 'user1', tags: [] });
+        setSelectedNote(note ? { 
+            ...note, 
+            date: note.date ? new Date(note.date) : new Date(),
+            tags: note.tags || []
+        } : { 
+            id: null, 
+            coupleId: coupleId,
+            title: '', 
+            content: '', 
+            date: new Date(), 
+            authorId: user?.userId || 'user1', 
+            tags: [] 
+        });
         setIsNewNote(isNew);
         setDialogOpen(true);
         
@@ -202,41 +292,77 @@ function LoveNotesPage() {
     };
     
     // 保存笔记
-    const saveNote = () => {
+    const saveNote = async () => {
         if (!selectedNote.title.trim()) {
-            alert('请输入笔记标题');
+            setError('请输入笔记标题');
+            setOpenSnackbar(true);
             return;
         }
         
         setLoading(true);
         
-        // 模拟API请求延迟
-        setTimeout(() => {
-            if (isNewNote) {
-                // 添加新笔记
-                setNotes([selectedNote, ...notes]);
-            } else {
-                // 更新现有笔记
-                setNotes(notes.map(note => note.id === selectedNote.id ? selectedNote : note));
-            }
+        try {
+            // 准备提交的数据
+            const noteData = {
+                ...selectedNote,
+                tags: selectedNote.tags.join(','),
+                createTime: selectedNote.date?.toISOString() || new Date().toISOString(),
+                coupleId: coupleId
+            };
             
+            let result;
+            const endpoint = isNewNote ? '/api/love-note/add' : '/api/love-note/update';
+            
+            result = await apiRequest(endpoint, 'POST', noteData, navigate);
+            
+            if (result && result.code === '200') {
+                setSuccessMessage(isNewNote ? '笔记创建成功！' : '笔记更新成功！');
+                setOpenSnackbar(true);
+                
+                // 更新本地状态
+                if (isNewNote) {
+                    setNotes([{ ...selectedNote, id: result.data }, ...notes]);
+                } else {
+                    setNotes(notes.map(note => note.id === selectedNote.id ? selectedNote : note));
+                }
+                
+                closeNoteDialog();
+            } else {
+                setError(result?.message || (isNewNote ? '创建笔记失败' : '更新笔记失败'));
+                setOpenSnackbar(true);
+            }
+        } catch (error) {
+            setError('网络错误，请稍后重试');
+            setOpenSnackbar(true);
+        } finally {
             setLoading(false);
-            closeNoteDialog();
-            alert('笔记保存成功！');
-        }, 800);
+        }
     };
     
     // 删除笔记
-    const deleteNote = (noteId) => {
+    const deleteNote = async (noteId) => {
         if (window.confirm('确定要删除这条笔记吗？')) {
             setLoading(true);
             
-            // 模拟API请求延迟
-            setTimeout(() => {
-                setNotes(notes.filter(note => note.id !== noteId));
+            try {
+                const result = await apiRequest('/api/love-note/delete', 'GET', { id: noteId }, navigate);
+                
+                if (result && result.code === '200') {
+                    setSuccessMessage('笔记已删除！');
+                    setOpenSnackbar(true);
+                    
+                    // 更新本地状态
+                    setNotes(notes.filter(note => note.id !== noteId));
+                } else {
+                    setError(result?.message || '删除笔记失败');
+                    setOpenSnackbar(true);
+                }
+            } catch (error) {
+                setError('网络错误，请稍后重试');
+                setOpenSnackbar(true);
+            } finally {
                 setLoading(false);
-                alert('笔记已删除！');
-            }, 500);
+            }
         }
     };
     
@@ -270,6 +396,25 @@ function LoveNotesPage() {
     const removeTag = (tagToRemove) => {
         updateNoteField('tags', selectedNote.tags.filter(tag => tag !== tagToRemove));
     };
+    
+    // 关闭提示框
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpenSnackbar(false);
+    };
+
+    // 如果认证信息正在加载或者用户未登录，显示加载状态
+    if (authLoading || !user) {
+        return (
+            <Layout>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+                    <CircularProgress color="primary" />
+                </Box>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
@@ -314,6 +459,12 @@ function LoveNotesPage() {
                 
                 {/* 笔记列表 */}
                 <Box sx={{ mt: 2 }}>
+                    {loading && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                            <CircularProgress color="primary" />
+                        </Box>
+                    )}
+                    
                     {notes.length > 0 ? (
                         <List>
                             {notes.map(note => (
@@ -329,13 +480,13 @@ function LoveNotesPage() {
                                                     {formatDate(note.date)}
                                                     <span sx={{ mx: 2 }}>|</span>
                                                     <PersonIcon fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
-                                                    {getUser(note.author).name}
+                                                    {getUser(note.authorId).name}
                                                 </Typography>
                                                 <Typography variant="body1" color="text.primary" mb={2} lineClamp={2}>
                                                     {note.content}
                                                 </Typography>
                                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                    {note.tags.map(tag => (
+                                                    {note.tags?.filter(tag => tag).map(tag => (
                                                         <Chip
                                                             key={tag}
                                                             label={tag}
@@ -367,21 +518,49 @@ function LoveNotesPage() {
                                 </NoteCard>
                             ))}
                         </List>
-                    ) : (
-                        <Box sx={{ textAlign: 'center', py: 8 }}>
-                            <Typography variant="h6" color="text.secondary" mb={3}>
-                                暂无爱情笔记
-                            </Typography>
+                    ) : !loading && (
+                        <EmptyStateContainer>
+                            {/* 浮动爱心装饰 */}
+                            <FloatingHeart position={{ top: '10%', left: '15%' }} size={30} opacity={0.2} />
+                            <FloatingHeart position={{ top: '20%', right: '20%' }} size={25} opacity={0.3} />
+                            <FloatingHeart position={{ bottom: '30%', left: '10%' }} size={20} opacity={0.25} />
+                            <FloatingHeart position={{ bottom: '20%', right: '15%' }} size={35} opacity={0.15} />
+                            
+                            {/* 主内容 */}
+                            <Avatar 
+                                sx={{ 
+                                    width: 80, 
+                                    height: 80, 
+                                    backgroundColor: COLORS.primary, 
+                                    mb: 3, 
+                                    boxShadow: '0 8px 20px rgba(255, 94, 135, 0.3)' 
+                                }}
+                            >
+                                <AddIcon fontSize="large" />
+                            </Avatar>
+                            
+                            <EmptyStateTitle>还没有爱情笔记</EmptyStateTitle>
+                            <EmptyStateMessage>{randomMessage}</EmptyStateMessage>
+                            
                             <ActionButton
                                 variant="contained"
                                 color="primary"
                                 onClick={() => openNoteDialog(null, true)}
                                 startIcon={<AddIcon />}
-                                sx={{ borderRadius: '1rem', py: '0.75rem', fontWeight: 'bold' }}
+                                sx={{ 
+                                    borderRadius: '1rem', 
+                                    py: '0.75rem', 
+                                    px: '2rem', 
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 15px rgba(255, 94, 135, 0.2)',
+                                    '&:hover': {
+                                        boxShadow: '0 6px 20px rgba(255, 94, 135, 0.3)',
+                                    }
+                                }}
                             >
-                                新建第一条笔记
+                                开始记录
                             </ActionButton>
-                        </Box>
+                        </EmptyStateContainer>
                     )}
                 </Box>
             </Box>
@@ -463,7 +642,7 @@ function LoveNotesPage() {
                             标签
                         </Typography>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                            {selectedNote?.tags.map(tag => (
+                            {selectedNote?.tags?.map(tag => (
                                 <Chip
                                     key={tag}
                                     label={tag}
@@ -500,7 +679,7 @@ function LoveNotesPage() {
                     <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box>
                             <PersonIcon sx={{ mr: 1, verticalAlign: 'middle', color: COLORS.primary }} />
-                            <span style={{ fontWeight: '500' }}>{getUser(selectedNote?.author || 'user1').name}</span>
+                            <span style={{ fontWeight: '500' }}>{getUser(selectedNote?.authorId || user?.userId || 'user1').name}</span>
                         </Box>
                         <Box>
                             <DateRangeIcon sx={{ mr: 1, verticalAlign: 'middle', color: COLORS.primary }} />
@@ -538,6 +717,22 @@ function LoveNotesPage() {
             </Dialog>
             
             <BottomNavigationBar />
+            
+            {/* 提示框 */}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={3000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={error ? 'error' : 'success'}
+                    sx={{ width: '100%' }}
+                >
+                    {error || successMessage}
+                </Alert>
+            </Snackbar>
         </Layout>
     );
 }

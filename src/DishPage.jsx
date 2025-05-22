@@ -272,7 +272,7 @@ function DishPage() {
                     maxWidth: 600,
                     boxShadow: '0 4px 12px rgba(255, 94, 135, 0.1)',
                     backgroundColor: '#fff',
-                    borderRadius: 16,
+                    borderRadius: 8,
                     overflow: 'hidden',
                     '@media (max-width: 600px)': {
                         p: 2,

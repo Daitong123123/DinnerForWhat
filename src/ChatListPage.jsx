@@ -48,21 +48,25 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
                 </Tabs>
                 <IconButton onClick={onAddFriendClick} color="primary" sx={{ color: COLORS.primary }}><FaUserPlus /></IconButton>
             </Box>
-            <List sx={{ flexGrow: 1, overflowY: 'auto', backgroundColor: COLORS.light }}>
+            <List sx={{ flexGrow: 1, 
+                overflowY: 'auto', 
+                backgroundColor: COLORS.light,
+                padding: '4px 8px'
+                }}>
                 {selectedTab === 0 ? (
                     friends.map((friend) => (
                         <ListItem key={friend.id} onClick={() => onFriendSelect(friend)}
                             sx={{
                                 cursor: 'pointer',
-                                padding: '16px',
+                                padding: '10px',
                                 '&:hover': { backgroundColor: '#fff' },
                                 transition: 'background-color 0.2s ease',
                                 '&:hover .MuiAvatar-root': {
                                     transform: 'scale(1.05)',
                                 },
                                 backgroundColor: '#fff',
-                                borderRadius: '12px',
-                                margin: '8px 16px',
+                                borderRadius: '10px',
+                                margin: '8px 0px',
                                 boxShadow: '0 2px 8px rgba(255, 94, 135, 0.05)'
                             }}
                         >
@@ -72,9 +76,9 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
                     ))
                 ) : (
                     <>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', padding: '16px 16px 8px 16px', color: COLORS.dark, marginLeft: 8 }}>好友请求</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', padding: '16px 16px 8px 16px', color: COLORS.dark }}>好友请求</Typography>
                         {friendRequests.filter(req => req.requestTo === currentUserId).length === 0 && (
-                            <ListItem sx={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', margin: '8px 16px' }}><Typography sx={{ color: '#666', textAlign: 'center' }}>暂无好友请求</Typography></ListItem>
+                            <ListItem sx={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', margin: '8px 0px' }}><Typography sx={{ color: '#666', textAlign: 'center' }}>暂无好友请求</Typography></ListItem>
                         )}
                         {friendRequests.filter(req => req.requestTo === currentUserId).map((request) => (
                             <ListItem key={request.requestFrom} onClick={() => onRequestClick(request)}
@@ -88,7 +92,7 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
                                     justifyContent: 'space-between',
                                     backgroundColor: '#fff',
                                     borderRadius: '12px',
-                                    margin: '8px 16px',
+                                    margin: '8px 0px',
                                     boxShadow: '0 2px 8px rgba(255, 94, 135, 0.05)'
                                 }}
                             >
@@ -129,9 +133,9 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
                             </ListItem>
                         ))}
                         <Divider sx={{ my: 2, backgroundColor: COLORS.secondary, margin: '0 16px' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', padding: '16px 16px 8px 16px', color: COLORS.dark, marginLeft: 8 }}>我的申请</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', padding: '16px 16px 8px 16px', color: COLORS.dark}}>我的申请</Typography>
                         {friendRequests.filter(req => req.requestFrom === currentUserId).length === 0 && (
-                            <ListItem sx={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', margin: '8px 16px' }}><Typography sx={{ color: '#666', textAlign: 'center' }}>暂无我的申请</Typography></ListItem>
+                            <ListItem sx={{ padding: '16px', backgroundColor: '#fff', borderRadius: '12px', margin: '8px 0px' }}><Typography sx={{ color: '#666', textAlign: 'center' }}>暂无我的申请</Typography></ListItem>
                         )}
                         {friendRequests.filter(req => req.requestFrom === currentUserId).map((request) => (
                             <ListItem key={request.requestTo} onClick={() => onRequestClick(request)}
@@ -145,7 +149,7 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
                                     justifyContent: 'space-between',
                                     backgroundColor: '#fff',
                                     borderRadius: '12px',
-                                    margin: '8px 16px',
+                                    margin: '8px 0px',
                                     boxShadow: '0 2px 8px rgba(255, 94, 135, 0.05)'
                                 }}
                             >
