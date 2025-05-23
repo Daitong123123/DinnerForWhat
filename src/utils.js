@@ -1,7 +1,15 @@
-import { Typography } from '@mui/material';
 
-import { Card } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Card,
+    Avatar,
+    CircularProgress
+} from '@mui/material';
 import sha1 from 'js-sha1';
+import { CloudUploadOutlined } from '@mui/icons-material';
+import COLORS from './constants/color';
+import apiRequest from './api';
 
 export const calculateFileHash = (file) => {
     return new Promise((resolve, reject) => {
@@ -123,4 +131,84 @@ export const renderCookbookCard = (cookbook) => {
             />
         </Card>
     );
-};    
+};   
+
+export const  getUrlByIconId = async(iconId)=>{
+    try {
+        // 使用apiRequest替代fetch
+        const response = await apiRequest(`/aliyun/download`, 'GET', {fileId: iconId });
+        
+        if (response && response.code === '200' && response.data) {
+            return response.data;
+        } else {
+            console.error('获取头像失败:', response?.message || '未知错误');
+            return undefined;
+        }
+    } catch (error) {
+        console.error('获取头像请求出错:', error);
+    } 
+}
+
+
+export const UserAvatar = ({ iconId, name, avatarUrl, size = 120, loading = false, editable = false, onEdit, previewUrl, hasPreview }) => {
+    const firstChar = name ? name.charAt(0).toUpperCase() : 'U';
+    
+    return (
+        <Box position="relative" display="inline-flex" >
+            {loading ? (
+                <Box 
+                    sx={{ 
+                        width: size, 
+                        height: size, 
+                        borderRadius: '50%',
+                        backgroundColor: '#f0f0f0',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 4px 15px rgba(255, 94, 135, 0.3)'
+                    }}
+                >
+                    <CircularProgress size={size / 3} color="primary" />
+                </Box>
+            ) : (
+                <Avatar 
+                    sx={{ 
+                        width: size, 
+                        height: size, 
+                        fontSize: size / 3,
+                        boxShadow: '0 4px 15px rgba(255, 94, 135, 0.3)',
+                        border: '2px solid white',
+                        transition: 'all 0.3s ease'
+                    }}
+                    src={hasPreview ? previewUrl : avatarUrl}
+                >
+                    {!avatarUrl && !previewUrl && firstChar}
+                </Avatar>
+            )}
+            
+            {editable && (
+                <Box 
+                    position="absolute" 
+                    bottom={0} 
+                    right={0} 
+                    sx={{
+                        backgroundColor: COLORS.primary,
+                        color: 'white',
+                        borderRadius: '50%',
+                        padding: '4px',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                            transform: 'scale(1.1)',
+                            backgroundColor: '#FF4778'
+                        }
+                    }}
+                    onClick={onEdit}
+                >
+                    <CloudUploadOutlined fontSize="small" />
+                </Box>
+            )}
+        </Box>
+    );
+};

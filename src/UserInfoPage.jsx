@@ -20,8 +20,8 @@ import BottomNavigationBar from './BottomNavigationBar.jsx';
 import Layout from './Layout.jsx';
 import baseUrl from './config.js';
 import apiRequest from './api.js';
-import { Upload, CloudUploadOutlined, CloseOutlined } from '@mui/icons-material';
-import { calculateFileHash } from './utils';
+import { Upload, CloseOutlined } from '@mui/icons-material';
+import { calculateFileHash, UserAvatar } from './utils';
 
 // 恋爱记风格配色
 const COLORS = {
@@ -233,70 +233,6 @@ function UserInfoPage() {
         } finally {
             setUploadingAvatar(false);
         }
-    };
-
-    // 头像组件
-    const UserAvatar = ({ iconId, name, avatarUrl, size = 120, loading = false, editable = false, onEdit, previewUrl, hasPreview }) => {
-        const firstChar = name ? name.charAt(0).toUpperCase() : 'U';
-        
-        return (
-            <Box position="relative" display="inline-flex" >
-                {loading ? (
-                    <Box 
-                        sx={{ 
-                            width: size, 
-                            height: size, 
-                            borderRadius: '50%',
-                            backgroundColor: '#f0f0f0',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: '0 4px 15px rgba(255, 94, 135, 0.3)'
-                        }}
-                    >
-                        <CircularProgress size={size / 3} color="primary" />
-                    </Box>
-                ) : (
-                    <Avatar 
-                        sx={{ 
-                            width: size, 
-                            height: size, 
-                            fontSize: size / 3,
-                            boxShadow: '0 4px 15px rgba(255, 94, 135, 0.3)',
-                            border: '2px solid white',
-                            transition: 'all 0.3s ease'
-                        }}
-                        src={hasPreview ? previewUrl : avatarUrl}
-                    >
-                        {!avatarUrl && !previewUrl && firstChar}
-                    </Avatar>
-                )}
-                
-                {editable && (
-                    <Box 
-                        position="absolute" 
-                        bottom={0} 
-                        right={0} 
-                        sx={{
-                            backgroundColor: COLORS.primary,
-                            color: 'white',
-                            borderRadius: '50%',
-                            padding: '4px',
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                                transform: 'scale(1.1)',
-                                backgroundColor: '#FF4778'
-                            }
-                        }}
-                        onClick={onEdit}
-                    >
-                        <CloudUploadOutlined fontSize="small" />
-                    </Box>
-                )}
-            </Box>
-        );
     };
 
     if (authLoading) {

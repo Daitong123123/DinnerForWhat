@@ -24,6 +24,7 @@ import GomokuInviteCard from './GomokuInviteCard.jsx';
 import { renderStars, renderCookbookCard ,calculateFileHash} from './utils.js';
 import baseUrl from './config.js';
 import apiRequest from './api.js';
+import DynamicAvatar from './commons/DynamicAvatar.jsx';
 
 // 恋爱记风格配色
 const COLORS = {
@@ -230,81 +231,98 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
                 backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23FF5E87\" fill-opacity=\"0.05\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
             }}>
                 {friendMessages[selectedFriend.id]?.map((message, index) => (
-                    <ListItem key={index} alignItems="flex-start" sx={{ justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2, flexDirection: 'row' }}>
-                        {message.sender === 'user' ? (
-                            <>
-                                <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'flex-end' }}>
-                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? '#666' : COLORS.primary, marginRight: 2, flexDirection: 'row' }}>
-                                        {message.isRead ? '已读' : '未读'}
-                                    </Typography>
-                                    {message.messageType === 'image' ? (
-                                        <ImageMessage
-                                            fileId={message.text}
-                                            onImageClick={(e, url) => handleImageClick(e, url)}
-                                        />
-                                    ) : message.messageType === 'cookBook' ? (
-                                        renderCookbookCard(JSON.parse(message.text))
-                                    ) : message.messageType === 'Gomoku' ? (
-                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
-                                    ) : (
-                                        <Box sx={{
-                                            backgroundColor: COLORS.primary,
-                                            borderRadius: '20px 20px 4px 20px',
-                                            padding: '8px 16px',
-                                            // 关键修改：优化气泡宽度
-                                            maxWidth: {
-                                                xs: '75%',  // 小屏幕设备使用75%宽度
-                                                sm: '85%'   // 大屏幕设备使用85%宽度
-                                            },
-                                            wordBreak: 'break-word',
-                                            whiteSpace: 'pre-wrap',
-                                            boxShadow: '0 2px 4px rgba(255, 94, 135, 0.2)',
-                                            color: 'white'
-                                        }}>
-                                            {message.text}
-                                        </Box>
-                                    )}
-                                </Box>
-                                <Avatar sx={{ marginLeft: 2, width: 36, height: 36, boxShadow: '0 2px 4px rgba(255, 94, 135, 0.15)', backgroundColor: COLORS.primary, color: 'white' }}>{selfAvatar}</Avatar>
-                            </>
-                        ) : (
-                            <>
-                                <Avatar sx={{ marginRight: 2, width: 36, height: 36, boxShadow: '0 2px 4px rgba(255, 94, 135, 0.15)', backgroundColor: COLORS.primary, color: 'white' }}>{selectedFriend.avatar}</Avatar>
-                                <Box sx={{ display: 'flex', alignItems: 'flex-start', flexDirection: 'row' }}>
-                                    {message.messageType === 'image' ? (
-                                        <ImageMessage
-                                            fileId={message.text}
-                                            onImageClick={(e, url) => handleImageClick(e, url)}
-                                        />
-                                    ) : message.messageType === 'cookBook' ? (
-                                        renderCookbookCard(JSON.parse(message.text))
-                                    ) : message.messageType === 'Gomoku' ? (
-                                        <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
-                                    ) : (
-                                        <Box sx={{
-                                            backgroundColor: 'white',
-                                            borderRadius: '20px 20px 20px 4px',
-                                            padding: '8px 16px',
-                                            // 关键修改：优化气泡宽度
-                                            maxWidth: {
-                                                xs: '75%',  // 小屏幕设备使用75%宽度
-                                                sm: '85%'   // 大屏幕设备使用85%宽度
-                                            },
-                                            wordBreak: 'break-word',
-                                            whiteSpace: 'pre-wrap',
-                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                            color: COLORS.dark
-                                        }}>
-                                            {message.text}
-                                        </Box>
-                                    )}
-                                    <Typography sx={{ fontSize: '0.8rem', color: message.isRead ? '#666' : COLORS.primary, marginLeft: 2, flexDirection: 'row' }}>
-                                        {message.isRead ? '已读' : '未读'}
-                                    </Typography>
-                                </Box>
-                            </>
-                        )}
-                    </ListItem>
+                   <ListItem key={index} alignItems="flex-start" sx={{ justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2, flexDirection: 'row' }}>
+    {message.sender === 'user' ? (
+        <>
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', // 垂直居中
+                flexDirection: 'row', 
+                justifyContent: 'flex-end' 
+            }}>
+                <Typography sx={{ 
+                    fontSize: '0.8rem', 
+                    color: message.isRead ? '#666' : COLORS.primary, 
+                    marginRight: 2, 
+                    whiteSpace: 'nowrap' // 防止换行
+                }}>
+                    {message.isRead ? '已读' : '未读'}
+                </Typography>
+                {message.messageType === 'image' ? (
+                    <ImageMessage
+                        fileId={message.text}
+                        onImageClick={(e, url) => handleImageClick(e, url)}
+                    />
+                ) : message.messageType === 'cookBook' ? (
+                    renderCookbookCard(JSON.parse(message.text))
+                ) : message.messageType === 'Gomoku' ? (
+                    <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
+                ) : (
+                    <Box sx={{
+                        backgroundColor: COLORS.primary,
+                        borderRadius: '20px 4px 20px 20px',
+                        padding: '8px 16px',
+                        maxWidth: {
+                            xs: '85%',  // 增加小屏幕宽度
+                            sm: '90%'   // 增加大屏幕宽度
+                        },
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap',
+                        boxShadow: '0 2px 4px rgba(255, 94, 135, 0.2)',
+                        color: 'white'
+                    }}>
+                        {message.text}
+                    </Box>
+                )}
+            </Box>
+            <DynamicAvatar userId={message.userIdFrom} size="md" />
+        </>
+    ) : (
+        <>
+           <DynamicAvatar userId={message.userIdFrom} size="md" />
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', // 垂直居中
+                flexDirection: 'row' 
+            }}>
+                {message.messageType === 'image' ? (
+                    <ImageMessage
+                        fileId={message.text}
+                        onImageClick={(e, url) => handleImageClick(e, url)}
+                    />
+                ) : message.messageType === 'cookBook' ? (
+                    renderCookbookCard(JSON.parse(message.text))
+                ) : message.messageType === 'Gomoku' ? (
+                    <GomokuInviteCard message={JSON.parse(message.text)} friend={selectedFriend} onJoin={(roomId) => navigate(`/gomoku?roomId=${roomId}`)} userIdTo={message.userIdTo} />
+                ) : (
+                    <Box sx={{
+                        backgroundColor: 'white',
+                        borderRadius: '4px 20px 20px 20px',
+                        padding: '8px 16px',
+                        maxWidth: {
+                            xs: '85%',  // 增加小屏幕宽度
+                            sm: '90%'   // 增加大屏幕宽度
+                        },
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        color: COLORS.dark
+                    }}>
+                        {message.text}
+                    </Box>
+                )}
+                <Typography sx={{ 
+                    fontSize: '0.8rem', 
+                    color: message.isRead ? '#666' : COLORS.primary, 
+                    marginLeft: 2, 
+                    whiteSpace: 'nowrap' // 防止换行
+                }}>
+                    {message.isRead ? '已读' : '未读'}
+                </Typography>
+            </Box>
+        </>
+    )}
+</ListItem>
                 ))}
             </List>
 

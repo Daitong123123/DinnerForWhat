@@ -12,6 +12,7 @@ import {
     Tab
 } from '@mui/material';
 import { FaUserPlus } from 'react-icons/fa';
+import DynamicAvatar from './commons/DynamicAvatar';
 
 // 恋爱记风格配色
 const COLORS = {

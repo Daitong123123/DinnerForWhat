@@ -50,7 +50,7 @@ function LoginPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                p: 2,
+                p: { xs: 6, md: 6 }, // 增加移动端内边距
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -62,12 +62,12 @@ function LoginPage() {
         >
             <Card
                 sx={{
-                    p: 3,
+                    p: { xs: 4, md: 6 }, // 移动端内边距适当减少
                     width: '100%',
                     maxWidth: 600,
                     boxShadow: '0 4px 20px rgba(255, 94, 135, 0.15)',
                     backgroundColor: 'white',
-                    borderRadius: 16,
+                    borderRadius: 10,
                     overflow: 'hidden'
                 }}
             >
@@ -88,11 +88,11 @@ function LoginPage() {
                         textFillColor: 'transparent',
                         textAlign: 'center',
                         mb: 6,
-                        fontSize: { xs: '2rem', md: '2.5rem' },
+                        fontSize: { xs: '1.8rem', md: '2.5rem' }, // 减小移动端字体大小
                         fontWeight: 'bold'
                     }}
                 >
-                    饭菜小记
+                    今天吃什么
                 </Typography>
                 
                 <Box display="flex" justifyContent="center" mb={6}>
@@ -101,8 +101,9 @@ function LoginPage() {
                         sx={{ 
                             mr: 2, 
                             borderRadius: 100, 
-                            px: 6, 
-                            py: 2,
+                            px: { xs: 2, md: 6 }, // 减小移动端按钮内边距
+                            py: { xs: 1.5, md: 2 }, // 减小移动端按钮高度
+                            fontSize: { xs: '0.9rem', md: '1rem' }, // 减小移动端字体大小
                             color: !isLoginWithPhone ? 'white' : COLORS.primary,
                             backgroundColor: !isLoginWithPhone ? COLORS.primary : 'white',
                             borderColor: COLORS.primary,
@@ -118,8 +119,9 @@ function LoginPage() {
                         variant={isLoginWithPhone ? "contained" : "outlined"}
                         sx={{ 
                             borderRadius: 100, 
-                            px: 6, 
-                            py: 2,
+                            px: { xs: 2, md: 6 }, // 减小移动端按钮内边距
+                            py: { xs: 1.5, md: 2 }, // 减小移动端按钮高度
+                            fontSize: { xs: '0.9rem', md: '1rem' }, // 减小移动端字体大小
                             color: isLoginWithPhone ? 'white' : COLORS.primary,
                             backgroundColor: isLoginWithPhone ? COLORS.primary : 'white',
                             borderColor: COLORS.primary,
@@ -184,9 +186,9 @@ function LoginPage() {
                     disabled={!username || !password}
                     sx={{
                         borderRadius: 100,
-                        py: 3,
+                        py: { xs: 1, md: 3 }, // 减小移动端按钮高度
                         textTransform: 'none',
-                        fontSize: '1.1rem',
+                        fontSize: { xs: '1rem', md: '1.1rem' }, // 减小移动端字体大小
                         fontWeight: 'bold',
                         background: `linear-gradient(45deg, ${COLORS.primary}, ${COLORS.secondary})`,
                         boxShadow: `0 4px 20px rgba(255, 94, 135, 0.3)`,

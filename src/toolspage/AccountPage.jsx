@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../login/AuthContext.js';
+
 import {
     Grid,
     Typography,
@@ -57,6 +58,7 @@ import { styled } from '@mui/system';
 import { format, parseISO, startOfMonth, endOfMonth, getMonth, getYear } from 'date-fns';
 import COLORS from '../constants/color.js';
 import apiRequest from '../api.js';
+import DynamicAvatar from '../commons/DynamicAvatar.jsx';
 
 // 自定义样式
 const StyledHeader = styled(CardHeader)(({ theme }) => ({
@@ -582,12 +584,12 @@ function AccountPage() {
                                     >
                                         {/* 直接使用 user 和 spouse 对象 */}
                                         <MenuItem value={user.userId}>
-                                            <Avatar src={'https://picsum.photos/seed/user1/100/100'} sx={{ mr: 2 }} />
+                                        <DynamicAvatar size="md" bgColor="#FF5E87" />
                                             {user.userName || '我'}
                                         </MenuItem>
                                         {spouse && (
                                             <MenuItem value={spouse.userId}>
-                                                <Avatar src={'https://picsum.photos/seed/user2/100/100'} sx={{ mr: 2 }} />
+                                               <DynamicAvatar userId={spouse.userId} size="md" />
                                                 {spouse.userName || '伴侣'}
                                             </MenuItem>
                                         )}
@@ -756,7 +758,7 @@ function AccountPage() {
                                                     {getCategoryName(record.category)}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Avatar src={getUser(record.userId).avatar} sx={{ mr: 2 }} />
+                                                <DynamicAvatar userId={record.userId} size="md" />
                                                     {getUser(record.userId).name}
                                                 </TableCell>
                                                 <TableCell>

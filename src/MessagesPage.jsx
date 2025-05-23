@@ -144,6 +144,7 @@ function MessagesPage() {
                     setFriendMessages((prevMessages) => ({
                         ...prevMessages,
                         [friend.id]: messages.records.map(record => ({
+                            userIdFrom: record.userIdFrom,
                             text: record.message,
                             userIdTo: record.userIdTo,
                             sender: record.userIdFrom === currentUserId ? 'user' : 'other',
@@ -172,7 +173,7 @@ function MessagesPage() {
                     ...prevMessages,
                     [selectedFriend.id]: [
                         ...(prevMessages[selectedFriend.id] || []),
-                        { text: newMessage, sender: 'user', messageType: 'text', isRead: true }
+                        { text: newMessage, sender: 'user', messageType: 'text', isRead: true,userIdFrom: currentUserId }
                     ]
                 }));
                 setNewMessage('');

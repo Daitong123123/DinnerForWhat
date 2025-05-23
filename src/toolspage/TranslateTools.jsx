@@ -155,7 +155,7 @@ function TranslateTool() {
 
   return (
     <Layout>
-      <Box sx={{ p: 4, maxWidth: 800, margin: '0 auto', minHeight: '100vh', backgroundColor: COLORS.light }}>
+      <Box sx={{ p: 2, maxWidth: 800, margin: '0 auto', minHeight: '100vh', backgroundColor: COLORS.light }}>
       {error && (
         <Alert severity="error" sx={{ mb: 4, borderRadius: 8 }}>
           {error}
@@ -306,7 +306,7 @@ function TranslateTool() {
             color: COLORS.primary,
             backgroundColor: 'white',
             borderRadius: '50%',
-            padding: '8px',
+            padding: '2px',
             boxShadow: '0 2px 8px rgba(255, 94, 135, 0.15)',
             '&:hover': {
               backgroundColor: 'rgba(255, 94, 135, 0.05)',

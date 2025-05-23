@@ -70,7 +70,7 @@ function RegisterPage() {
         <Box
             sx={{
                 minHeight: '100vh',
-                p: 2,
+                p: 6,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -82,12 +82,12 @@ function RegisterPage() {
         >
             <Card
                 sx={{
-                    p: 3,
+                    p: 4,
                     width: '100%',
                     maxWidth: 600,
                     boxShadow: '0 4px 20px rgba(255, 94, 135, 0.15)',
                     backgroundColor: 'white',
-                    borderRadius: 16,
+                    borderRadius: 10,
                     overflow: 'hidden'
                 }}
             >
@@ -106,7 +106,7 @@ function RegisterPage() {
                         fontWeight: 'bold'
                     }}
                 >
-                    饭菜小记 - 注册
+                    注册账号
                 </Typography>
                 
                 {error && (
@@ -202,7 +202,7 @@ function RegisterPage() {
                     disabled={!username || !password || !confirmPassword}
                     sx={{
                         borderRadius: 100,
-                        py: 3,
+                        py:{ xs: 1, md: 3},
                         textTransform: 'none',
                         fontSize: '1.1rem',
                         fontWeight: 'bold',
