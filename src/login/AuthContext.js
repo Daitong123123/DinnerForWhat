@@ -8,7 +8,9 @@ const AuthContext = createContext({
     spouse: null,
     loading: true,
     login: () => { },
-    logout: () => { }
+    logout: () => { },
+    setUserIconId: () => { },
+    setSpouseIconId: () => { },
 });
 
 export const AuthProvider = ({ children }) => {
@@ -107,11 +109,32 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('spouseInfo');
         setUser(null);
         setSpouse(null);
-        navigate('/login');
+        navigate('/');
+    };
+
+    const setUserIconId = (iconId) => {
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+            const userData = JSON.parse(userInfoStr);
+            userData.iconId = iconId;
+            localStorage.setItem("userInfo", JSON.stringify(userData));
+            setUser(userData);
+        }
+    };
+
+    const setSpouseIconId = (iconId) => {
+        // 获取并解析localStorage中的用户信息
+        const spouseInfoStr = localStorage.getItem('spouseInfo');
+        if (spouseInfoStr) {
+            const spouseData = JSON.parse(spouseInfoStr);
+            spouseData.iconId = iconId;
+            localStorage.setItem("spouseInfo", JSON.stringify(spouseData));
+            setSpouse(spouseData);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, spouse, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, spouse, loading, login, logout, setUserIconId, setSpouseIconId }}>
             {children}
         </AuthContext.Provider>
     );

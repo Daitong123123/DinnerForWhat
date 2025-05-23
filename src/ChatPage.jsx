@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import sha1 from 'js-sha1';
 import {
     Box,
     Typography,
@@ -22,7 +21,7 @@ import { IoSend } from 'react-icons/io5';
 import EmojiPicker from 'emoji-picker-react';
 import ImageMessage from './ImageMessage.jsx';
 import GomokuInviteCard from './GomokuInviteCard.jsx';
-import { renderStars, renderCookbookCard } from './utils.js';
+import { renderStars, renderCookbookCard ,calculateFileHash} from './utils.js';
 import baseUrl from './config.js';
 import apiRequest from './api.js';
 
@@ -69,28 +68,7 @@ const ChatPage = ({ navigate, selectedFriend, friendMessages, newMessage, setNew
         reader.readAsDataURL(file);
     };
 
-    // 计算文件哈希值的辅助函数（不依赖 crypto.subtle）
-    const calculateFileHash = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsArrayBuffer(file);
 
-            reader.onload = (e) => {
-                try {
-                    const buffer = e.target.result;
-                    const uint8Array = new Uint8Array(buffer);
-                    const hashHex = sha1(uint8Array);
-                    resolve(hashHex);
-                } catch (err) {
-                    reject(new Error(`哈希计算失败: ${err.message}`));
-                }
-            };
-
-            reader.onerror = () => {
-                reject(new Error('文件读取失败'));
-            };
-        });
-    };
 
     const handleSendImage = async () => {
         if (!selectedImage || !selectedFriend) return;
