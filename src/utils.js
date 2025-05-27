@@ -149,6 +149,22 @@ export const  getUrlByIconId = async(iconId)=>{
     } 
 }
 
+export const  getUserInfo = async(userId)=>{
+    try {
+        // 使用apiRequest替代fetch
+        const response = await apiRequest(`/userinfo`, 'GET', {userId: userId });
+        
+        if (response && response.code === '200' && response.data) {
+            return response.data;
+        } else {
+            console.error('获取用户信息失败:', response?.message || '未知错误');
+            return undefined;
+        }
+    } catch (error) {
+        console.error('获取用户信息出错:', error);
+    } 
+}
+
 
 export const UserAvatar = ({ iconId, name, avatarUrl, size = 120, loading = false, editable = false, onEdit, previewUrl, hasPreview }) => {
     const firstChar = name ? name.charAt(0).toUpperCase() : 'U';

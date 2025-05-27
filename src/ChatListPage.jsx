@@ -71,7 +71,7 @@ const ChatListPage = ({ friends, onFriendSelect, selectedTab, setSelectedTab, fr
                                 boxShadow: '0 2px 8px rgba(255, 94, 135, 0.05)'
                             }}
                         >
-                            <Avatar sx={{ mr: 2, width: 48, height: 48, boxShadow: '0 2px 4px rgba(255, 94, 135, 0.15)', backgroundColor: COLORS.primary, color: 'white' }}>{friend.avatar}</Avatar>
+                            <DynamicAvatar userId={friend.id} size='lg' sx={{ mr: 2}}></DynamicAvatar>
                             <Typography variant="subtitle1" sx={{ fontWeight: '500', color: COLORS.dark }}>{friend.name}</Typography>
                         </ListItem>
                     ))

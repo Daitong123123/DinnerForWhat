@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Avatar } from '@mui/material';
-import { getUrlByIconId } from '../utils';
-import { useAuth } from '../login/AuthContext'; // 导入认证上下文
+import { getUrlByIconId, getUserInfo } from '../utils';
+import { useAuth } from '../login/AuthContext';
 
-function DynamicAvatar({ userId, size = 'md', ...otherProps }) {
+// 恋爱记风格配色
+const COLORS = {
+  primary: '#FF5E87',
+  secondary: '#FFB6C1',
+  accent: '#FF85A2',
+  light: '#FFF0F3',
+  dark: '#333333'
+};
+
+function DynamicAvatar({ userId, size = 'md', handleClick, ...otherProps }) {
   const { user, spouse, loading: authLoading } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(true);
@@ -11,21 +20,16 @@ function DynamicAvatar({ userId, size = 'md', ...otherProps }) {
 
   // 确定要显示哪个用户的头像
   useEffect(() => {
-    // 如果传入了userId，查找对应的用户
     if (userId) {
-      // 检查是当前用户还是配偶
       if (user && user.userId === userId) {
         setCurrentUser(user);
       } else if (spouse && spouse.userId === userId) {
         setCurrentUser(spouse);
       } else {
-        // 如果userId不匹配当前用户或配偶，可能是其他用户
-        // 这里可以添加额外逻辑处理其他用户的情况
-        console.warn(`找不到ID为${userId}的用户`);
-        setCurrentUser(null);
+        const userData = getUserInfo(userId);
+        setCurrentUser(userData);
       }
     } else {
-      // 如果没有传入userId，默认显示当前用户
       setCurrentUser(user);
     }
   }, [userId, user, spouse, authLoading]);
@@ -38,19 +42,31 @@ function DynamicAvatar({ userId, size = 'md', ...otherProps }) {
       return;
     }
     
-    // 如果iconId为空或不存在，直接显示首字母
     if (!currentUser.iconId) {
       setAvatarUrl('');
       setLoading(false);
       return;
     }
     
-    // 从缓存中获取头像URL（如果有）
-    const cachedUrl = localStorage.getItem(`avatar_${currentUser.iconId}`);
-    if (cachedUrl) {
-      setAvatarUrl(cachedUrl);
-      setLoading(false);
-      return;
+    // 从缓存中获取头像URL和过期时间
+    const cachedData = localStorage.getItem(`avatar_${currentUser.iconId}`);
+    
+    if (cachedData) {
+      try {
+        const { url, expiresAt } = JSON.parse(cachedData);
+        const now = Date.now();
+        
+        if (now < expiresAt) {
+          setAvatarUrl(url);
+          setLoading(false);
+          return;
+        } else {
+          localStorage.removeItem(`avatar_${currentUser.iconId}`);
+        }
+      } catch (error) {
+        console.error('解析缓存数据失败:', error);
+        localStorage.removeItem(`avatar_${currentUser.iconId}`);
+      }
     }
     
     // 从API获取头像URL
@@ -59,8 +75,11 @@ function DynamicAvatar({ userId, size = 'md', ...otherProps }) {
         const url = await getUrlByIconId(currentUser.iconId);
         if (url) {
           setAvatarUrl(url);
-          // 缓存头像URL，减少API调用
-          localStorage.setItem(`avatar_${currentUser.iconId}`, url);
+          const expiresAt = Date.now() + 30 * 60 * 1000;
+          localStorage.setItem(
+            `avatar_${currentUser.iconId}`, 
+            JSON.stringify({ url, expiresAt })
+          );
         }
       } catch (error) {
         console.error('获取头像URL失败:', error);
@@ -84,18 +103,42 @@ function DynamicAvatar({ userId, size = 'md', ...otherProps }) {
     lg: { width: 48, height: 48 },
   };
 
+  // 恋爱记风格样式
+  const loveStyle = {
+    // 添加恋爱记风格的阴影和边框
+    boxShadow: '0 2px 4px rgba(255, 94, 135, 0.15)',
+    border: '2px solid rgba(255, 255, 255, 0.5)', // 半透明白色边框
+    transition: 'all 0.3s ease', // 添加过渡动画
+    
+    // 悬停效果
+    '&:hover': {
+      boxShadow: '0 4px 8px rgba(255, 94, 135, 0.25)',
+      transform: 'scale(1.05)',
+    }
+  };
+
+  // 骨架屏样式
+  const skeletonStyle = {
+    backgroundColor: COLORS.light,
+    color: COLORS.secondary,
+    boxShadow: '0 2px 4px rgba(255, 94, 135, 0.1)',
+  };
+
   // 加载状态下的骨架屏
   if (loading && !avatarUrl) {
     return (
       <Avatar
         sx={{
           ...sizeStyles[size],
+          ...skeletonStyle,
           ...otherProps.sx,
-          backgroundColor: '#f0f0f0', // 骨架屏背景色
         }}
         {...otherProps}
       >
-        {/* 加载状态下的占位符 */}
+        {/* 骨架屏显示首字母或爱心图标 */}
+        {currentUser && currentUser.userName 
+          ? currentUser.userName.charAt(0).toUpperCase()
+          : '💖'}
       </Avatar>
     );
   }
@@ -104,14 +147,19 @@ function DynamicAvatar({ userId, size = 'md', ...otherProps }) {
     <Avatar
       src={avatarUrl || undefined}
       onError={handleError}
+      onClick={handleClick}
       sx={{
         ...sizeStyles[size],
+        ...loveStyle,
         ...otherProps.sx,
-        backgroundColor: otherProps.bgColor || '#FF5E87', // 默认背景色
+        backgroundColor: otherProps.bgColor || COLORS.primary,
+        color: 'white',
       }}
       {...otherProps}
     >
-      {!avatarUrl && currentUser && currentUser.userName && currentUser.userName.charAt(0).toUpperCase()}
+      {/* 没有头像时显示用户名首字母 */}
+      {!avatarUrl && currentUser && currentUser.userName && 
+        currentUser.userName.charAt(0).toUpperCase()}
     </Avatar>
   );
 }

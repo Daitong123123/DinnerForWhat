@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import apiRequest from './api.js';
 import BottomNavigationBar from './BottomNavigationBar.jsx';
 import { FaHeart, FaRegHeart, FaRobot } from 'react-icons/fa';
-
+import DynamicAvatar from './commons/DynamicAvatar.jsx';
 // 恋爱记风格配色
 const COLORS = {
     primary: '#FF5E87',
@@ -55,6 +55,10 @@ function DishPage() {
         setUser(null);
         navigate('/');
     };
+    const handleUserInfo = () => {
+        navigate('/user');
+    };
+
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -245,12 +249,8 @@ function DishPage() {
                         boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                     }}
                 >
-                    <Avatar onClick={handleClick} src={user.avatarUrl || ''} sx={{
-                        backgroundColor: COLORS.primary,
-                        color: '#fff',
-                        width: '40px',
-                        height: '40px'
-                    }} />
+                    <DynamicAvatar handleClick={handleClick}></DynamicAvatar>
+                    
                     <Typography sx={{ ml: 1, color: COLORS.dark, fontSize: '16px', fontWeight: '500' }}>
                         {userNickName}，今天想吃什么？
                     </Typography>
@@ -259,8 +259,9 @@ function DishPage() {
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
                         onClose={handleClose}
-                        sx={{ mt: '30px' }}
+                        sx={{ mt: '4px' }}
                     >
+                        <MenuItem onClick={handleUserInfo} sx={{ color: COLORS.dark }}>个人信息</MenuItem>
                         <MenuItem onClick={handleLogout} sx={{ color: COLORS.dark }}>退出</MenuItem>
                     </Menu>
                 </Stack>
