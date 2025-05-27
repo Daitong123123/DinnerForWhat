@@ -432,31 +432,10 @@ function LoveNotesPage() {
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'center', color: COLORS.dark, fontWeight: 'bold' }}>
                         爱情笔记
                     </Typography>
-                    <IconButton
-                        color="primary"
-                        onClick={() => openNoteDialog(null, true)}
-                        sx={{ display: { xs: 'none', md: 'block' } }}
-                    >
-                        <AddIcon />
-                    </IconButton>
                 </Toolbar>
             </AppBar>
             
             <Box sx={{ p: 3, minHeight: 'calc(100vh - 112px)', backgroundColor: COLORS.lightPink }}>
-                {/* 新建笔记按钮（移动端） */}
-                <Box sx={{ mb: 4, display: { xs: 'block', md: 'none' } }}>
-                    <ActionButton
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        onClick={() => openNoteDialog(null, true)}
-                        startIcon={<AddIcon />}
-                        sx={{ borderRadius: '1rem', py: '0.75rem', fontWeight: 'bold' }}
-                    >
-                        新建笔记
-                    </ActionButton>
-                </Box>
-                
                 {/* 笔记列表 */}
                 <Box sx={{ mt: 2 }}>
                     {loading && (
@@ -533,8 +512,10 @@ function LoveNotesPage() {
                                     height: 80, 
                                     backgroundColor: COLORS.primary, 
                                     mb: 3, 
-                                    boxShadow: '0 8px 20px rgba(255, 94, 135, 0.3)' 
+                                    boxShadow: '0 8px 20px rgba(255, 94, 135, 0.3)',
+                                    cursor: 'pointer'
                                 }}
+                                onClick={() => openNoteDialog(null, true)}
                             >
                                 <AddIcon fontSize="large" />
                             </Avatar>
@@ -542,24 +523,26 @@ function LoveNotesPage() {
                             <EmptyStateTitle>还没有爱情笔记</EmptyStateTitle>
                             <EmptyStateMessage>{randomMessage}</EmptyStateMessage>
                             
-                            <ActionButton
-                                variant="contained"
-                                color="primary"
-                                onClick={() => openNoteDialog(null, true)}
-                                startIcon={<AddIcon />}
+                            <Box 
                                 sx={{ 
+                                    cursor: 'pointer',
                                     borderRadius: '1rem', 
                                     py: '0.75rem', 
                                     px: '2rem', 
                                     fontWeight: 'bold',
                                     boxShadow: '0 4px 15px rgba(255, 94, 135, 0.2)',
+                                    backgroundColor: COLORS.primary,
+                                    color: 'white',
+                                    transition: 'all 0.2s ease',
                                     '&:hover': {
                                         boxShadow: '0 6px 20px rgba(255, 94, 135, 0.3)',
+                                        transform: 'scale(1.03)',
                                     }
                                 }}
+                                onClick={() => openNoteDialog(null, true)}
                             >
-                                开始记录
-                            </ActionButton>
+                                点击上方红色加号开始记录
+                            </Box>
                         </EmptyStateContainer>
                     )}
                 </Box>
