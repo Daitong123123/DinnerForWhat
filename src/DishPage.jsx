@@ -655,17 +655,22 @@ function DishPage() {
                     sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}
                   >
                     <Chip
-                      label={`食材: ${dish.dishIngredients}`}
+                      label={`花费: ${dish.dishCost}`}
                       size="small"
                       sx={{
                         backgroundColor: COLORS.light,
                         color: COLORS.dark,
-                        display: "-webkit-box",
                         maxWidth: "100%",
-                        whiteSpace: "normal",
-                        wordBreak: "break-all",
                         height: "auto",
                         padding: "4px 8px",
+
+                        // 覆盖内部文本样式
+                        "& .MuiChip-label": {
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          lineHeight: 1.4,
+                          padding: "0", // 减少内边距
+                        },
                       }}
                     />
                     <Chip
@@ -675,10 +680,16 @@ function DishPage() {
                         backgroundColor: COLORS.light,
                         color: COLORS.dark,
                         maxWidth: "100%",
-                        whiteSpace: "normal",
-                        wordBreak: "break-all",
                         height: "auto",
                         padding: "4px 8px",
+
+                        // 覆盖内部文本样式
+                        "& .MuiChip-label": {
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          lineHeight: 1.4,
+                          padding: "0", // 减少内边距
+                        },
                       }}
                     />
                     <Chip
@@ -688,10 +699,16 @@ function DishPage() {
                         backgroundColor: COLORS.light,
                         color: COLORS.dark,
                         maxWidth: "100%",
-                        whiteSpace: "normal",
-                        wordBreak: "break-all",
                         height: "auto",
                         padding: "4px 8px",
+
+                        // 覆盖内部文本样式
+                        "& .MuiChip-label": {
+                          whiteSpace: "normal",
+                          wordBreak: "break-word",
+                          lineHeight: 1.4,
+                          padding: "0", // 减少内边距
+                        },
                       }}
                     />
                   </Box>
