@@ -49,3 +49,29 @@ dish 页面的步骤下面显示出了两个花费。修复 bug
 电脑端聊天输入框无法输入文字，需要修复一下。
 
 **需要修改的页面：ChatPage**
+
+# 任务记录
+
+## 周任务（2025.6.9-2025.6.16）
+
+`任务1:`
+
+a.优化美味餐厅点餐页面。模仿美团页面。
+
+b.结算按钮增加与后端的交互。调用/dish/order 接口来进行结算。
+请求方式 POST
+请求参数：
+{
+"totalSlackerValue":"xxxx",
+"dishInfo":[
+{"dishId":"xxxx",
+"number":"xx"},
+{"dishId":"xxxx",
+"number":"xx"}
+]
+}
+
+totalSlackerValue 表示总的不劳而获值。
+dishInfo 表示点的菜的信息。dishId 表示菜品 id。number 表示菜品数量。(不懂这个请求参数的结构的话可以询问 AI)
+
+**需要修改的页面：OrderingPage**
