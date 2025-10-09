@@ -249,7 +249,7 @@ const ChatPage = ({
     formData.append("file", file);
 
     const uploadResult = await apiRequest(
-      "/aliyun/upload",
+      "/image/upload",
       "POST",
       formData,
       navigate
