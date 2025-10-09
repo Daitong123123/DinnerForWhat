@@ -43,6 +43,9 @@ function DishPage() {
   const [complexStart, setComplexStart] = useState("1");
   const [complexEnd, setComplexEnd] = useState("3");
   const [dishes, setDishes] = useState([]);
+  useEffect(() => {
+    console.log("dishes", dishes);
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
@@ -693,7 +696,7 @@ function DishPage() {
                       }}
                     />
                     <Chip
-                      label={`花费: ${dish.dishCost}`}
+                      label={`食材: ${dish.dishIngredients}`}
                       size="small"
                       sx={{
                         backgroundColor: COLORS.light,
