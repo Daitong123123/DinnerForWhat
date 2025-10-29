@@ -22,6 +22,8 @@ import {
   Select,
   MenuItem,
   FormControlLabel,
+  Badge,
+  Chip,
 } from "@mui/material";
 import {
   Add,
@@ -29,26 +31,31 @@ import {
   ShoppingCart,
   Search,
   Fastfood,
+  Star,
+  LocalFireDepartment,
+  Cancel,
 } from "@mui/icons-material";
 import apiRequest from "./api";
 import { useNavigate } from "react-router-dom";
 import BottomNavigationBar from "./BottomNavigationBar";
 import { useAuth } from "./login/AuthContext.js";
 
-// 美团风格主题配置
+// 美团外卖风格主题配置
 const meituanTheme = {
-  primary: "#FF4D4F", // 美团红
-  secondary: "#FFF0F0",
+  primary: "#FFD100", // 美团黄
+  primaryDark: "#FFC800",
+  secondary: "#FFF8E6",
   text: "#333333",
   lightText: "#666666",
+  grayText: "#999999",
   border: "#EEEEEE",
   background: "#F5F5F5",
-  categoryActive: "#FF4D4F",
-  categoryNormal: "#333333",
+  red: "#FF4444", // 辅助红色（价格、按钮）
+  green: "#4CAF50", // 辅助绿色（满减）
 };
 
 // 占位图（无图片时显示）
-const PLACEHOLDER_IMAGE = "https://via.placeholder.com/80x80?text=无图片";
+const PLACEHOLDER_IMAGE = "https://via.placeholder.com/100x100?text=无图片";
 
 const OrderingPage = () => {
   const [cart, setCart] = useState([]);
@@ -84,7 +91,6 @@ const OrderingPage = () => {
         );
         if (response?.code === "200" && response.data) {
           setDishes(response.data);
-
           // 提取分类（去重）
           const uniqueCats = [
             "全部",
@@ -98,7 +104,6 @@ const OrderingPage = () => {
         console.error("请求出错:", error);
       }
     };
-
     fetchDishes();
   }, [navigate, coupleId]);
 
@@ -106,7 +111,6 @@ const OrderingPage = () => {
   const openDishDetail = (dish) => {
     setCurrentDish(dish);
     setQuantity(1);
-    // 初始化选项
     const initialOptions = {};
     if (dish.sideDishes && dish.sideDishes.length) {
       dish.sideDishes.forEach((side) => {
@@ -126,15 +130,14 @@ const OrderingPage = () => {
     }));
   };
 
-  // 结算按钮点击事件（新增创建订单逻辑）
+  // 结算按钮点击事件
   const handleCheckout = async () => {
     if (cart.length === 0) return;
 
-    // 构建订单数据
     const orderData = {
       userId: userId,
       coupleId: coupleId,
-      createdBy: userId, // 创建人ID
+      createdBy: userId,
       totalAmount: cartTotal,
       items: cart.map((item) => ({
         dishId: item.dishId,
@@ -143,12 +146,11 @@ const OrderingPage = () => {
         quantity: item.quantity,
         taste: item.taste,
         sideDishes: JSON.stringify(item.selectedSides),
-        dishStatus: 0, // 初始状态：未开始
+        dishStatus: 0,
       })),
     };
 
     try {
-      // 调用创建订单接口
       const response = await apiRequest(
         "/orders/create",
         "POST",
@@ -157,27 +159,26 @@ const OrderingPage = () => {
       );
       if (response?.code === "200") {
         console.log("订单提交成功，已发送至厨房", "success");
-        setCart([]); // 清空购物车
-        navigate("/kitchen"); // 跳转到厨房页面
+        setCart([]);
+        navigate("/kitchen");
       }
     } catch (error) {
       console.log("订单提交失败: " + error.message, "error");
     }
   };
+
   // 添加到购物车
   const addToCart = () => {
     if (!currentDish) return;
 
-    // 计算选中的配菜
     const selectedSides = currentDish.sideDishes
       ? Object.entries(selectedOptions)
           .filter(([_, checked]) => checked)
           .map(([id]) =>
             currentDish.sideDishes.find((side) => side.id === Number(id))
-          ) // 适配数字ID
+          )
       : [];
 
-    // 计算单价（基础价格 + 配菜价格）
     const unitPrice =
       currentDish.price +
       selectedSides.reduce((sum, side) => sum + side.price, 0);
@@ -185,7 +186,7 @@ const OrderingPage = () => {
     const cartItem = {
       id: `${currentDish.id}-${JSON.stringify(
         selectedSides.map((s) => s.id)
-      )}-${taste}`, // 唯一标识（菜品ID+配菜+口味）
+      )}-${taste}`,
       dishId: currentDish.id,
       name: currentDish.name,
       imageUrl: currentDish.imageUrl || PLACEHOLDER_IMAGE,
@@ -199,7 +200,6 @@ const OrderingPage = () => {
     const existingItemIndex = cart.findIndex((item) => item.id === cartItem.id);
 
     if (existingItemIndex > -1) {
-      // 更新已有项数量
       const newCart = [...cart];
       newCart[existingItemIndex].quantity += quantity;
       newCart[existingItemIndex].totalPrice =
@@ -207,7 +207,6 @@ const OrderingPage = () => {
         newCart[existingItemIndex].quantity;
       setCart(newCart);
     } else {
-      // 添加新项
       setCart([...cart, cartItem]);
     }
 
@@ -241,6 +240,22 @@ const OrderingPage = () => {
   const cartTotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  // 计算当前选择的总价（修复语法错误：移到JSX外）
+  const calculateCurrentTotal = () => {
+    if (!currentDish) return 0;
+    const selectedSidePrice = currentDish.sideDishes
+      ? Object.entries(selectedOptions)
+          .filter(([_, checked]) => checked)
+          .reduce((sum, [id]) => {
+            const side = currentDish.sideDishes.find(
+              (s) => s.id === Number(id)
+            );
+            return sum + (side ? side.price : 0);
+          }, 0)
+      : 0;
+    return (currentDish.price + selectedSidePrice) * quantity;
+  };
+
   return (
     <Box
       sx={{
@@ -266,11 +281,11 @@ const OrderingPage = () => {
             display: "flex",
             alignItems: "center",
             backgroundColor: meituanTheme.background,
-            borderRadius: "20px",
+            borderRadius: "24px",
             padding: "8px 16px",
           }}
         >
-          <Search color="action" sx={{ mr: 1 }} />
+          <Search color="action" sx={{ mr: 1, color: meituanTheme.grayText }} />
           <TextField
             placeholder="搜索菜品"
             variant="standard"
@@ -279,21 +294,69 @@ const OrderingPage = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
               disableUnderline: true,
-              sx: { fontSize: "14px" },
+              sx: { fontSize: "14px", color: meituanTheme.text },
             }}
           />
         </Box>
       </Box>
 
-      {/* 主体内容（左侧分类+右侧菜品列表） */}
-      <Box sx={{ flex: 1, display: "flex", height: "calc(100vh - 120px)" }}>
-        {/* 左侧分类栏（固定宽度，可滚动） */}
+      {/* 主体内容 */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          height: "calc(100vh - 180px)",
+        }}
+      >
+        {/* 移动端：顶部分类横向滚动栏 */}
+        <Box
+          sx={{
+            width: "100%",
+            backgroundColor: "#fff",
+            padding: "8px 16px",
+            borderBottom: `1px solid ${meituanTheme.border}`,
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+            display: { xs: "block", md: "none" },
+          }}
+        >
+          {categories.map((category) => (
+            <Button
+              key={category}
+              onClick={() => setActiveCategory(category)}
+              sx={{
+                minWidth: "auto",
+                padding: "6px 12px",
+                marginRight: "8px",
+                borderRadius: "16px",
+                backgroundColor:
+                  activeCategory === category ? meituanTheme.primary : "#fff",
+                color:
+                  activeCategory === category
+                    ? meituanTheme.text
+                    : meituanTheme.lightText,
+                fontWeight: activeCategory === category ? "bold" : "normal",
+                fontSize: "14px",
+                textTransform: "none",
+                "&:last-child": { marginRight: 0 },
+              }}
+            >
+              {category}
+            </Button>
+          ))}
+        </Box>
+
+        {/* 桌面端：左侧分类栏 */}
         <Box
           sx={{
             width: "100px",
             backgroundColor: "#fff",
             borderRight: `1px solid ${meituanTheme.border}`,
             overflowY: "auto",
+            display: { xs: "none", md: "block" },
           }}
         >
           <List disablePadding>
@@ -307,7 +370,7 @@ const OrderingPage = () => {
                   padding: "16px 0",
                   borderLeft: `3px solid ${
                     activeCategory === category
-                      ? meituanTheme.categoryActive
+                      ? meituanTheme.primary
                       : "transparent"
                   }`,
                   backgroundColor:
@@ -323,8 +386,8 @@ const OrderingPage = () => {
                     fontWeight: activeCategory === category ? "bold" : "normal",
                     color:
                       activeCategory === category
-                        ? meituanTheme.categoryActive
-                        : meituanTheme.categoryNormal,
+                        ? meituanTheme.text
+                        : meituanTheme.lightText,
                     textAlign: "center",
                   }}
                 />
@@ -333,43 +396,62 @@ const OrderingPage = () => {
           </List>
         </Box>
 
-        {/* 右侧菜品列表（横向卡片，可滚动） */}
+        {/* 菜品列表 */}
         <Box
           sx={{
             flex: 1,
-            padding: "16px",
+            padding: { xs: "12px", md: "16px" },
             overflowY: "auto",
             backgroundColor: meituanTheme.background,
           }}
         >
-          {/* 分类标题 */}
+          {/* 分类标题（仅桌面端显示） */}
           <Typography
             sx={{
               fontSize: "16px",
               fontWeight: "bold",
               marginBottom: "12px",
               color: meituanTheme.text,
+              display: { xs: "none", md: "block" },
             }}
           >
             {activeCategory}
           </Typography>
 
-          {/* 菜品横向卡片列表 */}
-          <Box sx={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* 满减提示 */}
+          <Box
+            sx={{
+              backgroundColor: meituanTheme.secondary,
+              borderRadius: "8px",
+              padding: "8px 12px",
+              marginBottom: "12px",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <LocalFireDepartment
+              sx={{ color: meituanTheme.red, fontSize: "16px" }}
+            />
+            <Typography sx={{ fontSize: "13px", color: meituanTheme.red }}>
+              满30元免配送费 | 满50元减5元
+            </Typography>
+          </Box>
+
+          {/* 菜品卡片列表 */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {filteredDishes.map((dish) => (
               <Card
                 key={dish.id}
                 sx={{
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   padding: "12px",
-                  borderRadius: "8px",
+                  borderRadius: "12px",
                   boxShadow: "none",
                   border: `1px solid ${meituanTheme.border}`,
                   backgroundColor: "#fff",
-                  "&:hover": {
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                  },
+                  "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.08)" },
                   cursor: "pointer",
                 }}
                 onClick={() => openDishDetail(dish)}
@@ -377,12 +459,13 @@ const OrderingPage = () => {
                 {/* 菜品图片 */}
                 <Box
                   sx={{
-                    width: "80px",
-                    height: "80px",
+                    width: { xs: "80px", md: "100px" },
+                    height: { xs: "80px", md: "100px" },
                     borderRadius: "8px",
                     overflow: "hidden",
-                    marginRight: "16px",
+                    marginRight: "12px",
                     flexShrink: 0,
+                    position: "relative",
                   }}
                 >
                   <img
@@ -394,72 +477,141 @@ const OrderingPage = () => {
                       objectFit: "cover",
                     }}
                   />
+                  {/* 热销标签 */}
+                  {dish.sales && dish.sales > 10 && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: "4px",
+                        left: "4px",
+                        backgroundColor: meituanTheme.red,
+                        color: "#fff",
+                        fontSize: "10px",
+                        padding: "2px 4px",
+                        borderRadius: "4px",
+                      }}
+                    >
+                      热销
+                    </Box>
+                  )}
                 </Box>
 
-                {/* 菜品信息（名称、描述、价格） */}
+                {/* 菜品信息 */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="subtitle2"
+                  <Box
                     sx={{
-                      fontWeight: "bold",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
                       marginBottom: "4px",
-                      color: meituanTheme.text,
                     }}
                   >
-                    {dish.name}
-                  </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: "bold",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: meituanTheme.text,
+                        fontSize: "15px",
+                      }}
+                    >
+                      {dish.name}
+                    </Typography>
+                    {/* 评分标签 */}
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Star sx={{ color: "#FFB800", fontSize: "12px" }} />
+                      <Typography
+                        sx={{ fontSize: "12px", color: meituanTheme.lightText }}
+                      >
+                        {dish.rating || 4.5}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* 口味标签 */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "4px",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    {dish.tastes?.slice(0, 2).map((t, idx) => (
+                      <Chip
+                        key={idx}
+                        label={t}
+                        size="small"
+                        sx={{
+                          height: "18px",
+                          fontSize: "11px",
+                          backgroundColor: meituanTheme.secondary,
+                          color: meituanTheme.text,
+                          borderRadius: "4px",
+                        }}
+                      />
+                    ))}
+                    {dish.tastes?.length > 2 && (
+                      <Typography
+                        sx={{ fontSize: "11px", color: meituanTheme.grayText }}
+                      >
+                        等{dish.tastes.length}种口味
+                      </Typography>
+                    )}
+                  </Box>
+
                   <Typography
                     variant="body2"
                     sx={{
                       fontSize: "12px",
-                      color: meituanTheme.lightText,
+                      color: meituanTheme.grayText,
                       display: "-webkit-box",
-                      WebkitLineClamp: 2,
+                      WebkitLineClamp: 1,
                       WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                       marginBottom: "8px",
-                      height: "28px",
+                      height: "16px",
                     }}
                   >
                     {dish.description || "美味佳肴，值得品尝"}
                   </Typography>
-                  <Typography
+
+                  <Box
                     sx={{
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      color: meituanTheme.primary,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                     }}
                   >
-                    ¥{dish.price.toFixed(2)}
-                  </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                        color: meituanTheme.red,
+                      }}
+                    >
+                      ¥{dish.price.toFixed(2)}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "12px",
+                        color: meituanTheme.grayText,
+                      }}
+                    >
+                      {dish.sales || 0}人已点
+                    </Typography>
+                  </Box>
                 </Box>
 
-                {/* 销量标签 */}
-                <Box
-                  sx={{
-                    marginRight: "16px",
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: "12px",
-                      color: meituanTheme.lightText,
-                    }}
-                  >
-                    {dish.sales || 0}人已点
-                  </Typography>
-                </Box>
-
-                {/* 加减按钮（悬浮显示，点击不触发卡片跳转） */}
+                {/* 加减按钮 */}
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
+                    gap: "0",
+                    marginTop: "4px",
                   }}
                 >
                   {cart.findIndex(
@@ -469,11 +621,22 @@ const OrderingPage = () => {
                         JSON.stringify([]) &&
                       item.taste === (dish.tastes?.[0] || "")
                   ) > -1 ? (
-                    // 已有默认配置（无配菜+默认口味）的菜品，显示加减按钮
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        border: `1px solid ${meituanTheme.border}`,
+                        borderRadius: "16px",
+                      }}
+                    >
                       <IconButton
                         size="small"
-                        sx={{ width: "24px", height: "24px", padding: 0 }}
+                        sx={{
+                          width: "28px",
+                          height: "28px",
+                          padding: 0,
+                          color: meituanTheme.text,
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
                           const targetIndex = cart.findIndex(
@@ -487,13 +650,14 @@ const OrderingPage = () => {
                           if (targetIndex > -1) removeFromCart(targetIndex);
                         }}
                       >
-                        <Remove sx={{ fontSize: "16px" }} />
+                        <Remove sx={{ fontSize: "18px" }} />
                       </IconButton>
                       <Typography
                         sx={{
                           fontSize: "14px",
-                          minWidth: "20px",
+                          minWidth: "24px",
                           textAlign: "center",
+                          color: meituanTheme.text,
                         }}
                       >
                         {cart.find(
@@ -507,10 +671,14 @@ const OrderingPage = () => {
                       </Typography>
                       <IconButton
                         size="small"
-                        sx={{ width: "24px", height: "24px", padding: 0 }}
+                        sx={{
+                          width: "28px",
+                          height: "28px",
+                          padding: 0,
+                          color: meituanTheme.text,
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          // 直接添加默认配置（无配菜+默认口味）
                           const defaultCartItem = {
                             id: `${dish.id}-[]-${dish.tastes?.[0] || ""}`,
                             dishId: dish.id,
@@ -537,21 +705,24 @@ const OrderingPage = () => {
                           }
                         }}
                       >
-                        <Add sx={{ fontSize: "16px" }} />
+                        <Add sx={{ fontSize: "18px" }} />
                       </IconButton>
                     </Box>
                   ) : (
-                    // 无默认配置，显示"加入购物车"按钮
                     <Button
                       variant="contained"
                       size="small"
                       sx={{
                         backgroundColor: meituanTheme.primary,
-                        color: "#fff",
+                        color: meituanTheme.text,
                         padding: "4px 12px",
-                        borderRadius: "12px",
+                        borderRadius: "16px",
+                        minWidth: "80px",
+                        textTransform: "none",
+                        fontSize: "13px",
+                        fontWeight: "bold",
                         "&:hover": {
-                          backgroundColor: "#e04345",
+                          backgroundColor: meituanTheme.primaryDark,
                         },
                       }}
                       onClick={(e) => {
@@ -569,11 +740,11 @@ const OrderingPage = () => {
         </Box>
       </Box>
 
-      {/* 购物车底部栏（固定底部） */}
+      {/* 购物车底部栏 */}
       <Box
         sx={{
           position: "fixed",
-          bottom: "56px", // 避开底部导航
+          bottom: "56px",
           left: 0,
           right: 0,
           backgroundColor: "#fff",
@@ -583,6 +754,7 @@ const OrderingPage = () => {
           alignItems: "center",
           justifyContent: "space-between",
           zIndex: 10,
+          borderRadius: "16px 16px 0 0",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -592,53 +764,67 @@ const OrderingPage = () => {
               marginRight: "12px",
             }}
           >
-            <ShoppingCart color="primary" sx={{ fontSize: "24px" }} />
-            <Box
+            <Badge
+              badgeContent={cartItemCount}
+              color="error"
               sx={{
-                position: "absolute",
-                top: "-8px",
-                right: "-8px",
-                backgroundColor: meituanTheme.primary,
-                color: "#fff",
-                borderRadius: "50%",
-                width: "20px",
-                height: "20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                fontWeight: "bold",
+                "& .MuiBadge-badge": {
+                  backgroundColor: meituanTheme.red,
+                  color: "#fff",
+                  fontSize: "12px",
+                  width: "20px",
+                  height: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  top: "-8px",
+                  right: "-8px",
+                },
               }}
             >
-              {cartItemCount}
-            </Box>
+              <ShoppingCart
+                sx={{ fontSize: "26px", color: meituanTheme.primary }}
+              />
+            </Badge>
           </Box>
           <Box>
-            <Typography sx={{ fontWeight: "bold" }}>
+            <Typography
+              sx={{
+                fontWeight: "bold",
+                fontSize: "16px",
+                color: meituanTheme.text,
+              }}
+            >
               总计: ¥{cartTotal.toFixed(2)}
             </Typography>
-            <Typography
-              sx={{ fontSize: "12px", color: meituanTheme.lightText }}
-            >
-              另需配送费 ¥5
+            <Typography sx={{ fontSize: "12px", color: meituanTheme.grayText }}>
+              {cartTotal < 30
+                ? `还差¥${(30 - cartTotal).toFixed(2)}免配送费`
+                : "已免配送费"}
             </Typography>
           </Box>
         </Box>
         <Button
           sx={{
-            backgroundColor: meituanTheme.primary,
-            color: "#fff",
+            backgroundColor:
+              cartItemCount > 0 ? meituanTheme.primary : meituanTheme.border,
+            color:
+              cartItemCount > 0 ? meituanTheme.text : meituanTheme.grayText,
             padding: "8px 24px",
-            borderRadius: "20px",
+            borderRadius: "24px",
+            fontWeight: "bold",
+            textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e04345",
+              backgroundColor:
+                cartItemCount > 0
+                  ? meituanTheme.primaryDark
+                  : meituanTheme.border,
             },
-            opacity: cartItemCount > 0 ? 1 : 0.6,
             pointerEvents: cartItemCount > 0 ? "auto" : "none",
           }}
-          onClick={handleCheckout} // 原先是跳转，现在改为创建订单
+          onClick={handleCheckout}
         >
-          去结算
+          去结算({cartItemCount})
         </Button>
       </Box>
 
@@ -652,58 +838,146 @@ const OrderingPage = () => {
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: "16px", overflow: "hidden" },
+          sx: { borderRadius: "20px", overflow: "hidden", maxHeight: "90vh" },
         }}
+        sx={{ "& .MuiDialog-container": { alignItems: "flex-end" } }}
       >
         {currentDish && (
           <>
-            <DialogTitle sx={{ padding: 0 }}>
+            <DialogTitle sx={{ padding: 0, position: "relative" }}>
               <img
                 src={currentDish.imageUrl || PLACEHOLDER_IMAGE}
                 alt={currentDish.name}
                 style={{ width: "100%", height: "200px", objectFit: "cover" }}
               />
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  top: "12px",
+                  right: "12px",
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  borderRadius: "50%",
+                }}
+                onClick={() => setDishDetailOpen(false)}
+              >
+                <Cancel sx={{ fontSize: "20px", color: meituanTheme.text }} />
+              </IconButton>
             </DialogTitle>
-            <DialogContent sx={{ padding: "16px" }}>
+            <DialogContent
+              sx={{ padding: "16px", maxHeight: "40vh", overflowY: "auto" }}
+            >
               <Typography
                 variant="h6"
-                sx={{ fontWeight: "bold", marginBottom: "8px" }}
+                sx={{
+                  fontWeight: "bold",
+                  marginBottom: "8px",
+                  fontSize: "18px",
+                  color: meituanTheme.text,
+                }}
               >
                 {currentDish.name}
               </Typography>
-              <Typography
+              <Box
                 sx={{
-                  color: meituanTheme.primary,
-                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
                   marginBottom: "16px",
                 }}
               >
-                ¥{currentDish.price.toFixed(2)}
+                <Typography
+                  sx={{
+                    color: meituanTheme.red,
+                    fontWeight: "bold",
+                    fontSize: "20px",
+                    marginRight: "12px",
+                  }}
+                >
+                  ¥{currentDish.price.toFixed(2)}
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Star sx={{ color: "#FFB800", fontSize: "14px" }} />
+                  <Typography
+                    sx={{ fontSize: "14px", color: meituanTheme.lightText }}
+                  >
+                    {currentDish.rating || 4.5} | {currentDish.sales || 0}人已点
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* 菜品描述 */}
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  color: meituanTheme.lightText,
+                  marginBottom: "16px",
+                  lineHeight: 1.5,
+                }}
+              >
+                {currentDish.description || "精选食材制作，口感丰富，欢迎品尝"}
               </Typography>
 
               {/* 口味选择 */}
               {currentDish.tastes && currentDish.tastes.length > 0 && (
-                <FormControl fullWidth sx={{ marginBottom: "16px" }}>
-                  <InputLabel>选择口味</InputLabel>
-                  <Select
-                    value={taste}
-                    label="选择口味"
-                    onChange={(e) => setTaste(e.target.value)}
+                <Box sx={{ marginBottom: "16px" }}>
+                  <Typography
+                    sx={{
+                      marginBottom: "8px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: meituanTheme.text,
+                    }}
                   >
+                    选择口味
+                  </Typography>
+                  <Grid container spacing={1}>
                     {currentDish.tastes.map((t) => (
-                      <MenuItem key={t} value={t}>
-                        {t}
-                      </MenuItem>
+                      <Grid item xs={4} key={t}>
+                        <Button
+                          fullWidth
+                          variant={taste === t ? "contained" : "outlined"}
+                          sx={{
+                            borderRadius: "8px",
+                            padding: "6px 0",
+                            textTransform: "none",
+                            backgroundColor:
+                              taste === t ? meituanTheme.primary : "#fff",
+                            color:
+                              taste === t
+                                ? meituanTheme.text
+                                : meituanTheme.lightText,
+                            borderColor:
+                              taste === t
+                                ? meituanTheme.primary
+                                : meituanTheme.border,
+                            "&:hover": {
+                              backgroundColor:
+                                taste === t
+                                  ? meituanTheme.primaryDark
+                                  : "#fafafa",
+                            },
+                          }}
+                          onClick={() => setTaste(t)}
+                        >
+                          {t}
+                        </Button>
+                      </Grid>
                     ))}
-                  </Select>
-                </FormControl>
+                  </Grid>
+                </Box>
               )}
 
               {/* 配菜选择 */}
               {currentDish.sideDishes && currentDish.sideDishes.length > 0 && (
                 <Box sx={{ marginBottom: "16px" }}>
-                  <Typography sx={{ marginBottom: "8px", fontWeight: "bold" }}>
-                    选择配菜
+                  <Typography
+                    sx={{
+                      marginBottom: "8px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: meituanTheme.text,
+                    }}
+                  >
+                    选择配菜（可选）
                   </Typography>
                   <Grid container spacing={1}>
                     {currentDish.sideDishes.map((side) => (
@@ -713,18 +987,34 @@ const OrderingPage = () => {
                             <Checkbox
                               checked={selectedOptions[side.id] || false}
                               onChange={() => handleSideDishChange(side.id)}
+                              sx={{
+                                "&.Mui-checked": {
+                                  color: meituanTheme.primary,
+                                },
+                              }}
                             />
                           }
                           label={
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <Typography sx={{ fontSize: "14px" }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                width: "100%",
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontSize: "14px",
+                                  color: meituanTheme.text,
+                                }}
+                              >
                                 {side.name}
                               </Typography>
                               <Typography
                                 sx={{
-                                  fontSize: "12px",
-                                  color: meituanTheme.primary,
-                                  marginLeft: "4px",
+                                  fontSize: "13px",
+                                  color: meituanTheme.red,
                                 }}
                               >
                                 +¥{side.price.toFixed(2)}
@@ -746,21 +1036,28 @@ const OrderingPage = () => {
                   alignItems: "center",
                   justifyContent: "center",
                   marginTop: "24px",
+                  border: `1px solid ${meituanTheme.border}`,
+                  width: "120px",
+                  margin: "0 auto",
+                  borderRadius: "20px",
                 }}
               >
                 <IconButton
                   size="small"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
+                  sx={{ width: "40px", height: "40px", padding: 0 }}
                 >
-                  <Remove />
+                  <Remove sx={{ fontSize: "20px", color: meituanTheme.text }} />
                 </IconButton>
                 <Typography
                   sx={{
                     margin: "0 16px",
                     minWidth: "30px",
                     textAlign: "center",
-                    fontSize: "16px",
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    color: meituanTheme.text,
                   }}
                 >
                   {quantity}
@@ -768,26 +1065,32 @@ const OrderingPage = () => {
                 <IconButton
                   size="small"
                   onClick={() => setQuantity((q) => q + 1)}
+                  sx={{ width: "40px", height: "40px", padding: 0 }}
                 >
-                  <Add />
+                  <Add sx={{ fontSize: "20px", color: meituanTheme.text }} />
                 </IconButton>
               </Box>
             </DialogContent>
-            <DialogActions sx={{ padding: "16px" }}>
+            <DialogActions
+              sx={{
+                padding: "16px",
+                borderTop: `1px solid ${meituanTheme.border}`,
+              }}
+            >
               <Button
                 fullWidth
                 sx={{
                   backgroundColor: meituanTheme.primary,
-                  color: "#fff",
+                  color: meituanTheme.text,
                   padding: "12px",
-                  borderRadius: "8px",
-                  "&:hover": {
-                    backgroundColor: "#e04345",
-                  },
+                  borderRadius: "12px",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                  "&:hover": { backgroundColor: meituanTheme.primaryDark },
                 }}
                 onClick={addToCart}
               >
-                加入购物车
+                加入购物车（¥{calculateCurrentTotal().toFixed(2)}）
               </Button>
             </DialogActions>
           </>

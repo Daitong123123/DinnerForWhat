@@ -131,6 +131,15 @@ function FoodPage() {
             sx={{
               backgroundColor: "#fff",
               "& .MuiTabs-indicator": { height: "3px" },
+              // 缩小整体间距
+              "& .MuiTab-root": {
+                minWidth: "auto", // 取消默认最小宽度限制
+                padding: "6px 8px", // 减少内边距
+                fontSize: "12px", // 缩小字体（手机端适合12-14px）
+                "& .MuiTab-label": {
+                  whiteSpace: "nowrap", // 防止文字换行
+                },
+              },
             }}
           >
             <Tab
