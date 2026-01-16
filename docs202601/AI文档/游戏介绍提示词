@@ -1,0 +1,190 @@
+我需要用unity写一个做菜挣钱的2d游戏，我们扮演的是一个地摊摊主，主界面是一张桌布上面有若干厨具：菜刀，砧板，锅，烤箱......（种类可以参考胡闹厨房），
+摊位上有四个顾客会显示出自己想吃的菜，后续的顾客显示xx人在排队。我们需要做出这四个顾客想吃的菜，只能从第一个顾客的菜开始上菜，但是可以把后续顾客的菜
+提前做好，以便第一个顾客的菜上完之后可以马上上第二个顾客的菜。第一个顾客拿到自己的菜之后会支付相应的金币，并且根据菜品的评分来给出好评或者差评，
+我们做菜是根据食谱来的，我们只能制作自己有的食谱里面的菜，食谱需要定义做菜的详细步骤，包括加哪些调料，需要哪些食材制作出来的。使用挣的钱我们可以去买各种不同的小摊车
+，不同的车上面搭载不同的厨具，有不同的载重，食材也有自己的重量，所以采购食材的时候需要充分考虑车子装不装得下。我们每一天的摆摊时间可以是8-24点，你可以随时选择收摊
+但是收摊之后当天无法继续摆摊，游戏里一天的实际差不多为实际时间的15分钟。我们可以随时查看历史流水的折线图，也可以随时查看食谱，通过手机进行一些基本的操作，也可以随时查看
+当地的基本地图，通过地图我们可以去各种场所，比如说商店（购买食材，菜谱），钓鱼场（钓鱼，获得稀有鱼类的方式），家（回家，家里会有各种交互可以做）。
+请你设计一个扩展性强的，游戏系统。给出模块之间的关系。将这个游戏拆分成很细很明确的需求（包括需要的美术资源，需要哪些功能性脚本），分条列出，需求之间的依赖性尽可能小。
+
+你生成的模块关系：
+graph TD
+    A[核心游戏管理器] --> B[场景管理模块]
+    A --> C[玩家数据模块]
+    A --> D[烹饪系统模块]
+    A --> E[顾客系统模块]
+    A --> F[经济系统模块]
+    A --> G[时间系统模块]
+    A --> H[载具/摊位模块]
+    A --> I[地图探索模块]
+    A --> J[UI交互模块]
+    
+    D --> D1[食谱子系统]
+    D --> D2[厨具/食材子系统]
+    D --> D3[烹饪步骤子系统]
+    
+    E --> E1[顾客生成子系统]
+    E --> E2[订单显示子系统]
+    E --> E3[评价/支付子系统]
+    
+    F --> F1[金币管理子系统]
+    F --> F2[流水统计子系统]
+    
+    I --> I1[场景跳转子系统]
+    I --> I2[场所交互子系统]
+    
+    J --> J1[主界面UI]
+    J --> J2[订单UI]
+    J --> J3[数据统计UI]
+    J --> J4[地图/场所UI]
+
+现在你已经列出了如下需求。
+
+一、美术资源需求（逐条列出）
+时间显示 UI 面板（2D Sprite/UI Image）
+倒计时进度条（2D Sprite/UI Slider）
+食谱图标（每个菜品 1 个 2D Sprite）
+食谱详情面板 UI（2D Sprite/UI Image）
+烹饪步骤示意图（每个步骤 1 张 2D Sprite，如 “切菜”“下锅”）
+厨具 Sprite（菜刀、砧板、锅、烤箱等，每个厨具 1-2 个 Sprite）
+食材 Sprite（蔬菜、肉类、调料、鱼类等，每个食材 1 个 Sprite）
+食材库存 UI 面板（2D Sprite/UI Image）
+烹饪步骤进度 UI（2D Sprite/UI Slider）
+菜品成功 / 失败提示 Sprite（2D）
+成品菜品展示 Sprite（每个菜品 1 个 Sprite）
+顾客形象 Sprite（至少 4 种不同顾客，2D）
+排队人数显示 UI（2D Sprite/UI Text）
+订单面板 UI（2D Sprite/UI Image）
+订单优先级标识 Sprite（如 “1st” 标记，2D）
+超时警告 Sprite（2D，如红色感叹号）
+好评 / 差评 Sprite（2D，如笑脸 / 哭脸）
+金币获取提示 Sprite（2D，如金币图标 + 数字）
+金币图标 Sprite（2D）
+金币不足提示 Sprite（2D，如红色叉号）
+折线图 UI 面板（2D Sprite/UI Image）
+流水详情 UI 面板（2D Sprite/UI Image）
+不同载具 Sprite（如小推车、三轮车、餐车等，2D）
+摊位桌布 Sprite（不同载具对应不同桌布，2D）
+载重提示 UI（2D Sprite/UI Text）
+2D 地图底图 Sprite
+场所标记 Sprite（商店、钓鱼场、家、摆摊点，2D）
+场景过渡遮罩 Sprite（2D）
+商店场景 Sprite（2D 背景、货架、NPC）
+钓鱼场场景 Sprite（2D 背景、鱼竿、水面特效）
+家场景 Sprite（2D 背景、家具、交互点标记）
+钓鱼小游戏 UI（进度条、按键提示，2D）
+主界面 UI 面板（2D Sprite/UI Image）
+手机 UI 外壳 Sprite（2D）
+通用弹窗背景 Sprite（2D）
+按钮 Sprite（摆摊 / 收摊 / 地图 / 食谱等，含常态 / 按下 / 禁用状态）
+二、代码脚本需求（逐条列出）
+GameManager.cs（单例，核心管理器，全局游戏状态 / 模块生命周期管理）
+GameEventSystem.cs（事件中心，解耦模块通信）
+SaveLoadSystem.cs（存档 / 读档逻辑）
+PlayerData.cs（玩家数据模型，可序列化）
+PlayerDataManager.cs（玩家数据增删改查逻辑）
+GameTimeSystem.cs（时间计算、流速控制）
+TimeUIManager.cs（时间 UI 更新逻辑）
+Recipe.cs（食谱数据模型，可序列化）
+RecipeManager.cs（食谱解锁、查询、加载逻辑）
+RecipeUIManager.cs（食谱查看 UI 交互）
+KitchenTool.cs（厨具数据模型）
+Ingredient.cs（食材数据模型）
+KitchenToolManager.cs（厨具管理逻辑）
+IngredientManager.cs（食材采购、消耗、库存管理）
+CookingStep.cs（单一步骤数据模型）
+CookingSystem.cs（烹饪流程控制、步骤执行）
+Dish.cs（成品菜品数据模型，关联顾客订单）
+DishStorage.cs（已完成菜品暂存管理）
+Customer.cs（顾客数据模型，含订单、等待时间）
+CustomerSpawner.cs（顾客生成、排队人数更新）
+Order.cs（订单数据模型，关联顾客和菜品）
+OrderUIManager.cs（订单 UI 展示、状态更新）
+PaymentSystem.cs（金币结算逻辑）
+EvaluationSystem.cs（评价生成、影响逻辑）
+GoldManager.cs（金币增删改查）
+GoldUIManager.cs（金币 UI 更新）
+TransactionRecord.cs（流水数据模型）
+TransactionManager.cs（流水记录、统计）
+ChartSystem.cs（折线图生成、展示逻辑）
+Vehicle.cs（载具数据模型）
+VehicleManager.cs（载具购买、切换、载重计算）
+StallDisplay.cs（摊位厨具展示更新）
+MapSystem.cs（地图数据、场景跳转逻辑）
+SceneLoader.cs（场景加载、过渡效果）
+ShopSystem.cs（商店购买逻辑）
+FishingGame.cs（钓鱼小游戏逻辑）
+HomeSystem.cs（家的交互逻辑）
+UIManager.cs（所有 UI 的统一管理）
+MainUIPanel.cs（主界面 UI 交互）
+PhoneUISystem.cs（手机模拟 UI 逻辑）
+PopupWindow.cs（通用弹窗逻辑）
+InputSystem.cs（输入适配，支持键鼠 / 触控）
+
+
+假设美术资源已经完成了。
+
+脚本开发进度如下。
+二、最终脚本完成进度统计
+分类	已完成	未完成	总计
+核心管理器	2/2	0	2
+玩家数据	4/4	0	4
+时间系统	2/2	0	2
+烹饪系统	7/7	0	7
+顾客系统	5/5	0	5
+经济系统	6/6	0	6
+载具 / 摊位	3/3	0	3
+地图场景	3/3	0	3
+扩展玩法	3/3	0	3
+UI 系统	8/8	0	8
+输入系统	1/1	0	1
+总计	44	0	44
+详细完成清单
+序号	脚本名称	状态	备注
+1	GameManager.cs	✅ 完成	核心管理器
+2	GameEventSystem.cs	✅ 完成	事件中心
+3	SaveLoadSystem.cs	✅ 完成	存档 / 读档
+4	PlayerData.cs	✅ 完成	玩家数据模型（序列化）
+5	PlayerDataManager.cs	✅ 完成	玩家数据管理
+6	GameTimeSystem.cs	✅ 完成	时间计算
+7	TimeUIManager.cs	✅ 完成	时间 UI 更新
+8	Recipe.cs	✅ 完成	食谱数据模型
+9	RecipeManager.cs	✅ 完成	食谱管理
+10	RecipeUIManager.cs	✅ 完成	食谱 UI 交互
+11	KitchenTool.cs	✅ 完成	厨具数据模型
+12	Ingredient.cs	✅ 完成	食材数据模型
+13	KitchenToolManager.cs	✅ 完成	厨具管理
+14	IngredientManager.cs	✅ 完成	食材管理
+15	CookingStep.cs	✅ 完成	烹饪步骤模型（内嵌）
+16	CookingSystem.cs	✅ 完成	烹饪流程控制（完善）
+17	Dish.cs	✅ 完成	菜品数据模型
+18	DishStorage.cs	✅ 完成	菜品暂存管理
+19	Customer.cs	✅ 完成	顾客数据模型
+20	CustomerSpawner.cs	✅ 完成	顾客生成
+21	Order.cs	✅ 完成	订单数据模型
+22	OrderUIManager.cs	✅ 完成	订单 UI 展示
+23	PaymentSystem.cs	✅ 完成	金币结算
+24	EvaluationSystem.cs	✅ 完成	评价系统
+25	GoldManager.cs	✅ 完成	金币管理
+26	GoldUIManager.cs	✅ 完成	金币 UI 更新
+27	TransactionRecord.cs	✅ 完成	流水记录模型（内嵌）
+28	TransactionManager.cs	✅ 完成	流水统计
+29	ChartSystem.cs	✅ 完成	折线图生成
+30	Vehicle.cs	✅ 完成	载具数据模型
+31	VehicleManager.cs	✅ 完成	载具管理
+32	StallDisplay.cs	✅ 完成	摊位展示
+33	MapSystem.cs	✅ 完成	地图系统
+34	SceneLoader.cs	✅ 完成	场景加载
+35	ShopSystem.cs	✅ 完成	商店系统
+36	FishingGame.cs	✅ 完成	钓鱼小游戏
+37	HomeSystem.cs	✅ 完成	家的交互
+38	UIManager.cs	✅ 完成	UI 统一管理
+39	MainUIPanel.cs	✅ 完成	主界面 UI
+40	PhoneUISystem.cs	✅ 完成	手机 UI 系统
+41	PopupWindow.cs	✅ 完成	通用弹窗
+42	InputSystem.cs	✅ 完成	输入适配
+43	补充：CookingSystem 完善	✅ 完成	厨具选择逻辑
+44	补充：PlayerData 序列化	✅ 完成	存档兼容性
+
+脚本导入到Unity之后，分步详细给出具体的游戏场景UI的搭建步骤，具体到参数设置，并且给出进度总结。
+如果你不知道某些脚本的内容可以告诉我我来提供给你。

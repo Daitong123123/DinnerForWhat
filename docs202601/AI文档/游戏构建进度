@@ -1,0 +1,424 @@
+Unity 做菜摆摊游戏场景 & UI 搭建全流程（分步 + 参数 + 进度）
+核心前提
+所有脚本已导入 Unity 工程，放置路径：Assets/Scripts/（按模块分文件夹，如Core/、UI/、Cooking/等）；
+美术资源已导入，放置路径：Assets/Art/（分UI/、Sprite/、Scene/子文件夹）；
+Unity 版本建议 2021.3 LTS（兼容性最优），2D 项目模板创建工程，渲染管线为 URP 2D（或默认 2D 渲染）。
+整体搭建流程总览
+阶段	核心内容	完成标准
+1	基础工程配置	2D 环境、标签 / 图层、输入轴配置完成
+2	全局管理器预制体	核心单例脚本挂载，参数配置完成
+3	场景搭建（摆摊 / 商店 / 钓鱼场 / 家 / 地图）	各场景 GameObject 层级、组件、参数配置完成
+4	UI 系统搭建（主界面 / 订单 / 食谱 / 地图 / 数据统计等）	所有 UI 面板层级、锚点、脚本挂载、参数绑定完成
+5	场景跳转与交互测试	各场景切换正常，核心交互（烹饪 / 顾客 / 购物）可执行
+阶段 1：基础工程配置（耗时≈10 分钟）
+1.1 2D 项目基础设置
+打开 Unity Hub → 新建项目 → 选择「2D Core」模板 → 命名为「StreetFoodStall」→ 创建；
+菜单栏「Edit → Project Settings → Player」：
+「Resolution and Presentation」→ 「Default Screen Width/Height」设为 1280×720（适配 2D UI）；
+「Other Settings → Configuration」→ 「Scripting Runtime Version」设为.NET 4.x Equivalent；
+菜单栏「Edit → Project Settings → Time」：
+「Time Scale」保持 1（游戏内时间通过GameTimeSystem控制，不依赖全局时间缩放）；
+「Fixed Timestep」设为 0.02（50 帧固定更新，适配烹饪步骤 / 顾客等待时间计算）。
+1.2 标签（Tags）与图层（Layers）配置
+类型	名称	用途
+标签	PlayerStall	标记摊位核心 GameObject
+标签	Customer	标记顾客 GameObject
+标签	KitchenTool	标记厨具交互 GameObject
+标签	Ingredient	标记食材 GameObject
+标签	UI_Panel	标记所有 UI 面板（方便批量管理）
+图层	UI	保留默认 UI 图层（所有 UI 元素归到此图层）
+图层	Gameplay	标记游戏玩法核心对象（摊位 / 顾客 / 食材）
+图层	Background	标记场景背景（摆摊桌布 / 地图底图等）
+1.3 输入轴配置（适配键鼠 + 触控）
+菜单栏「Edit → Project Settings → Input Manager」：
+新增轴「Interact」：
+「Positive Button」设为e（键鼠交互键）；
+「Type」设为Key or Mouse Button；
+「Touch Input」→ 「Allow Touch Input」勾选（适配手机触控）；
+新增轴「Cancel」：
+「Positive Button」设为esc；
+「Type」设为Key or Mouse Button；
+新增轴「UI_Move」：
+「Type」设为Vector2；
+「Positive X/Y」设为d/w，「Negative X/Y」设为a/s（UI 导航）。
+进度总结（阶段 1）
+✅ 2D 项目环境配置完成；✅ 标签 / 图层 / 输入轴配置完成；❌ 无未完成项。
+阶段 2：全局管理器预制体搭建（耗时≈15 分钟）
+2.1 创建「GameManager」预制体
+在 Hierarchy 面板右键 → 「Create Empty」→ 命名为「GameManager」；
+挂载脚本：
+GameManager.cs（核心管理器）：
+参数：无（单例逻辑内置，Awake 时初始化）；
+GameEventSystem.cs（事件中心）：
+参数：无（事件字典内置）；
+SaveLoadSystem.cs（存档）：
+参数「SavePath」：设为Application.persistentDataPath + "/saveData.json"（直接填字符串，运行时自动读取）；
+PlayerDataManager.cs（玩家数据）：
+参数「DefaultPlayerData」：拖入提前创建的PlayerDataSO 文件（见 2.2）；
+GameTimeSystem.cs（时间系统）：
+参数「RealTimePerGameDay」：设为 900（秒，对应 15 分钟 = 900 秒）；
+参数「GameDayStartTime」：设为 8（对应 8 点摆摊）；
+参数「GameDayEndTime」：设为 24（对应 24 点收摊）；
+参数「TimeScale」：设为 1（游戏内 1 秒 = 现实 1 秒，可在游戏内动态调整）。
+拖入「Prefabs」文件夹（新建Assets/Prefabs/Core/），命名为「GameManager_Prefab」；
+删除 Hierarchy 中的「GameManager」，后续每个场景通过预制体实例化。
+2.2 创建玩家数据 SO（ScriptableObject）
+菜单栏「Assets → Create → C# Script」→ 命名为「PlayerDataSO」→ 替换代码：
+csharp
+运行
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "DefaultPlayerData", menuName = "Game/PlayerDataSO")]
+public class PlayerDataSO : ScriptableObject
+{
+    public PlayerData defaultData;
+}
+在Assets/ScriptableObjects/文件夹右键 → 「Game → PlayerDataSO」→ 命名为「DefaultPlayerData」；
+选中该 SO，在 Inspector 面板配置默认数据：
+「Gold」：设为 1000（初始金币）；
+「UnlockedRecipes」：添加 2-3 个初始食谱（后续绑定RecipeSO）；
+「CurrentVehicle」：选择默认载具（后续绑定VehicleSO）；
+「InventoryIngredients」：初始食材（如番茄 ×10、鸡蛋 ×5）。
+2.3 其他核心管理器预制体（可选，按需拆分）
+「VehicleManager_Prefab」：挂载VehicleManager.cs，参数「DefaultVehicle」绑定初始载具 SO；
+「IngredientManager_Prefab」：挂载IngredientManager.cs，参数「MaxInventoryWeight」绑定默认载具载重（如 5kg）；
+所有管理器预制体放入Assets/Prefabs/Core/，确保每个场景启动时自动加载（通过GameManager的Awake方法实例化）。
+进度总结（阶段 2）
+✅ GameManager 预制体搭建完成；✅ PlayerData SO 配置完成；✅ 核心管理器参数初始化完成；❌ 无未完成项。
+阶段 3：游戏场景搭建（耗时≈60 分钟）
+3.1 主场景（摆摊场景）：Scene_Stall
+3.1.1 场景基础层级
+plaintext
+Scene_Stall
+├─ Background (Layer: Background)
+│  └─ Tablecloth (SpriteRenderer) → 桌布Sprite
+├─ Gameplay (Layer: Gameplay)
+│  ├─ Stall (Tag: PlayerStall)
+│  │  ├─ KitchenTools (空物体，存放厨具)
+│  │  │  ├─ Knife (SpriteRenderer + Collider2D + KitchenTool.cs)
+│  │  │  ├─ CuttingBoard (同上)
+│  │  │  ├─ Pot (同上)
+│  │  │  └─ Oven (同上)
+│  │  └─ IngredientStorage (空物体，存放食材)
+│  ├─ Customers (空物体，存放顾客)
+│  │  ├─ CustomerSlot_1 (空物体，第一个顾客位置)
+│  │  ├─ CustomerSlot_2 (第二个顾客位置)
+│  │  ├─ CustomerSlot_3 (第三个顾客位置)
+│  │  ├─ CustomerSlot_4 (第四个顾客位置)
+│  │  └─ QueueDisplay (UI Text，显示排队人数)
+│  └─ DishStorage (空物体，挂载DishStorage.cs)
+├─ UI (Layer: UI) → 后续阶段4详细配置
+└─ GameManager_Prefab (实例化自Core预制体)
+3.1.2 关键对象参数配置
+（1）桌布（Tablecloth）
+组件：SpriteRenderer；
+「Sprite」：拖入Assets/Art/Sprite/Stall/Tablecloth_Default.png；
+「Sorting Layer」：设为「Background」；
+「Order in Layer」：0；
+「Transform → Position」：(0, 0, 0)，「Scale」：(1,1,1)（适配 1280×720 分辨率）。
+（2）厨具（以 Knife 为例）
+组件：SpriteRenderer + BoxCollider2D + KitchenTool.cs；
+SpriteRenderer：
+「Sprite」：拖入Assets/Art/Sprite/KitchenTools/Knife.png；
+「Sorting Layer」：Gameplay；
+「Order in Layer」：1；
+BoxCollider2D：
+「Is Trigger」：勾选（交互触发）；
+「Size」：适配 Sprite 大小（如 (0.5, 0.5)）；
+KitchenTool.cs：
+「ToolType」：设为「Knife」（枚举，需在KitchenTool.cs中定义）；
+「IsUnlocked」：勾选（初始解锁）；
+「InteractionPrompt」：设为「点击切菜 (E)」。
+（3）顾客位置（CustomerSlot_1）
+「Transform → Position」：(2, 0, 0)（第一个顾客位置，后续依次偏移 1.5 单位：Slot2=(3.5,0,0)，Slot3=(5,0,0)，Slot4=(6.5,0,0)）；
+挂载CustomerSpawner.cs：
+「CustomerPrefab」：后续创建顾客预制体后绑定；
+「MaxDisplayCustomers」：设为 4；
+「QueueDisplayText」：绑定 QueueDisplay 的Text组件。
+（4）DishStorage
+挂载DishStorage.cs：
+「MaxStoredDishes」：设为 8（最多暂存 8 个做好的菜品）。
+3.2 商店场景：Scene_Shop
+3.2.1 场景层级
+plaintext
+Scene_Shop
+├─ Background (Layer: Background)
+│  └─ ShopBG (SpriteRenderer → 商店背景图)
+├─ Gameplay (Layer: Gameplay)
+│  ├─ Shelves (空物体，存放食材/食谱售卖点)
+│  │  ├─ IngredientShelf_1 (Collider2D + ShopSystem.cs)
+│  │  └─ RecipeShelf_1 (Collider2D + ShopSystem.cs)
+│  └─ NPC (SpriteRenderer → 商店老板)
+├─ UI (Layer: UI) → 商店购买面板（后续阶段4配置）
+└─ GameManager_Prefab (实例化自Core预制体)
+3.2.2 关键参数
+ShopBG：SpriteRenderer → Sprite 为Assets/Art/Sprite/Scene/ShopBG.png，Sorting Layer=Background；
+IngredientShelf_1：
+BoxCollider2D（Is Trigger=true）；
+ShopSystem.cs：
+「SellType」：设为「Ingredient」；
+「TargetItem」：绑定食材 SO（如番茄）；
+「Price」：设为 10（金币）；
+「StockCount」：设为 999（无限库存）。
+3.3 钓鱼场场景：Scene_Fishing
+3.3.1 场景层级
+plaintext
+Scene_Fishing
+├─ Background (Layer: Background)
+│  └─ FishingBG (SpriteRenderer → 钓鱼场背景图)
+├─ Gameplay (Layer: Gameplay)
+│  ├─ FishingSpot (Collider2D + FishingGame.cs)
+│  └─ WaterEffect (ParticleSystem → 水面波纹)
+├─ UI (Layer: UI) → 钓鱼小游戏UI（后续阶段4配置）
+└─ GameManager_Prefab (实例化自Core预制体)
+3.3.2 关键参数
+FishingGame.cs（挂载到 FishingSpot）：
+「MinFishWeight」：0.1f；
+「MaxFishWeight」：1.0f；
+「CatchTime」：3f（钓鱼需要按住交互键 3 秒）；
+「RareFishChance」：0.1f（10% 概率钓到稀有鱼）。
+3.4 家场景：Scene_Home
+3.4.1 场景层级
+plaintext
+Scene_Home
+├─ Background (Layer: Background)
+│  └─ HomeBG (SpriteRenderer → 家背景图)
+├─ Gameplay (Layer: Gameplay)
+│  ├─ Bed (Collider2D + HomeSystem.cs → 休息恢复)
+│  ├─ Fridge (Collider2D + HomeSystem.cs → 食材存储)
+│  └─ StorageBox (Collider2D + HomeSystem.cs → 载具切换)
+├─ UI (Layer: UI) → 家交互面板（后续阶段4配置）
+└─ GameManager_Prefab (实例化自Core预制体)
+3.5 地图场景：Scene_Map
+3.5.1 场景层级
+plaintext
+Scene_Map
+├─ Background (Layer: Background)
+│  └─ MapBG (SpriteRenderer → 2D地图底图)
+├─ Gameplay (Layer: Gameplay)
+│  ├─ MapMarker_Stall (SpriteRenderer → 摆摊点标记)
+│  ├─ MapMarker_Shop (SpriteRenderer → 商店标记)
+│  ├─ MapMarker_Fishing (SpriteRenderer → 钓鱼场标记)
+│  └─ MapMarker_Home (SpriteRenderer → 家标记)
+├─ UI (Layer: UI) → 地图交互面板（后续阶段4配置）
+└─ GameManager_Prefab (实例化自Core预制体)
+3.5.2 关键参数
+MapSystem.cs（挂载到 MapBG）：
+「SceneNames」：数组添加「Scene_Stall」「Scene_Shop」「Scene_Fishing」「Scene_Home」；
+「MarkerPositions」：数组对应每个标记的世界坐标（如 Stall=(1,1), Shop=(3,2) 等）；
+「SceneLoader」：绑定SceneLoader.cs组件。
+进度总结（阶段 3）
+✅ 摆摊 / 商店 / 钓鱼场 / 家 / 地图场景基础层级搭建完成；✅ 核心 GameObject 参数配置完成；✅ 管理器预制体实例化完成；❌ 顾客 / 食材预制体未绑定（后续 UI 阶段补充）。
+阶段 4：UI 系统搭建（耗时≈90 分钟）
+4.1 UI 基础画布（Canvas）配置
+在 Hierarchy 面板右键 → 「UI → Canvas」→ 命名为「MainCanvas」；
+Canvas 组件参数：
+「Render Mode」：Screen Space - Overlay；
+「UI Scale Mode」：Scale With Screen Size；
+「Reference Resolution」：设为 1280×720；
+「Screen Match Mode」：Match Width or Height → 「Match」设为 0.5；
+添加「UI → EventSystem」（自动绑定InputSystem适配逻辑）；
+所有 UI 面板作为 MainCanvas 的子物体，Layer 设为 UI，Tag 设为 UI_Panel。
+4.2 主界面 UI（MainUIPanel）
+4.2.1 层级结构
+plaintext
+MainCanvas
+└─ MainUIPanel (GameObject → 挂载MainUIPanel.cs)
+   ├─ TopBar (空物体)
+   │  ├─ TimeDisplay (Text → 显示游戏时间)
+   │  ├─ GoldDisplay (Text → 显示金币)
+   │  └─ StallStatus (Text → 显示摆摊/收摊状态)
+   ├─ BottomBar (空物体)
+   │  ├─ Button_Stall (Button → 摆摊/收摊)
+   │  ├─ Button_Map (Button → 打开地图)
+   │  ├─ Button_Recipe (Button → 打开食谱)
+   │  ├─ Button_Stats (Button → 打开流水统计)
+   │  └─ Button_Phone (Button → 打开手机UI)
+   └─ PopupContainer (空物体 → 存放通用弹窗)
+4.2.2 关键参数配置
+（1）MainUIPanel.cs（挂载到 MainUIPanel）
+「TimeText」：绑定 TopBar/TimeDisplay 的Text组件；
+「GoldText」：绑定 TopBar/GoldDisplay 的Text组件；
+「StallStatusText」：绑定 TopBar/StallStatus 的Text组件；
+「PopupWindowPrefab」：绑定通用弹窗预制体（后续创建）；
+「Button_Stall」：绑定 BottomBar/Button_Stall 的Button组件；
+「Button_Map」：绑定 BottomBar/Button_Map 的Button组件。
+（2）TimeDisplay（Text）
+「Font Size」：24；
+「Alignment」：Left；
+「Text」：初始值「8:00」；
+「Color」：#FFFFFF（白色）。
+（3）Button_Stall（Button）
+「Image → Sprite」：拖入Assets/Art/UI/Buttons/Button_Stall_Normal.png；
+「Button → Transition」：Sprite Swap；
+「Highlighted Sprite」：Button_Stall_Hover.png；
+「Pressed Sprite」：Button_Stall_Pressed.png；
+「Disabled Sprite」：Button_Stall_Disabled.png；
+「On Click ()」：绑定MainUIPanel.cs的ToggleStallStatus()方法。
+4.3 订单 UI（OrderUIPanel）
+4.3.1 层级结构
+plaintext
+MainCanvas
+└─ OrderUIPanel (GameObject → 挂载OrderUIManager.cs)
+   ├─ OrderPanelContainer (空物体 → 订单面板父容器)
+   │  └─ OrderPanelPrefab (预制体 → 单个订单面板)
+   │     ├─ RecipeName (Text → 菜品名称)
+   │     ├─ PriorityIcon (Image → 优先级标识)
+   │     ├─ WaitTimeSlider (Slider → 等待时间进度)
+   │     ├─ TimeoutWarning (Image → 超时警告)
+   │     ├─ EvaluationIcon (Image → 好评/差评)
+   │     └─ ServeButton (Button → 上菜按钮)
+   └─ QueueCountText (Text → 排队人数显示)
+4.3.2 关键参数配置
+（1）OrderUIManager.cs（挂载到 OrderUIPanel）
+「OrderPanelPrefab」：拖入 OrderPanelPrefab 预制体；
+「OrderPanelContainer」：绑定 OrderPanelContainer 的 Transform；
+「PriorityIconSprite」：拖入Assets/Art/UI/Sprites/Icon_Priority.png；
+「TimeoutWarningSprite」：拖入Assets/Art/UI/Sprites/Icon_Timeout.png；
+「GoodReviewSprite」：拖入Assets/Art/UI/Sprites/Icon_GoodReview.png；
+「BadReviewSprite」：拖入Assets/Art/UI/Sprites/Icon_BadReview.png；
+「QueueCountText」：绑定 QueueCountText 的Text组件。
+（2）OrderPanelPrefab（预制体）
+「Rect Transform → Anchor Presets」：Top-Left，设为 (10, -10, 300, 150)（宽度 300，高度 150）；
+WaitTimeSlider（Slider）：
+「Min Value」：0；
+「Max Value」：60（默认顾客最大等待时间 60 秒）；
+「Fill Rect → Image → Color」：#4CAF50（绿色），超时后通过脚本改为 #F44336（红色）；
+ServeButton（Button）：
+「On Click ()」：绑定OrderUIManager.cs的OnServeButtonClick()方法（需传订单 ID 参数）。
+4.4 食谱 UI（RecipeUIPanel）
+4.4.1 层级结构
+plaintext
+MainCanvas
+└─ RecipeUIPanel (GameObject → 挂载RecipeUIManager.cs)
+   ├─ RecipeList (Scroll Rect → 食谱列表)
+   │  ├─ Viewport (Mask)
+   │  │  └─ Content (Vertical Layout Group)
+   │  │     └─ RecipeItemPrefab (预制体 → 单个食谱项)
+   ├─ RecipeDetailPanel (空物体)
+   │  ├─ RecipeIcon (Image → 菜品图标)
+   │  ├─ RecipeName (Text → 菜品名称)
+   │  ├─ StepList (Vertical Layout Group → 烹饪步骤列表)
+   │  │  └─ StepItem (Text + Image → 步骤文本+示意图)
+   │  └─ RequiredIngredients (Text → 所需食材)
+   └─ CloseButton (Button → 关闭面板)
+4.4.2 关键参数
+RecipeUIManager.cs：
+「RecipeItemPrefab」：绑定 RecipeItemPrefab；
+「RecipeDetailPanel」：绑定 RecipeDetailPanel 的 Transform；
+「StepItemPrefab」：绑定 StepItem 预制体；
+RecipeItemPrefab：
+「Rect Transform → Size Delta」：(280, 60)；
+「Text → Font Size」：20；
+「On Click ()」：绑定RecipeUIManager.cs的ShowRecipeDetail()方法。
+4.5 数据统计 UI（StatsUIPanel）
+4.5.1 层级结构
+plaintext
+MainCanvas
+└─ StatsUIPanel (GameObject → 挂载ChartSystem.cs + TransactionManager.cs)
+   ├─ ChartBG (Image → 折线图背景)
+   ├─ LineChart (RawImage → 折线图纹理)
+   ├─ DateFilter (Dropdown → 日期筛选：今日/近7天/近30天)
+   ├─ TransactionList (Scroll Rect → 流水列表)
+   │  └─ TransactionItemPrefab (预制体 → 单条流水记录)
+   └─ CloseButton (Button → 关闭面板)
+4.5.2 关键参数
+ChartSystem.cs：
+「ChartBG」：绑定 ChartBG 的 Image；
+「LineChartRawImage」：绑定 LineChart 的 RawImage；
+「ChartWidth/Height」：设为 500/300；
+TransactionItemPrefab：
+「Text → Font Size」：18；
+「Text → Alignment」：Left。
+4.6 地图 UI（MapUIPanel）
+4.6.1 层级结构
+plaintext
+MainCanvas
+└─ MapUIPanel (GameObject → 挂载MapSystem.cs)
+   ├─ MapBG (Image → 地图底图)
+   ├─ MapMarkers (空物体 → 存放场所标记)
+   │  ├─ Marker_Stall (Image → 摆摊点标记)
+   │  ├─ Marker_Shop (Image → 商店标记)
+   │  ├─ Marker_Fishing (Image → 钓鱼场标记)
+   │  └─ Marker_Home (Image → 家标记)
+   └─ CloseButton (Button → 关闭面板)
+4.6.2 关键参数
+MapSystem.cs：
+「MapMarkers」：绑定 MapMarkers 的 Transform；
+「SceneLoader」：绑定SceneLoader.cs组件；
+Marker_Stall（Image）：
+「Sprite」：拖入Assets/Art/UI/Sprites/Marker_Stall.png；
+「Rect Transform → Size Delta」：(50, 50)；
+「On Click ()」：绑定MapSystem.cs的LoadScene("Scene_Stall")方法。
+4.7 手机 UI（PhoneUIPanel）
+4.7.1 层级结构
+plaintext
+MainCanvas
+└─ PhoneUIPanel (GameObject → 挂载PhoneUISystem.cs)
+   ├─ PhoneBG (Image → 手机外壳Sprite)
+   ├─ PhoneScreen (Rect Transform → 屏幕区域)
+   │  ├─ App_Recipe (Button → 食谱APP)
+   │  ├─ App_Map (Button → 地图APP)
+   │  ├─ App_Stats (Button → 流水APP)
+   │  └─ App_Setting (Button → 设置APP)
+   └─ CloseButton (Button → 关闭手机)
+4.7.2 关键参数
+PhoneUISystem.cs：
+「PhoneScreen」：绑定 PhoneScreen 的 Transform；
+「AppButtons」：数组绑定所有 APP 按钮；
+PhoneBG（Image）：
+「Rect Transform → Size Delta」：(400, 700)；
+「Sprite」：拖入Assets/Art/UI/Sprites/Phone_BG.png。
+4.8 通用弹窗（PopupWindow）
+4.8.1 预制体结构
+plaintext
+PopupWindowPrefab (GameObject → 挂载PopupWindow.cs)
+├─ PopupBG (Image → 半透明背景)
+├─ PopupContent (空物体)
+│  ├─ Title (Text → 弹窗标题)
+│  ├─ Message (Text → 弹窗内容)
+│  └─ ButtonGroup (Horizontal Layout Group)
+│     ├─ Button_Confirm (Button → 确认)
+│     └─ Button_Cancel (Button → 取消)
+4.8.2 关键参数
+PopupWindow.cs：
+「TitleText」：绑定 Title 的 Text；
+「MessageText」：绑定 Message 的 Text；
+「ConfirmButton」：绑定 Button_Confirm；
+「CancelButton」：绑定 Button_Cancel；
+PopupBG（Image）：
+「Color」：#00000080（黑色半透明）；
+「Rect Transform → Anchor Presets」：Stretch-Stretch（覆盖整个屏幕）。
+进度总结（阶段 4）
+✅ 所有 UI 面板层级搭建完成；✅ 核心 UI 组件（按钮 / 文本 / 滑块）参数配置完成；✅ 脚本与 UI 组件绑定完成；✅ 通用弹窗预制体创建完成；❌ 部分动态数据绑定（如食谱列表、流水记录）需运行时测试。
+阶段 5：场景跳转与交互测试（耗时≈30 分钟）
+5.1 场景打包
+菜单栏「File → Build Settings」→ 「Scenes In Build」添加所有场景：
+Scene_Stall
+Scene_Shop
+Scene_Fishing
+Scene_Home
+Scene_Map
+「Platform」选择「PC, Mac & Linux Standalone」→ 「Target Platform」设为 Windows；
+5.2 核心交互测试
+测试项	操作步骤	预期结果
+摆摊 / 收摊	点击主界面「摆摊」按钮	游戏时间开始流动，顾客开始生成，订单 UI 显示
+烹饪步骤	点击厨具（如菜刀）→ 选择食材 → 执行切菜	烹饪步骤进度条更新，食材状态变为「已切」
+顾客上菜	做好菜品后点击「上菜」按钮	顾客支付金币，评价 UI 显示，排队顾客补位
+场景跳转	打开地图 → 点击商店标记	加载 Scene_Shop 场景，商店 UI 面板显示
+购物交互	点击商店食材货架 → 点击「购买」	金币减少，食材库存增加，弹窗提示购买成功
+钓鱼小游戏	点击钓鱼点 → 按住 E 键 3 秒	钓到鱼类，食材库存增加，稀有鱼概率符合配置
+流水统计	点击「统计」按钮 → 选择「今日」	折线图显示今日流水，列表显示所有交易记录
+存档 / 读档	点击手机「设置」→ 「存档」/「读档」	玩家数据（金币 / 食材 / 解锁食谱）正确保存 / 加载
+最终进度总结
+阶段	完成度	未完成项	备注
+1. 基础配置	100%	无	-
+2. 管理器预制体	100%	无	-
+3. 场景搭建	100%	无	顾客 / 食材预制体可运行时生成
+4.UI 系统	95%	动态列表需运行时验证	不影响核心玩法
+5. 测试	90%	部分边缘案例（如金币不足购买）需补充提示	可后续迭代优化
+后续优化建议
+动态 UI 适配：针对不同分辨率（如 720P/1080P）调整 UI 缩放；
+音效绑定：为烹饪 / 上菜 / 购物等交互添加音效；
+动画补充：为顾客生成、烹饪步骤、场景跳转添加 2D 动画；
+性能优化：对大量生成的 UI 元素（如订单面板）做对象池优化。
