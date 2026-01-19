@@ -1,15 +1,14 @@
 1.哪些系统还没实现完成，哪些地方的逻辑像临时补丁而不符合我们当前的架构，影响了可扩展性的。
 
-GameManager基本上状态切换的逻辑都没完成。
+GameManager基本上状态切换的逻辑都没完成。  √
 
-TimeManager方式也不对，开始营业的时间和收摊的时间都是玩家自由决定的。判断营业需要通过是否营业的状态来获取。
-
-ConfigManager里面的IngredientTag设置不合理，这样只能知道有哪个标签，比如说能知道这个菜有糖，但是无法表现糖度，我希望任何标签都能区分1-9九种度。
-ConfigManager里面的一些枚举不太合理，需要结合整个项目其他部分代码来合理设置枚举值。
+TimeManager方式不太对，开始营业的时间和收摊的时间都是玩家自由决定的。判断营业需要通过是否营业的状态来获取。  √
+ConfigManager里面的IngredientTag设置不合理，这样只能知道有哪个标签，比如说能知道这个菜有糖，但是无法表现糖度，我希望任何标签都能区分1-9九种度。 √
+ConfigManager里面的一些枚举不太合理，需要结合整个项目其他部分代码来合理设置枚举值。 √
 
 玩家库存里面不同品质的物品也能堆叠在一起吗？
 
-拖拽系统是否可以直接使用。帮忙添加对应的DragAble和DragTarget实现类。还是不同的物体有不同的逻辑。实现食材和厨具的拖拽逻辑。
+拖拽系统是否可以直接使用。帮忙添加对应的DragAble和DragTarget实现类。还是不同的物体有不同的逻辑。实现食材和厨具的拖拽逻辑。 √
 
 UIPanel默认需要在场景里吗？可以不可Panel做成预制体然后动态创建。
 
@@ -22,5 +21,54 @@ UIPanel默认需要在场景里吗？可以不可Panel做成预制体然后动�
 完成度较高的系统。TimeManager，EventManager
 
 完成度不够的系统。GameManager
+
+
+
+游戏策划书：GameDesignDocument.md
+需求文档：DetailedRequirementsDocument.md
+架构文档：GameArchitectureDocument.md
+进度文档：AIDevProgressDocument.md
+游戏待办清单：AIToDoListDocument.md
+游戏验证指南:GameVerificationDocument.md
+根据以上游戏设计文档和项目代码完成任务。
+分析代码看看哪些系统还没实现完成的地方，列到待办清单里。
+完成后在进度文档：AIDevProgressDocument更新一下你修改的内容。
+代码暂时不用提交。
+
+检查拖拽系统是否可以直接使用。帮忙添加对应食材，调料，厨具，盘子拖拽实现。需要满足以下逻辑，厨具只能被拖到桌子上的位置和盘子上，桌子上就是移动了一下锅，盘子上就是把菜到进了盘子里。
+食材只能拖到厨具和盘子上或者桌子上，拖到桌子上就是放到桌子上了，拖到盘子是就是放到盘子上了，拖到厨具上就是对食材进行这个厨具的操作。调料只能放厨具里面，这个是放入一定量的调料，自己的耐久会降低。
+盘子可以拖到桌子上或者厨具上，桌子上就是改变位置，厨具上就是把盘子里的东西倒进厨具里。
+
+
+Failed to load config: Config/IngredientConfig_Tomato
+UnityEngine.Debug:LogError (object)
+Data.ConfigManager:LoadConfig<Data.IngredientConfig> (string) (at Assets/Data/ConfigManager.cs:89)
+Data.ConfigManager:GetIngredientConfig (string) (at Assets/Data/ConfigManager.cs:133)
+Systems.IngredientSystem.Ingredient:Initialize (string,int) (at Assets/Systems/IngredientSystem/Ingredient.cs:145)
+Systems.IngredientSystem.Ingredient:Start () (at Assets/Systems/IngredientSystem/Ingredient.cs:129)
+
+Ingredient config not found for: Tomato
+UnityEngine.Debug:LogError (object)
+Systems.IngredientSystem.Ingredient:Initialize (string,int) (at Assets/Systems/IngredientSystem/Ingredient.cs:181)
+Systems.IngredientSystem.Ingredient:Start () (at Assets/Systems/IngredientSystem/Ingredient.cs:129)
+
+Ingredient initialized: Tomato, Quality: 3
+UnityEngine.Debug:Log (object)
+Systems.IngredientSystem.Ingredient:Initialize (string,int) (at Assets/Systems/IngredientSystem/Ingredient.cs:184)
+Systems.IngredientSystem.Ingredient:Start () (at Assets/Systems/IngredientSystem/Ingredient.cs:129)
+
+Failed to load config: Config/ToolConfig_Grill
+UnityEngine.Debug:LogError (object)
+Data.ConfigManager:LoadConfig<Data.ToolConfig> (string) (at Assets/Data/ConfigManager.cs:89)
+Data.ConfigManager:GetToolConfig (string) (at Assets/Data/ConfigManager.cs:143)
+Systems.ToolSystem.Tool:Initialize (string) (at Assets/Systems/ToolSystem/Tool.cs:237)
+Systems.ToolSystem.Tool:Start () (at Assets/Systems/ToolSystem/Tool.cs:217)
+
+Tool config not found for: Grill
+UnityEngine.Debug:LogError (object)
+Systems.ToolSystem.Tool:Initialize (string) (at Assets/Systems/ToolSystem/Tool.cs:269)
+Systems.ToolSystem.Tool:Start () (at Assets/Systems/ToolSystem/Tool.cs:217)
+
+
 
 
