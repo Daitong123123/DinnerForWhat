@@ -1,31 +1,43 @@
 public class IngredientSO : ItemSO
 {
-    public List<IngredientState> possibleStates; // 这个食材能变成的状态列表
-}
+    [Header("加工规则：该食材支持的所有加工动作")]
+    public List<IngredientProcessRule> processRules;
+    
+    [Header("视觉表现：不同标签组合对应的显示效果")]
+    public List<IngredientVisualState> visualStates;
 
-// 状态定义：生的、切好的、熟的、焦的、加了盐的...
-[System.Serializable]
-public class IngredientState
-{
-    public StateTag stateTag; // 标签：Raw, Cut, Cooked, Burnt, Spiced_Salt...
-    public Sprite stateSprite; // 不同状态显示不同图片
-    public float cookTimeRequired; // 达到此状态需要的烹饪时间
-    public float burnTime; // 超过这个时间会变成焦的
-}
+    // 获取某个加工动作的规则（比如“煮”的规则）
+    public IngredientProcessRule GetProcessRule(ProcessType type)
+    {
+        return processRules.Find(rule => rule.processType == type);
+    }
 
-// 标签系统：用位运算或者列表存储，方便判断
-[System.Flags]
-public enum StateTag
-{
-    None = 0,
-    Raw = 1 << 0,
-    Cut = 1 << 1,
-    Cooked = 1 << 2,
-    Burnt = 1 << 3,
-    // 调料标签
-    Spiced_Salt = 1 << 4,
-    Spiced_Soy = 1 << 5,
-    Spiced_Sugar = 1 << 6,
-    // 混合标签（用于成品）
-    Mixed = 1 << 30
+    // 根据当前标签组合，获取对应的视觉表现
+    public IngredientVisualState GetVisualState(StateTag currentTags)
+    {
+        // 优先匹配最精准的标签组合（比如先匹配Cut+Cooked，再匹配仅Cut）
+        foreach (var visual in visualStates.OrderByDescending(v => CountTags(v.requiredTags)))
+        {
+            if ((currentTags & visual.requiredTags) == visual.requiredTags)
+            {
+                return visual;
+            }
+        }
+        // 默认返回第一个视觉状态（生的）
+        return visualStates.Count > 0 ? visualStates[0] : null;
+    }
+
+    // 辅助方法：计算标签数量（用于精准匹配）
+    private int CountTags(StateTag tags)
+    {
+        int count = 0;
+        foreach (StateTag tag in Enum.GetValues(typeof(StateTag)))
+        {
+            if (tag != StateTag.None && (tags & tag) == tag)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
 }

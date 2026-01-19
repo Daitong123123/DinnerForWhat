@@ -88,6 +88,26 @@ private void ProcessMixing(ItemInstance container)
     Debug.Log("食材混合完成！");
 }
 
+
+// 切菜动作（InteractionManager中）
+private void ProcessCut(IngredientInstance ingredient)
+{
+    // 1. 获取该食材的切菜规则
+    var cutRule = (ingredient.data as IngredientSO).GetProcessRule(ProcessType.Cut);
+    if (cutRule == null)
+    {
+        Debug.LogError($"{ingredient.data.itemName} 不能切！");
+        return;
+    }
+
+    // 2. 执行切菜：添加/移除标签（无时间，即时完成）
+    ingredient.currentState |= cutRule.addTagOnComplete;
+    ingredient.currentState &= ~cutRule.removeTagOnComplete;
+
+    // 3. 更新视觉表现（切完变成“生番茄块”）
+    UpdateIngredientVisual(ingredient);
+}
+
     // 切菜逻辑
     private void ProcessCutting(ToolSO tool, ItemInstance target)
     {
