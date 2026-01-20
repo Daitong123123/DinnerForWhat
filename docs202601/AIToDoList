@@ -40,34 +40,9 @@ UIPanel默认需要在场景里吗？可以不可Panel做成预制体然后动�
 盘子可以拖到桌子上或者厨具上，桌子上就是改变位置，厨具上就是把盘子里的东西倒进厨具里。
 
 
-Failed to load config: Config/IngredientConfig_Tomato
-UnityEngine.Debug:LogError (object)
-Data.ConfigManager:LoadConfig<Data.IngredientConfig> (string) (at Assets/Data/ConfigManager.cs:89)
-Data.ConfigManager:GetIngredientConfig (string) (at Assets/Data/ConfigManager.cs:133)
-Systems.IngredientSystem.Ingredient:Initialize (string,int) (at Assets/Systems/IngredientSystem/Ingredient.cs:145)
-Systems.IngredientSystem.Ingredient:Start () (at Assets/Systems/IngredientSystem/Ingredient.cs:129)
 
-Ingredient config not found for: Tomato
-UnityEngine.Debug:LogError (object)
-Systems.IngredientSystem.Ingredient:Initialize (string,int) (at Assets/Systems/IngredientSystem/Ingredient.cs:181)
-Systems.IngredientSystem.Ingredient:Start () (at Assets/Systems/IngredientSystem/Ingredient.cs:129)
-
-Ingredient initialized: Tomato, Quality: 3
-UnityEngine.Debug:Log (object)
-Systems.IngredientSystem.Ingredient:Initialize (string,int) (at Assets/Systems/IngredientSystem/Ingredient.cs:184)
-Systems.IngredientSystem.Ingredient:Start () (at Assets/Systems/IngredientSystem/Ingredient.cs:129)
-
-Failed to load config: Config/ToolConfig_Grill
-UnityEngine.Debug:LogError (object)
-Data.ConfigManager:LoadConfig<Data.ToolConfig> (string) (at Assets/Data/ConfigManager.cs:89)
-Data.ConfigManager:GetToolConfig (string) (at Assets/Data/ConfigManager.cs:143)
-Systems.ToolSystem.Tool:Initialize (string) (at Assets/Systems/ToolSystem/Tool.cs:237)
-Systems.ToolSystem.Tool:Start () (at Assets/Systems/ToolSystem/Tool.cs:217)
-
-Tool config not found for: Grill
-UnityEngine.Debug:LogError (object)
-Systems.ToolSystem.Tool:Initialize (string) (at Assets/Systems/ToolSystem/Tool.cs:269)
-Systems.ToolSystem.Tool:Start () (at Assets/Systems/ToolSystem/Tool.cs:217)
+不需要自己实现动画系统，使用unity自带的动画系统。
+输入系统也不需要。
 
 
 
