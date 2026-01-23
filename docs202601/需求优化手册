@@ -1,0 +1,22 @@
+1.厨具应该有默认虚方法来判断满没满。子类逻辑特殊可以重写。
+
+2.Dish类不可以去继承monobehavior。要记录Dish可以在ingredient里面增加一个DishSource数据字段，一直维护这个就好了。
+DishSource{
+
+    List<IngredientInfo>;
+
+    cookedMethod;
+
+    List<DishSource>;
+
+}
+
+IngredientInfo{
+    
+    string ingredientId;
+
+    int quality；
+
+}最后在Ingredient里面提供一些操作这个数据字段的方法。
+
+3.厨具工作的时候上面显示一个工作中的UI。
