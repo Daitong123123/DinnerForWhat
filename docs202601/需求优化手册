@@ -25,6 +25,10 @@ IngredientInfo{
 
 }这是一个记录食物制作过程的使用了哪些材料的数据类。最后在Ingredient里面提供一些操作这个数据字段的方法。
 
+
+
+
+
 3.厨具工作的时候上面显示一个工作中的UI。
 
 
@@ -89,16 +93,35 @@ IngredientInfo{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+1.先查看下列要求，有必要的话，写一个生成预制体Panel的脚本，可以去Editor目录下参考现有的脚本。
+2.拖拽的时候支持进行处理的厨具应该有一个高亮的描边的效果。（不用通过简单的复制一层放大一点，设置颜色，放到背景这样的方式，效果很差）
+3.厨具工作的时候上面显示一个工作中的UI，做成常见的三个点循环出现的样子（很多等待中效果常用的）。
+4.tool里面播放厨具工作音效通过SoundManager来管理。在机器启动的时候播放音效，在机器关闭的时候停止播放音效。烹饪的音效为循环音效。
+5. public virtual Ingredient ProcessIngredient(Ingredient ingredient, string cookingMethod)
+        {
+            if (ingredient == null || !StartUsing(ingredient))
+                return null;
+            
+            // 检查烹饪方式是否可用
+            if (!AvailableCookingMethods.Contains(cookingMethod))
+            {
+                Debug.LogWarning($"Cooking method {cookingMethod} is not available for {ToolId}");
+                StopUsing();
+                return null;
+            }
+            
+            // 计算耐久度消耗
+            float durabilityCost = CalculateDurabilityCost(cookingMethod);
+            Durability -= durabilityCost;
+            
+            // 启动协程处理食材，添加动画延迟
+            StartCoroutine(ProcessIngredientWithDelay(ingredient, cookingMethod));
+            
+            return ingredient;
+        }里面的StartUsing逻辑不对不能在开始使用的时候就销毁食材（只能先隐藏食材），万一拖拽失败了食材是需要还原的。
+6.食谱系统和现在不符，食谱应该能展示出菜谱制作步骤。参考DishSource的存储，他可以是嵌套的。比如说制作一道复杂的菜可能是多步骤的中间会出现诸多中间dish的。
+食谱的匹配应该和dishSource进行匹配。如果匹配到了对应的食谱，返回食谱的信息。食谱应该也要记录最终菜的图片。匹配的方式从食材的数量，不同食材各自的标签，标签强度这些来匹配。
+7.实现一个简单的食谱查看的功能，首先需要一个食谱页面，点击对应的食谱之后会显示出制作的详细步骤，第一步干啥，第二步干啥...。
+7.GamePanel的顾客排队区域应该根据顾客系统实际关联上排队人数（包括显示4个人的和没显示的），需要增加一个商店的按钮，结束摆摊的按钮。点击结束摆摊后应该触发每日结算。
+8.实现商店页面的功能。每一个项需要显示食材的图片，名字，价格（可以通过食材配置文件获取）。商店里面也有厨具升级的按钮，点击厨具升级之后就可以选择我们现有的厨具，花费一定的金币就可以升级。
 
