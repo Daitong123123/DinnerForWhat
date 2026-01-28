@@ -126,6 +126,7 @@ IngredientInfo{
 8.实现商店页面的功能。每一个项需要显示食材的图片，名字，价格（可以通过食材配置文件获取）。商店里面也有厨具升级的按钮，点击厨具升级之后就可以选择我们现有的厨具，花费一定的金币就可以升级。
 
 
+2026-01-28
 游戏策划书：GameDesignDocument.md
 需求文档：DetailedRequirementsDocument.md
 架构文档：GameArchitectureDocument.md
