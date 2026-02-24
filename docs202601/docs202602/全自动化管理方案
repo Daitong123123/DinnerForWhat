@@ -1,0 +1,34 @@
+
+1.游戏资源库目录结构
+2.AI素材索引表：ResourceIndex.json
+示例：
+{
+    "characters": [
+        {
+            "name": "骑士",
+            "path": "Assets/Player/knight.png",
+            "style": "像素16x16",
+            "animations": [
+                "idle",
+                "walk",
+                "attack",
+                "dead"
+            ]
+        }
+    ],
+    "scenes": [
+        {
+            "name": "主城",
+            "path": "Assets/Scenes/city.png",
+            "type": "固定场景"
+        }
+    ],
+    "ui": [
+        {
+            "name": "血条",
+            "path": "Assets/UI/health.png",
+            "type": "核心UI"
+        }
+    ]
+}
+3.
